@@ -1,0 +1,201 @@
+/*main лучше заменить, т.к. будет афектить весь сайт. Нужен для мобилок, чтобы кнопки для каждого блока не пытались ужаться в экран телефона, а занимали всё пространство*/
+.main{
+	min-width:100vh;
+	padding-bottom:10px;
+}
+
+body {
+	margin: 0;
+	font-family: Helvetica, sans-serif;
+	height: 100%; 
+	margin: 0;
+	padding: 0;
+	background-image: url(icons/city.jpg);
+	background-repeat: no-repeat; 
+    background-size: cover; 
+    background-attachment: fixed; 
+    background-position: center;
+}
+
+.content {
+	max-width: 100%;
+}
+		
+/* Убираем подчёркивание  ссылок*/ 
+a {
+	text-decoration: none;
+	color: black;
+}
+
+/*Расположение картинок по центру*/
+img {
+    max-width: 100%;
+    height: auto;
+	margin-left: auto;
+    margin-right: auto;
+	display: flex;
+}
+
+/*Поля для выставления оценок жюри*/
+#inputFields {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  padding-bottom: 1.5em;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.input-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Центрируем элементы по горизонтали */
+  width: 100%;
+}
+
+.input-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 1.4em;
+  margin: 0.7em;
+  text-align: center;
+}
+
+.data-input {
+  font-size: 16px;
+  margin: 0 0.4em; /* Добавляем небольшой отступ между элементами */
+}
+
+select {
+  width: 4em;
+  line-height: 1.3;
+  margin: 0;
+  border: 2px solid #aaa;
+  font-size: 16px;
+  padding: 5px;
+  margin-bottom: 10px;
+}
+
+textarea {
+  width: 13em;
+  height: 4em;
+  font-size: 16px;
+  padding: 5px;
+  margin-bottom: 10px;
+  border: 2px solid #aaa;
+}
+
+input[type="checkbox"] {
+  transform: scale(2);
+  margin: 5px;
+}
+
+.checkbox-container{
+	display: flex;
+	
+}
+
+.thumbnail {
+            max-height: 700px;
+            width: auto;
+        }
+
+.tyan {
+    position: fixed; /* Фиксируем изображение на экране */
+	bottom: 0%; /* Центрируем по вертикали */
+    left: 50%; /* Центрируем по горизонтали */
+    transform: translateX(-50%); /* Корректируем центрирование */
+    width: auto; /* Ширина автоматически подстраивается */
+    max-width: 100%; /* Ограничиваем максимальную ширину */
+    max-height: 100%; /* Ограничиваем максимальную высоту */
+    z-index: -1; /* Размещаем изображение под другими элементами */
+}
+
+@media (max-width: 768px) {
+    .tyan {
+        height: auto; /* Автоматическая высота на мобильных устройствах */
+        width: 100%; /* Ширина 100% экрана */
+        max-height: none; /* Отменяем ограничение высоты */
+        bottom: 0%; /* Центрируем по вертикали */
+        left: 50%; /* Центрируем по горизонтали */
+        transform: translateX(-50%); /* Корректируем центрирование */
+    }
+}
+
+#red {
+	margin-left: auto;
+	margin-right: auto; 
+	background-color: rgba(255, 255, 255, 0.5);
+	max-width: 800px;
+	/* Обертка таблицы для управления прокруткой */
+	.table-container {
+		overflow-x: auto;
+		width: 100%; /* Ширина контейнера таблицы */
+	}
+	.accordion {
+		width: 95%;
+	}
+
+	/* Ограничение ширины таблицы и предотвращение её выхода за пределы контейнера */
+	table {
+		width: 100%;
+		max-width: 100%;
+		border-collapse: collapse;
+	}
+
+	/* Ограничение ширины ячеек и перенос текста */
+	th, td {
+		border: 1px solid #ddd;
+		padding: 5px;
+		text-align: left;
+		word-wrap: break-word; /* Перенос длинных слов */
+		min-width: 30px;
+		max-width: 150px; /* Максимальная ширина ячейки */
+		overflow: hidden; /* Прячем переполняющий текст */
+		text-overflow: ellipsis; /* Добавление многоточия, если текст слишком длинный */
+	}
+
+	/* Добавление отступа для правой стороны в последней ячейке */
+	td:last-child {
+		padding-right: 12px; /* Отступ справа для последней ячейки */
+	}
+
+	/* Фон для заголовков таблицы */
+	th {
+		background-color: #f2f2f2;
+	}
+}
+
+.tableHead {
+    font-weight: bold; /* Жирный шрифт */
+    background-color: #FFB040; /* Цвет фона */
+    text-align: center !important; /* Выравнивание текста по центру */
+	font-size: 20px;
+    /* Дополнительные стили, например, отступы, границы и др. */
+    padding: 8px;
+}
+
+
+/*СТАРЫЕ СТИЛИ. Сохранил на случай, если что-то отвалится*/
+
+/*Таблица */
+/*.B {font-weight: bold; font-size: 1.1em; text-align: center;}
+.table_blur {background: #f5ffff; border-collapse: collapse; text-align: left; font-size: 1.07em;}
+.table_blur th {border-top: 1px solid #777777; border-bottom: 1px solid #777777; box-shadow: inset 0 1px 0 #999999, inset 0 -1px 0 #999999; color: white; padding: 15px 20px; position: relative; text-align: center;}
+.table_blur th:after {content: ""; display: block; position: absolute; left: 0; top: 25%; height: 25%; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0), rgba(255,255,255,.08));}
+.table_blur tr:nth-child(odd) {background: #ebf3f9;}
+.table_blur th:first-child { border-left: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset 1px 1px 0 #999999, inset 0 -1px 0 #999999;}
+.table_blur th:last-child {border-right: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset -1px 1px 0 #999999, inset 0 -1px 0 #999999;}
+.table_blur td {border: 1px solid #e3eef7; padding: 15px 20px; position: relative; transition: all 0.5s ease;}*/
+
+
+/*Для картинок на заднем плане. Для Анимау не нужен
+.muzhik{position: fixed; bottom: 0; height:70%;  width:auto; right:5%;}
+.tyan{position: fixed;  bottom: 0; height:70%; width:auto; right:-2%;}*/
+
+/*Для текста "СМОТР В 11:50 на вкладках. Для анимау может быть не нужно.
+h3 {color: white;}*/
+
+/*body {background-image: url("Background.jpg"); background-size: cover; background-repeat: no-repeat; background-attachment: fixed; margin: 0; font-family: Helvetica, sans-serif; background-color:#495e66;}*/
+/*.background-container {width: 100%; height: 100vh; /* 100% высоты viewport */ /*background-image: url('path/to/your/image.jpg');  background-size: cover;  background-position: center; background-repeat: no-repeat;}*/

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8" />
+	<title>Mocon</title>
+	<base href=".">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+  	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<!--Скрипты для аккардеона и таблицы-->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="./accordion.js"></script>
+	<script async defer src="https://apis.google.com/js/api.js"></script>
+	<script type="text/javascript" src="lightzoom/lightzoom.js"></script>
+	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>   
+	<!--Стили-->
+	<link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" type="text/css" href="./timetable.css">
+	<link rel="stylesheet" href="lightzoom/lightzoom.css" type="text/css">
+	<link rel="manifest" href="icons/site.webmanifest">
+	<link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+	<!-- Favicons -->
+	<link type="image/png" sizes="16x16" rel="icon" href="icons/favicon-16x16.png">
+	<link type="image/png" sizes="32x32" rel="icon" href="icons/favicon-32x32.png">
+	<link type="image/png" sizes="72x72" rel="icon" href="icons/android-icon-72x72.png">
+	<link type="image/png" sizes="96x96" rel="icon" href="icons/android-icon-96x96.png">
+	<link type="image/png" sizes="144x144" rel="icon" href="icons/android-icon-144x144.png">
+	<link rel="manifest" href="./manifest.json">
+</head>
+<body>
+<div class="main">
+    <div>
+	<header>
+    <!-- Верхняя панель -->
+    <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
+    <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
+    <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
+	<button class="tablinks"><a href="map.jpg" class="lightzoom" data-lightzoom>Карта ДК</a></button>
+    <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
+	<button class="tablinks" onclick="openCity(event, 'red')">HELP</button>
+    </div></div>
+
+	<img class="tyan"src="icons/girl.png" alt="tyan">
+<!-- Вкладка 1 -->
+<div id="One" class="tabcontent"><!--<h3>1 часть(от 04 до 07) смотр в 11:15. 2 часть(от 08 до 10) смотр в 13:35</h3>-->
+<div id="section1"></div>
+	</div>
+
+<!-- Вкладка 2 -->
+<div id="Two" class="tabcontent">
+<div id="section2"></div>
+</div>
+<!-- Вкладка 3 -->
+<div id="Three" class="tabcontent">
+<div id="section3"></div>
+</div>
+
+<!--  Таблица -->
+<div id="table" class="tabcontent">
+<table id="schedule" class="table_blur">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table></div>
+<div id="red" class="tabcontent">
+<div><a href="tel:+7919608-19-69"><img src="help/med.png" alt="МЕДИК"/></a> <a href="tel:+7952523-41-75"><img src="help/tina.png" alt="ВОЛОНТЁРЫ"/></a><a href="tel:+7982761-52-38"><img src="help/sb.png" alt="ОХРАНА"/></a></div>
+</div>
+</body>
+</html>

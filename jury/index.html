@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8" />
+	<title>Jury</title>
+	<base href=".">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="JavaScript.js"></script>
+	<script src="participants.js"></script>
+	<script src="result.js"></script>
+	<script src="lightbox-plus-jquery.js"></script>
+	<script type="text/javascript" src="lightzoom/lightzoom.js"></script>
+	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>  	
+	<link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" type="text/css" href="./timetable.css">
+	<link rel="stylesheet" href="lightzoom/lightzoom.css" type="text/css">
+	<link rel="stylesheet" href="./lightbox.css">
+	<!-- Favicons -->
+	<link type="image/png" sizes="16x16" rel="icon" href="icons/favicon-16x16.png">
+	<link type="image/png" sizes="32x32" rel="icon" href="icons/favicon-32x32.png">
+	<link type="image/png" sizes="96x96" rel="icon" href="./favicon-96x96.png">
+	<link type="image/png" sizes="120x120" rel="icon" href="./favicon-120x120.png">
+	<link type="image/png" sizes="72x72" rel="icon" href="icons/android-icon-72x72.png">
+	<link type="image/png" sizes="96x96" rel="icon" href="icons/android-icon-96x96.png">
+	<link type="image/png" sizes="144x144" rel="icon" href="icons/android-icon-144x144.png">
+	<link type="image/png" sizes="192x192" rel="icon" href="icons/android-icon-192x192.png">
+	<link type="image/png" sizes="512x512" rel="icon" href="icons/android-icon-512x512.png">
+	<link rel="manifest" href="./manifest.json">
+	<link sizes="57x57" rel="apple-touch-icon" href="icons/apple-touch-icon-57x57.png">
+	<link sizes="60x60" rel="apple-touch-icon" href="icons/apple-touch-icon-60x60.png">
+	<link sizes="72x72" rel="apple-touch-icon" href="icons/apple-touch-icon-72x72.png">
+	<link sizes="76x76" rel="apple-touch-icon" href="icons/apple-touch-icon-76x76.png">
+	<link sizes="114x114" rel="apple-touch-icon" href="icons/apple-touch-icon-114x114.png">
+	<link sizes="120x120" rel="apple-touch-icon" href="icons/apple-touch-icon-120x120.png">
+	<link sizes="144x144" rel="apple-touch-icon" href="icons/apple-touch-icon-144x144.png">
+	<link sizes="152x152" rel="apple-touch-icon" href="icons/apple-touch-icon-152x152.png">
+	<link sizes="180x180" rel="apple-touch-icon" href="icons/apple-touch-icon-180x180.png">
+</head>
+<body>
+<div class="main">
+    <div class="head">
+	<header>
+    <!-- Верхняя панель -->
+    <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
+    <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
+    <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
+	<button class="tablinks"><a href="map.jpg" class="lightzoom">Карта</a></button>
+    <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
+	<button class="tablinks" onclick="openCity(event, 'red')">Итог</button>
+	<button class="tablinks" id="sendCacheButton">Отправить данные</button>
+    </div></div>
+	<img class="tyan"src="icons/girl.png" alt="tyan">
+<div id="One" class="tabcontent">
+	<div id="section1"></div>
+	</div>
+
+<!-- Вкладка 2 -->
+<div id="Two" class="tabcontent">
+	<div id="section2"></div>
+</div>
+
+<!-- Вкладка 3 -->
+<div id="Three" class="tabcontent">
+<div id="section3"></div>
+</div>
+
+<!--  Таблица -->
+<div id="table" class="tabcontent">
+<table id="schedule" class="table_blur">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table></div>
+
+<div id="red" class="tabcontent">
+<div id="accordion-container">
+    <div class="accordion" id="accordion1">Одиночное</div>
+    <div class="panel" id="panel1"></div>
+
+    <div class="accordion" id="accordion2">Малое групповое</div>
+    <div class="panel" id="panel2"></div>
+
+    <div class="accordion" id="accordion3">Групповое и тематическое</div>
+    <div class="panel" id="panel3"></div>
+
+    <div class="accordion" id="accordion4">Спецпризы</div>
+    <div class="panel" id="panel4"></div>
+</div></div>
+</body>
+</html>
