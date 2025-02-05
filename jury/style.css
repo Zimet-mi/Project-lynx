@@ -57,8 +57,9 @@ img {
 
 .input-container {
     display: flex;
-    flex-direction: column; /* Элементы в столбик */
-    align-items: center; /* Центрируем по горизонтали */
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем элементы по горизонтали */
+    gap: 10px; /* Отступы между элементами */
     width: 100%;
     padding: 10px; /* Добавляем отступы */
     box-sizing: border-box; /* Учитываем padding в ширине */
@@ -66,24 +67,25 @@ img {
 
 .input-row {
     display: flex;
-    flex-direction: column; /* Элементы в столбик */
+    flex-direction: column; /* Элементы внутри строки в столбик */
     align-items: center; /* Центрируем по горизонтали */
-    width: 100%; /* Занимаем всю ширину */
     margin: 0.5em 0; /* Уменьшаем отступы */
     font-size: 1em; /* Уменьшаем размер шрифта */
     text-align: center;
+    flex: 1 1 auto; /* Элементы растягиваются и сжимаются по необходимости */
+    min-width: 150px; /* Минимальная ширина для каждого input-row */
+    max-width: 200px; /* Максимальная ширина для каждого input-row */
 }
 
 .data-input {
     font-size: 16px;
     margin: 0.5em 0; /* Отступы сверху и снизу */
-    width: 90%; /* Ширина 90% от родительского контейнера */
-    max-width: 300px; /* Ограничиваем максимальную ширину */
+    width: 100%; /* Ширина 100% от родительского контейнера */
+    max-width: 100%; /* Ограничиваем максимальную ширину */
 }
 
 select {
     width: 100%; /* Ширина 100% */
-    max-width: 300px; /* Ограничиваем максимальную ширину */
     line-height: 1.3;
     margin: 0.5em 0; /* Отступы сверху и снизу */
     border: 2px solid #aaa;
@@ -94,7 +96,6 @@ select {
 
 textarea {
     width: 100%; /* Ширина 100% */
-    max-width: 300px; /* Ограничиваем максимальную ширину */
     height: 100px; /* Фиксированная высота */
     font-size: 16px;
     padding: 8px; /* Увеличиваем padding для удобства */
@@ -111,10 +112,22 @@ input[type="checkbox"] {
 
 .checkbox-container {
     display: flex;
-    flex-direction: column; /* Элементы в столбик */
-    align-items: center; /* Центрируем по горизонтали */
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем по горизонтали */
+    gap: 10px; /* Отступы между элементами */
     width: 100%;
     margin: 0.5em 0; /* Отступы сверху и снизу */
+}
+.checkbox-row {
+    display: flex;
+    flex-direction: column; /* Элементы внутри строки в столбик */
+    align-items: center; /* Центрируем по горизонтали */
+    margin: 0.5em 0; /* Уменьшаем отступы */
+    font-size: 1em; /* Уменьшаем размер шрифта */
+    text-align: center;
+    flex: 1 1 auto; /* Элементы растягиваются и сжимаются по необходимости */
+    min-width: 100px; /* Минимальная ширина для каждого checkbox-row */
+    max-width: 150px; /* Максимальная ширина для каждого checkbox-row */
 }
 
 .thumbnail {
