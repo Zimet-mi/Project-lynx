@@ -139,7 +139,7 @@ table {
 
 .tabcontent {
     display: none;
-    padding: 8px 13px;
+    padding: 8px 14px;
     border-top: none;
     position: relative; /*Таблицу делаем поверх картинок*/
     }
