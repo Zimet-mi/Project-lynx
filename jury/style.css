@@ -1,14 +1,5 @@
-body, html {
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden; /* Скрываем горизонтальную прокрутку */
-    margin: 0;
-    padding: 0;
-}
-
 .main {
     width: 100%;
-    max-width: 100%; /* Ограничиваем максимальную ширину */
     padding-bottom: 10px;
     box-sizing: border-box;
 }
@@ -177,9 +168,34 @@ input[type="checkbox"] {
 }
 
 .tableHead {
-    font-weight: bold; 
-    background-color: #FFB040; 
-    text-align: center !important; 
+    font-weight: bold; /* Жирный шрифт */
+    background-color: #FFB040; /* Цвет фона */
+    text-align: center !important; /* Выравнивание текста по центру */
 	font-size: 20px;
+    /* Дополнительные стили, например, отступы, границы и др. */
     padding: 8px;
 }
+
+
+/*СТАРЫЕ СТИЛИ. Сохранил на случай, если что-то отвалится*/
+
+/*Таблица */
+/*.B {font-weight: bold; font-size: 1.1em; text-align: center;}
+.table_blur {background: #f5ffff; border-collapse: collapse; text-align: left; font-size: 1.07em;}
+.table_blur th {border-top: 1px solid #777777; border-bottom: 1px solid #777777; box-shadow: inset 0 1px 0 #999999, inset 0 -1px 0 #999999; color: white; padding: 15px 20px; position: relative; text-align: center;}
+.table_blur th:after {content: ""; display: block; position: absolute; left: 0; top: 25%; height: 25%; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0), rgba(255,255,255,.08));}
+.table_blur tr:nth-child(odd) {background: #ebf3f9;}
+.table_blur th:first-child { border-left: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset 1px 1px 0 #999999, inset 0 -1px 0 #999999;}
+.table_blur th:last-child {border-right: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset -1px 1px 0 #999999, inset 0 -1px 0 #999999;}
+.table_blur td {border: 1px solid #e3eef7; padding: 15px 20px; position: relative; transition: all 0.5s ease;}*/
+
+
+/*Для картинок на заднем плане. Для Анимау не нужен
+.muzhik{position: fixed; bottom: 0; height:70%;  width:auto; right:5%;}
+.tyan{position: fixed;  bottom: 0; height:70%; width:auto; right:-2%;}*/
+
+/*Для текста "СМОТР В 11:50 на вкладках. Для анимау может быть не нужно.
+h3 {color: white;}*/
+
+/*body {background-image: url("Background.jpg"); background-size: cover; background-repeat: no-repeat; background-attachment: fixed; margin: 0; font-family: Helvetica, sans-serif; background-color:#495e66;}*/
+/*.background-container {width: 100%; height: 100vh; /* 100% высоты viewport */ /*background-image: url('path/to/your/image.jpg');  background-size: cover;  background-position: center; background-repeat: no-repeat;}*/
