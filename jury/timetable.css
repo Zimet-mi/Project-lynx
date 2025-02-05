@@ -99,12 +99,6 @@ table {
     margin-right: auto; /* Выравниваем таблицу по центру окна  */
     }
 
-.tab {
-    overflow: hidden;
-    border: 1px solid #ccc;
-    background-color: #000000;
-    }
-
 .tablinks {
     font-weight: bold;
     font-size: 1.2em;
@@ -114,16 +108,26 @@ table {
 .tablinks a {
 	color: white;
 }
+	
+	.tab {
+    display: flex;
+    overflow-x: auto; /* Горизонтальная прокрутка */
+    white-space: nowrap; /* Кнопки в одну строку */
+    padding: 10px 0;
+    background-color: #000000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
 .tab button {
-    background-color: inherit;
-    float: left;
+    flex: 0 0 auto; /* Кнопки не сжимаются */
+    margin: 0 5px;
+    padding: 10px 15px;
+    font-size: 14px;
     border: none;
-    outline: none;
+    background-color: inherit;
+    border-radius: 5px;
     cursor: pointer;
-    padding: 16px 20px;
-    transition: 0.3s;
-    }
+}
 
 .tab button:hover {
     background-color: #ddd;
