@@ -15,7 +15,8 @@
 	<script src="result.js"></script>
 	<script src="lightbox-plus-jquery.js"></script>
 	<script type="text/javascript" src="lightzoom/lightzoom.js"></script>
-	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>  	
+	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>
+	<script src="https://telegram.org/js/telegram-web-app.js"></script>
 	<link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" type="text/css" href="./timetable.css">
 	<link rel="stylesheet" href="lightzoom/lightzoom.css" type="text/css">
@@ -44,53 +45,61 @@
 <body>
 <div class="main">
     <div class="head">
-	<header>
-    <!-- Верхняя панель -->
-    <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
-    <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
-    <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
-	<button class="tablinks"><a href="map.jpg" class="lightzoom">Карта</a></button>
-    <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
-	<button class="tablinks" onclick="openCity(event, 'red')">Итог</button>
-	<button class="tablinks" id="sendCacheButton">Отправить данные</button>
-    </div></div>
-	<img class="tyan"src="icons/girl.png" alt="tyan">
-<div id="One" class="tabcontent">
-	<div id="section1"></div>
-	</div>
-
-<!-- Вкладка 2 -->
-<div id="Two" class="tabcontent">
-	<div id="section2"></div>
+        <header>
+            <div class="tab">
+                <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button>
+                <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
+                <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
+                <button class="tablinks"><a href="map.jpg" class="lightzoom">Карта</a></button>
+                <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button>
+                <button class="tablinks" onclick="openCity(event, 'red')">Итог</button>
+                <button class="tablinks" id="sendCacheButton">Отправить данные</button>
+            </div>
+        </header>
+    </div>
+    <div id="One" class="tabcontent">
+        <div id="section1"></div>
+    </div>
+    <div id="Two" class="tabcontent">
+        <div id="section2"></div>
+    </div>
+    <div id="Three" class="tabcontent">
+        <div id="section3"></div>
+    </div>
+    <div id="table" class="tabcontent">
+        <table id="schedule" class="table_blur">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="red" class="tabcontent">
+        <div id="accordion-container">
+            <div class="accordion" id="accordion1">Одиночное</div>
+            <div class="panel" id="panel1"></div>
+            <div class="accordion" id="accordion2">Малое групповое</div>
+            <div class="panel" id="panel2"></div>
+            <div class="accordion" id="accordion3">Групповое и тематическое</div>
+            <div class="panel" id="panel3"></div>
+            <div class="accordion" id="accordion4">Спецпризы</div>
+            <div class="panel" id="panel4"></div>
+        </div>
+    </div>
 </div>
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.ready();
 
-<!-- Вкладка 3 -->
-<div id="Three" class="tabcontent">
-<div id="section3"></div>
-</div>
+    // Пример использования данных пользователя
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+        console.log(`Привет, ${user.first_name}!`);
+    }
 
-<!--  Таблица -->
-<div id="table" class="tabcontent">
-<table id="schedule" class="table_blur">
-        <thead>
-        </thead>
-        <tbody>
-        </tbody>
-    </table></div>
-
-<div id="red" class="tabcontent">
-<div id="accordion-container">
-    <div class="accordion" id="accordion1">Одиночное</div>
-    <div class="panel" id="panel1"></div>
-
-    <div class="accordion" id="accordion2">Малое групповое</div>
-    <div class="panel" id="panel2"></div>
-
-    <div class="accordion" id="accordion3">Групповое и тематическое</div>
-    <div class="panel" id="panel3"></div>
-
-    <div class="accordion" id="accordion4">Спецпризы</div>
-    <div class="panel" id="panel4"></div>
-</div></div>
+    // Отправка данных через Telegram Bot
+    document.getElementById('sendCacheButton').addEventListener('click', () => {
+        const data = { action: 'saveData', sheet: 'jury', row: 5, column: 'A', value: 'Test' };
+        tg.sendData(JSON.stringify(data));
+    });
+</script>
 </body>
 </html>

@@ -1,4 +1,14 @@
+const tg = window.Telegram.WebApp;
 
+// Инициализация
+tg.ready(); // Сообщает Telegram, что Mini App готов к использованию
+const user = tg.initDataUnsafe.user;
+console.log(user); // { id: 12345, first_name: "John", last_name: "Doe", username: "johndoe" }
+tg.BackButton.show();
+tg.BackButton.onClick(() => {
+    tg.close(); // Закрыть Mini App
+});
+tg.sendData(JSON.stringify({ action: 'saveData', sheet: 'jury', row: 5, column: 'A', value: 'Test' }));
 
 // Функции для работы аккордеона
 function openCity(evt, cityName) {
