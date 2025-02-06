@@ -57,12 +57,34 @@ img {
 
 .input-container {
     display: flex;
-    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
-    justify-content: center; /* Центрируем элементы по горизонтали */
-    gap: 10px; /* Отступы между элементами */
+    flex-direction: column; /* Элементы в столбик */
+    gap: 10px; /* Отступы между группами */
     width: 100%;
     padding: 10px; /* Добавляем отступы */
     box-sizing: border-box; /* Учитываем padding в ширине */
+}
+
+/* Группа селектов (первые 3 .input-row) */
+.input-row:nth-child(-n+3) {
+    display: flex;
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем по горизонтали */
+    gap: 10px; /* Отступы между элементами */
+}
+
+/* Группа текстового поля (4-й .input-row) */
+.input-row:nth-child(4) {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Центрируем по горизонтали */
+}
+
+/* Группа чекбоксов (последние .input-row) */
+.input-row:nth-child(n+5) {
+    display: flex;
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем по горизонтали */
+    gap: 10px; /* Отступы между элементами */
 }
 
 .input-row {
@@ -95,7 +117,8 @@ select {
 }
 
 textarea {
-    width: 100%; /* Ширина 100% */
+    width: 90%; /* Ширина 90% от родительского контейнера */
+    max-width: 400px; /* Ограничиваем максимальную ширину */
     height: 100px; /* Фиксированная высота */
     font-size: 16px;
     padding: 8px; /* Увеличиваем padding для удобства */
