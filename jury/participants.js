@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         select.addEventListener('input', function () {
-            saveData(select.value, dataColumn, dataRow, 'brickus');
+            saveData(select.value, dataColumn, dataRow, 'jury');
         });
 
         return select;
@@ -159,7 +159,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     textarea.value = placeholders['comment'] || ''; // Инициализируем значение из placeholders
 
     textarea.addEventListener('input', debounce(function () {
-    saveData(this.value, 'F', rowId, 'brickus');
+    saveData(this.value, 'F', rowId, 'jury');
 	}, 300));  // Задержка 300 мс
 
     commentInputDiv.appendChild(textarea);
