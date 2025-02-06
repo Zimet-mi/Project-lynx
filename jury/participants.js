@@ -245,7 +245,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 
 
 	async function getSheetId() {
-		const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec'; 
+		const url = 'https://script.google.com/macros/s/AKfycbxQ3MrknFLRGXb6J7YJcNEVe5IShT-AITtvSvZHHSwK1OPvs-4ikzDXeSWQ60czU5z1/exec'; 
 		const response = await fetch(url);
 		return response.text();
 	}
@@ -417,7 +417,7 @@ async function sendDataToServer(cacheKey) {
     }
 
     const { value, column, row, sheet } = JSON.parse(cachedData);
-    const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
+    const url = 'https://script.google.com/macros/s/AKfycbxQ3MrknFLRGXb6J7YJcNEVe5IShT-AITtvSvZHHSwK1OPvs-4ikzDXeSWQ60czU5z1/exec';
     const params = new URLSearchParams({
         column: column,
         row: row,
