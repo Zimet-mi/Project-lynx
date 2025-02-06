@@ -417,7 +417,7 @@ async function sendDataToServer(cacheKey) {
     }
 
     const { value, column, row, sheet } = JSON.parse(cachedData);
-    const url = 'https://script.google.com/macros/s/AKfycbyL42-wZJRFqnqcL50UYmPykIIYLMeK4ajMwssTodupbuXqw7-7b0atbyJkqyXTaZj4/exec';
+    const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
     const params = new URLSearchParams({
         column: column,
         row: row,
