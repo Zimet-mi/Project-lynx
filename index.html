@@ -30,6 +30,38 @@
 	<link rel="manifest" href="./manifest.json">
 </head>
 <body>
+
+    <script>
+        // Функция для извлечения параметров из URL
+        function getQueryParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const pairs = queryString.split("&");
+
+            for (const pair of pairs) {
+                const [key, value] = pair.split("=");
+                params[decodeURIComponent(key)] = decodeURIComponent(value);
+            }
+
+            return params;
+        }
+
+        // Обработка параметров
+        const params = getQueryParams();
+        const page = window.location.pathname.split("/").pop(); // Получаем страницу (alpha, beta, crew и т.д.)
+        const userId = params.user_id; // Получаем user_id из параметров
+
+        // Отображаем информацию на странице
+        const messageElement = document.getElementById("message");
+        if (page === "alpha") {
+            messageElement.innerText = `Вы на странице Alpha. User ID: ${userId}`;
+        } else if (page === "crew") {
+            messageElement.innerText = `Вы на странице Crew. User ID: ${userId}`;
+        } else {
+            messageElement.innerText = "Страница не найдена.";
+        }
+    </script>
+
 <div class="main">
     <div>
 	<header>
