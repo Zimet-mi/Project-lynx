@@ -148,31 +148,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Аккордеон
-    var acc = document.getElementsByClassName("accordion");
-    var i;
-
-    for (i = 0; i < acc.length; i++) {
-        acc[i].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if (panel.style.display === "block") {
-                panel.style.display = "none";
-            } else {
-                panel.style.display = "block";
-                // Инициализируем lightzoom для изображений в этом открытом аккордеоне
-                $(panel).find('a.lightzoom').lightzoom({speed: 400, overlayOpacity: 0.5});
-            }
-        });
-    }
-
-    // Инициализация lightzoom для всех элементов с классом lightzoom
-    $('a.lightzoom').lightzoom({speed: 400, overlayOpacity: 0.5});
-});
-
 // Функция для переключения вкладок в шапке
  function openCity(evt, cityName) {
     // Declare all variables
