@@ -1,4 +1,11 @@
-const tg = window.Telegram.WebApp;
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+
+    // Пример использования данных пользователя
+    const user = tg.initDataUnsafe.user;
+    if (user) {
+        console.log(`Привет, ${user.first_name}!`);
+    }
 
 // Инициализация
 tg.ready(); // Сообщает Telegram, что Mini App готов к использованию
