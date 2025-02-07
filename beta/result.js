@@ -146,30 +146,6 @@ async function renderTable() {
     createTableFromData(parts[3] || {}, 'panel4');
 }
 
-// Функция для инициализации аккордеонов
-function initializeAccordions() {
-    const accordions = document.getElementsByClassName("accordion");
-    for (let i = 0; i < accordions.length; i++) {
-        accordions[i].addEventListener("click", function () {
-            this.classList.toggle("active");
-            const panelId = this.id.replace('accordion', 'panel');
-            const panel = document.getElementById(panelId);
-            if (panel) {
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
-                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
-                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-                }
-            } else {
-                console.warn(`Panel with id ${panelId} not found.`);
-            }
-        });
-    }
-}
-
-
 // Функция для отображения данных
 async function renderData(sheetName = 'juryRes') {
     try {
