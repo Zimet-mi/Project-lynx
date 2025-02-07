@@ -206,11 +206,11 @@ function createInputFields(container, rowId, placeholders, options = []) {
     button.textContent = `${participant.id} ${participant.name}`;
 
     const imgLink = document.createElement('a');
-    imgLink.href = `card/${participant.img}`;
+    imgLink.href = `../card/${participant.img}`;
     imgLink.className = 'lightzoom';
 
     const img = document.createElement('img');
-    img.src = `card/${participant.img}`;
+    img.src = `../card/${participant.img}`;
     img.className = 'thumbnail';
 
     imgLink.appendChild(img);
