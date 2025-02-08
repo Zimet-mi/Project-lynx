@@ -4,7 +4,7 @@ function createTableCell(cellContent, isLink = false, colspan = 1, isHeader = fa
 
     if (isLink) {
         const link = document.createElement('a');
-        link.href = `card/${cellContent}.jpg`; // Формирование ссылки на изображение
+        link.href = `../card/${cellContent}.jpg`; // Формирование ссылки на изображение
         link.textContent = cellContent;
         link.classList.add('lightzoom'); // Добавляем класс для lightzoom
         cell.appendChild(link);
