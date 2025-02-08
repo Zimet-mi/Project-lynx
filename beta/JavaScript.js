@@ -95,3 +95,4 @@ document.addEventListener('DOMContentLoaded', async function() {
         $('.lightzoom').lightzoom(); // Настройка lightzoom, если используется jQuery
     });
 });
+window.openCity = openCity;
