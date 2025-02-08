@@ -1,7 +1,3 @@
-import { getSheetId } from './utils.js';
-import { fetchDataWithCache } from './utils.js';
-import { createTableCell } from './utils.js';
-
 const tg = window.Telegram.WebApp;
 
 // Инициализация
@@ -15,7 +11,7 @@ tg.BackButton.onClick(() => {
 tg.sendData(JSON.stringify({ action: 'saveData', sheet: 'jury', row: 5, column: 'A', value: 'Test' }));
 
 // Функции для работы аккордеона
-window.openCity = function(evt, cityName) {
+function openCity(evt, cityName) {
     // Объявляем все переменные
     var i, tabcontent, tablinks;
 
@@ -36,8 +32,8 @@ window.openCity = function(evt, cityName) {
     evt.currentTarget.className += " active";
 	}
 
-// Проверка на существование элемента с классом .time перед попыткой доступа к его textContent
-let timeElement = document.querySelector('.time');
+	// Проверка на существование элемента с классом .time перед попыткой доступа к его textContent
+	let timeElement = document.querySelector('.time');
 	if (timeElement) {
 		let text = timeElement.textContent;
 		console.log(text);
@@ -46,10 +42,56 @@ let timeElement = document.querySelector('.time');
 // Для заполнения расписания
 document.addEventListener('DOMContentLoaded', async function() {
     const SHEET_ID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
+    const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
+    const RANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
+    const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
-    const data = await fetchDataWithCache('Day1', 'A1:B250', 'cachedData', 'cachedTime', 420000);
+    const fetchDataWithCache = async () => {
+        const cacheKey = `cachedData`;
+        const cacheTimeKey = `cachedTime`;
 
-    const cell = createTableCell(cellContent, isLink);
+        const cachedData = localStorage.getItem(cacheKey);
+        const cachedTime = localStorage.getItem(cacheTimeKey);
+
+        if (cachedData && cachedTime) {
+            const currentTime = new Date().getTime();
+            const timeDiff = currentTime - parseInt(cachedTime);
+
+            if (timeDiff < CACHE_EXPIRY) {
+                return JSON.parse(cachedData);
+            }
+        }
+
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const message = `An error has occurred: ${response.status} ${response.statusText}`;
+            const errorData = await response.json();
+            console.error('Error details:', errorData);
+            throw new Error(message);
+        }
+
+        const data = await response.json();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+
+        return data;
+    };
+
+    const createTableCell = (cellContent, isLink = false) => {
+        const cell = document.createElement('td');
+        if (isLink) {
+            const link = document.createElement('a');
+            link.href = `card/${cellContent}.jpg`;
+            link.textContent = cellContent;
+            link.classList.add('lightzoom'); // Настройка lightzoom
+            cell.appendChild(link);
+        } else {
+            cell.textContent = cellContent;
+        }
+        return cell;
+    };
 
     const renderTable = (data) => {
         const tableBody = document.querySelector('#schedule tbody');

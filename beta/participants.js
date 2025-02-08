@@ -1,6 +1,3 @@
-import { initializeAccordions } from './utils.js';
-import { getSheetId } from './utils.js';
-
 document.addEventListener('DOMContentLoaded', function () {
     // Диапазоны для секций
     const section1Range = [2, 38];
@@ -250,6 +247,13 @@ function createInputFields(container, rowId, placeholders, options = []) {
         });
     }
 
+
+	async function getSheetId() {
+		const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec'; 
+		const response = await fetch(url);
+		return response.text();
+	}
+
     // Функция для загрузки данных из Google Sheets с кешированием
     async function fetchDataWithCache(sheetName = 'jury', includeParticipants = false) {
         const SHEET_ID = await getSheetId(); // Получаем ID динамически
@@ -358,6 +362,31 @@ function createInputFields(container, rowId, placeholders, options = []) {
         // Инициализация lightzoom для всех элементов с классом lightzoom после обновления таблицы
         document.dispatchEvent(new Event('tableUpdated'));
     }
+
+    // Функция для инициализации аккордеонов
+    function initializeAccordions() {
+        const accordions = document.getElementsByClassName("accordion");
+
+        for (let i = 0; i < accordions.length; i++) {
+            accordions[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
+                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+                }
+            });
+        }
+
+        // Инициализация lightzoom для всех элементов с классом lightzoom
+        $('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+    }
+
+
+ 
 
 // Функция для сохранения данных в кеш
 function saveData(value, column, row, sheetName = 'jury') {
