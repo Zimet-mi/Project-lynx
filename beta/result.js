@@ -1,28 +1,10 @@
+import { getSheetId } from './utils.js';
+import { fetchDataWithCache } from './utils.js';
+import { initializeAccordions } from './utils.js';
+import { createTableCell } from './utils.js';
+
 // Функция для создания ячейки таблицы
-function createTableCell(cellContent, isLink = false, colspan = 1, isHeader = false) {
-    const cell = document.createElement(isHeader ? 'th' : 'td');
-
-    if (isLink) {
-        const link = document.createElement('a');
-        link.href = `card/${cellContent}.jpg`; // Формирование ссылки на изображение
-        link.textContent = cellContent;
-        link.classList.add('lightzoom'); // Добавляем класс для lightzoom
-        cell.appendChild(link);
-    } else {
-        cell.textContent = cellContent;
-    }
-
-    // Устанавливаем colspan только для ячеек, содержащих ключевые слова
-    if (cellContent.toLowerCase().includes('лучш') || cellContent.toLowerCase().includes('дефиле')) {
-        cell.classList.add('tableHead'); // Применение класса
-        cell.setAttribute('colspan', '8'); // Устанавливаем colspan для ячеек с ключевыми словами
-    } else {
-        // Убираем colspan для обычных ячеек
-        cell.removeAttribute('colspan');
-    }
-
-    return cell;
-}
+const cell = createTableCell(cellContent, isLink, colspan, isHeader);
 
 // Функция для создания таблицы из данных и вставки ее в указанный элемент
 function createTableFromData(data, panelId) {
@@ -73,47 +55,8 @@ function createTableFromData(data, panelId) {
     $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
 }
 
-// Функция для получения ID таблицы через Google Apps Script
-async function getSheetId() {
-    const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
-    const response = await fetch(url);
-    return response.text();
-}
-
 // Функция для загрузки данных из Google Sheets с кешированием
-async function fetchDataWithCache(sheetName = 'juryRes', range = 'A1:L120') {
-    const SHEET_ID = await getSheetId(); // Получаем ID динамически
-    const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // Замените YOUR_API_KEY на ваш ключ API
-    const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
-    const cacheKey = `cachedData_${sheetName}_${range}`;
-    const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
-
-    const cachedData = localStorage.getItem(cacheKey);
-    const cachedTime = localStorage.getItem(cacheTimeKey);
-
-    if (cachedData && cachedTime) {
-        const currentTime = new Date().getTime();
-        const timeDiff = currentTime - parseInt(cachedTime);
-
-        if (timeDiff < CACHE_EXPIRY) {
-            return JSON.parse(cachedData);
-        }
-    }
-
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error(`Ошибка HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
-
-    return data;
-}
+const data = await fetchDataWithCache('juryRes', 'A1:L120', 'cachedData_juryRes', 'cachedTime_juryRes', 420000);
 
 
 // Функция для рендеринга таблицы с данными
