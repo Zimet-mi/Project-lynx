@@ -83,7 +83,7 @@ async function getSheetId() {
 // Функция для загрузки данных из Google Sheets с кешированием
 async function fetchDataWithCache(sheetName = 'juryRes', range = 'A1:L120') {
     const SHEET_ID = await getSheetId(); // Получаем ID динамически
-    const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // Замените YOUR_API_KEY на ваш ключ API
+    const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
     const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
     const cacheKey = `cachedData_${sheetName}_${range}`;
     const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
