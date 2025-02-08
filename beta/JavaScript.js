@@ -10,7 +10,7 @@ tg.BackButton.show();
 tg.BackButton.onClick(() => {
     tg.close(); // Закрыть Mini App
 });
-tg.sendData(JSON.stringify({ action: 'saveData', sheet: 'jury', row: 5, column: 'A', value: 'Test' }));
+tg.sendData(JSON.stringify({ action: 'saveData', sheet: sheet_Name, row: 5, column: 'A', value: 'Test' }));
 
 // Функции для работы аккордеона
 function openCity(evt, cityName) {
@@ -37,11 +37,42 @@ function openCity(evt, cityName) {
 // Для заполнения расписания
 document.addEventListener('DOMContentLoaded', async function() {
     const SHEET_ID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
+    const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
     const RANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
     const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
-    // Используем глобальную функцию fetchDataWithCache и API_KEY из utils.js
-    const data = await fetchDataWithCache('Day1', RANGE, 'cachedData', 'cachedTime', CACHE_EXPIRY);
+    const fetchDataWithCache = async () => {
+        const cacheKey = `cachedData`;
+        const cacheTimeKey = `cachedTime`;
+
+        const cachedData = localStorage.getItem(cacheKey);
+        const cachedTime = localStorage.getItem(cacheTimeKey);
+
+        if (cachedData && cachedTime) {
+            const currentTime = new Date().getTime();
+            const timeDiff = currentTime - parseInt(cachedTime);
+
+            if (timeDiff < CACHE_EXPIRY) {
+                return JSON.parse(cachedData);
+            }
+        }
+
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const message = `An error has occurred: ${response.status} ${response.statusText}`;
+            const errorData = await response.json();
+            console.error('Error details:', errorData);
+            throw new Error(message);
+        }
+
+        const data = await response.json();
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+
+        return data;
+    };
 
     const createTableCell = (cellContent, isLink = false) => {
         const cell = document.createElement('td');
@@ -94,8 +125,18 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.dispatchEvent(new Event('tableUpdated'));
     };
 
-    renderTable(data);
+    const renderData = async () => {
+        try {
+            const data = await fetchDataWithCache();
+            renderTable(data);
+        } catch (error) {
+            console.error(error);
+            alert(`Error: ${error.message}`);
+        }
+    };
 
+    await renderData();
+    
     // Подключение lightzoom после обновления таблицы
     document.addEventListener('tableUpdated', function() {
         $('.lightzoom').lightzoom(); // Настройка lightzoom, если используется jQuery

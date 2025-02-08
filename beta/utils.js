@@ -2,6 +2,21 @@
 
 // Глобальные переменные
 const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
+const sheet_Name = 'jury'; //Основная страница с выставлением оценок жюри
+const ResultSheet = 'juryRes'; // страница с итогами конкретного жюри
+
+// Диапазоны для секций с участниками
+    const section1Range = [2, 38];
+    const section2Range = [39, 84];
+    const section3Range = [85, 90];
+
+//Диапазоны для таблицы с результатами
+const RANGE_PARTS = [
+    'A1:G55', // Диапазон для первой части
+    'A57:G88', // Диапазон для второй части
+    'A90:G112', // Диапазон для третьей части
+    'A114:C500'  // Диапазон для четвертой части
+];
 
 // Функция для получения ID таблицы через Google Apps Script
 async function getSheetId() {

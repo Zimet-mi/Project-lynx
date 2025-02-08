@@ -1,9 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Диапазоны для секций
-    const section1Range = [2, 38];
-    const section2Range = [39, 84];
-    const section3Range = [85, 90];
-	
+    	
     // Функция для фильтрации участников по диапазону
     function filterParticipantsByRange(participants, range) {
         return participants.filter(participant => {
@@ -57,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         select.addEventListener('input', function () {
-            saveData(select.value, dataColumn, dataRow, 'jury');
+            saveData(select.value, dataColumn, dataRow, sheet_Name);
         });
 
         return select;
@@ -82,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     select.addEventListener('input', function () {
-        saveData(select.value, dataColumn, dataRow, 'jury');
+        saveData(select.value, dataColumn, dataRow, sheet_Name);
     });
 
     return select;
@@ -103,9 +99,9 @@ function createCheckbox(id, dataColumn, dataRow, initialValue) {
 
     checkbox.addEventListener('change', function () {
         if (checkbox.checked) {
-            saveData('Номинант', dataColumn, dataRow, 'jury');
+            saveData('Номинант', dataColumn, dataRow, sheet_Name);
         } else {
-            saveData('', dataColumn, dataRow, 'jury');
+            saveData('', dataColumn, dataRow, sheet_Name);
         }
     });
 
@@ -162,7 +158,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     textarea.value = placeholders['comment'] || '';
 
     textarea.addEventListener('input', debounce(function () {
-        saveData(this.value, 'F', rowId, 'jury');
+        saveData(this.value, 'F', rowId, sheet_Name);
     }, 300));
 
     textareaRow.appendChild(commentLabelDiv);
@@ -255,9 +251,9 @@ function createInputFields(container, rowId, placeholders, options = []) {
 	}
 
     // Функция для загрузки данных из Google Sheets с кешированием
-    async function fetchDataWithCache(sheetName = 'jury', includeParticipants = false) {
+    async function fetchDataWithCache(sheetName = sheet_Name, includeParticipants = false) {
         const SHEET_ID = await getSheetId(); // Получаем ID динамически
-        const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
+//      const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
         const RANGE = 'A1:L200';
         const CACHE_EXPIRY = 120000; // 2 минуты в миллисекундах
         const cacheKey = `cachedData_${sheetName}`;
@@ -320,7 +316,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 	}
 
     // Функция для отображения данных
-    async function renderData(sheetName = 'jury') {
+    async function renderData(sheetName = sheet_Name) {
         const { data, participants } = await fetchDataWithCache(sheetName, true);
         
         const section1Container = document.getElementById('section1');
@@ -389,11 +385,8 @@ function createInputFields(container, rowId, placeholders, options = []) {
  
 
 // Функция для сохранения данных в кеш
-function saveData(value, column, row, sheetName = 'jury') {
+function saveData(value, column, row, sheetName = sheet_Name) {
     const cacheKey = `unsavedData_${row}_${column}`;
-    
-    // Логируем данные, которые сохраняем в кеш
-    // console.log(`Сохраняем данные в кеш: ${value}, row: ${row}, column: ${column}, sheet: ${sheetName}`);
     
     // Сохраняем данные в локальное хранилище
     localStorage.setItem(cacheKey, JSON.stringify({
@@ -403,12 +396,9 @@ function saveData(value, column, row, sheetName = 'jury') {
         sheet: sheetName
     }));
     
-    // Попытка отправить данные на сервер, если интернет есть
     if (navigator.onLine) {
-        // console.log('Интернет доступен, пробуем отправить данные...');
         sendDataToServer(cacheKey);
     } else {
-     //   console.warn('Интернет недоступен, данные сохранены в кеш.');
     }
 }
 
@@ -416,7 +406,6 @@ function saveData(value, column, row, sheetName = 'jury') {
 async function sendDataToServer(cacheKey) {
     const cachedData = localStorage.getItem(cacheKey);
     if (!cachedData) {
-    //    console.error(`Нет данных в кеше для ключа: ${cacheKey}`);
         return;
     }
 
@@ -429,19 +418,14 @@ async function sendDataToServer(cacheKey) {
         sheet: sheet
     });
 
-    // console.log(`Отправляем данные на сервер: ${params.toString()}`);
-
     try {
         const response = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
 
         if (response.ok) {
-     //       console.log(`Данные успешно отправлены для ключа ${cacheKey}`);
-            localStorage.removeItem(cacheKey); // Удаляем из кеша при успешной отправке
+            localStorage.removeItem(cacheKey); 
         } else {
-     //       console.error(`Ошибка отправки данных на сервер для ключа ${cacheKey}: ${response.statusText}`);
         }
     } catch (error) {
-     //   console.error('Ошибка сети при отправке данных:', error);
     }
 }
 
@@ -450,7 +434,6 @@ async function sendAllCachedData() {
     for (let i = 0; i < localStorage.length; i++) {
         const cacheKey = localStorage.key(i);
         if (cacheKey.startsWith('unsavedData_')) {
-          //  console.log(`Отправляем кешированные данные для ключа: ${cacheKey}`);
             await sendDataToServer(cacheKey);
         }
     }
@@ -458,18 +441,15 @@ async function sendAllCachedData() {
 
 // Обработчик кнопки для отправки кешированных данных
 document.getElementById('sendCacheButton').addEventListener('click', async () => {
-   // console.log('Пытаемся отправить все кешированные данные...');
     await sendAllCachedData();
 });
 
 // Событие при потере интернета
 window.addEventListener('offline', () => {
-   // console.warn('Интернет пропал. Оценки будут сохранены в кеше.');
 });
 
 // Событие при восстановлении интернета
 window.addEventListener('online', () => {
-   // console.info('Интернет появился. Вы можете отправить кешированные данные.');
 });
 
 // Привязка события change к функции сохранения данных
@@ -477,7 +457,7 @@ function attachInputListeners() {
     const textareas = document.querySelectorAll('textarea.data-input');
     textareas.forEach(textarea => {
         textarea.addEventListener('change', function () {
-            saveData(this.value, this.getAttribute('data-column'), this.getAttribute('data-row'), 'jury');
+            saveData(this.value, this.getAttribute('data-column'), this.getAttribute('data-row'), sheet_Name);
         });
     });
 }
@@ -489,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 	
 	// Инициализация загрузки данных и отображение таблицы
-    renderData('jury');
+    renderData(sheet_Name);
 
 
 });

@@ -81,9 +81,9 @@ async function getSheetId() {
 }
 
 // Функция для загрузки данных из Google Sheets с кешированием
-async function fetchDataWithCache(sheetName = 'juryRes', range = 'A1:L120') {
+async function fetchDataWithCache(sheetName = ResultSheet, range = 'A1:L120') {
     const SHEET_ID = await getSheetId(); // Получаем ID динамически
-    const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
+//    const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
     const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
     const cacheKey = `cachedData_${sheetName}_${range}`;
     const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
@@ -118,17 +118,10 @@ async function fetchDataWithCache(sheetName = 'juryRes', range = 'A1:L120') {
 
 // Функция для рендеринга таблицы с данными
 async function renderTable() {
-    const RANGE_PARTS = [
-        'A1:G55', // Диапазон для первой части
-        'A57:G88', // Диапазон для второй части
-        'A90:G112', // Диапазон для третьей части
-        'A114:C500'  // Диапазон для четвертой части
-    ];
-
     const parts = [];
     for (const range of RANGE_PARTS) {
         try {
-            const data = await fetchDataWithCache('juryRes', range);
+            const data = await fetchDataWithCache(ResultSheet, range);
             if (!data || !data.values) {
                 console.warn(`Нет данных для диапазона ${range}`);
                 continue;
@@ -147,7 +140,7 @@ async function renderTable() {
 }
 
 // Функция для отображения данных
-async function renderData(sheetName = 'juryRes') {
+async function renderData(sheetName = ResultSheet) {
     try {
         // Рендеринг итоговой таблицы с данными
         await renderTable();
@@ -162,5 +155,5 @@ async function renderData(sheetName = 'juryRes') {
 
 // Инициализация загрузки данных и отображение таблицы
 document.addEventListener('DOMContentLoaded', function() {
-    renderData('juryRes');
+    renderData(ResultSheet);
 });
