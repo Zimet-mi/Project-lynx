@@ -1,3 +1,6 @@
+// participants.js
+// Нужно вынести в констаны создание полей ввода для оценок, чекбоксов
+// А так же, не понятно за что отвечающий, диапазон.
 document.addEventListener('DOMContentLoaded', function () {
     	
     // Функция для фильтрации участников по диапазону
@@ -253,9 +256,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     // Функция для загрузки данных из Google Sheets с кешированием
     async function fetchDataWithCache(sheetName = sheet_Name, includeParticipants = false) {
         const SHEET_ID = await getSheetId(); // Получаем ID динамически
-//      const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
         const RANGE = 'A1:L200';
-        const CACHE_EXPIRY = 120000; // 2 минуты в миллисекундах
         const cacheKey = `cachedData_${sheetName}`;
         const cacheTimeKey = `cachedTime_${sheetName}`;
 
@@ -266,7 +267,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
             const currentTime = new Date().getTime();
             const timeDiff = currentTime - parseInt(cachedTime);
 
-            if (timeDiff < CACHE_EXPIRY) {
+            if (timeDiff < CACHE_PARICIPANTS_EXPIRY) {
                 const parsedData = JSON.parse(cachedData);
                 if (includeParticipants) {
                     return { data: parsedData, participants: extractParticipants(parsedData) };
@@ -431,12 +432,18 @@ async function sendDataToServer(cacheKey) {
 
 // Функция для отправки всех кешированных данных
 async function sendAllCachedData() {
+    const promises = []; // Массив для хранения промисов
+
     for (let i = 0; i < localStorage.length; i++) {
         const cacheKey = localStorage.key(i);
         if (cacheKey.startsWith('unsavedData_')) {
-            await sendDataToServer(cacheKey);
+            // Добавляем промис для отправки данных в массив
+            promises.push(sendDataToServer(cacheKey));
         }
     }
+
+    // Ожидаем завершения всех промисов параллельно
+    await Promise.all(promises);
 }
 
 // Обработчик кнопки для отправки кешированных данных

@@ -1,17 +1,5 @@
 // JavaScript.js
-
-const tg = window.Telegram.WebApp;
-
-// Инициализация
-tg.ready(); // Сообщает Telegram, что Mini App готов к использованию
-const user = tg.initDataUnsafe.user;
-console.log(user); // { id: 12345, first_name: "John", last_name: "Doe", username: "johndoe" }
-tg.BackButton.show();
-tg.BackButton.onClick(() => {
-    tg.close(); // Закрыть Mini App
-});
-tg.sendData(JSON.stringify({ action: 'saveData', sheet: sheet_Name, row: 5, column: 'A', value: 'Test' }));
-
+// Выноса в константы более не требуется
 // Функции для работы аккордеона
 function openCity(evt, cityName) {
     // Объявляем все переменные
@@ -36,10 +24,6 @@ function openCity(evt, cityName) {
 
 // Для заполнения расписания
 document.addEventListener('DOMContentLoaded', async function() {
-    const SHEET_ID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
-    const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
-    const RANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
-    const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
     const fetchDataWithCache = async () => {
         const cacheKey = `cachedData`;
@@ -57,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
 
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${timetableID}/values/${timetableRANGE}?key=${API_KEY}`;
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -78,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const cell = document.createElement('td');
         if (isLink) {
             const link = document.createElement('a');
-            link.href = `card/${cellContent}.jpg`;
+            link.href = `../card/${cellContent}.jpg`;
             link.textContent = cellContent;
             link.classList.add('lightzoom'); // Настройка lightzoom
             cell.appendChild(link);

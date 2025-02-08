@@ -1,3 +1,5 @@
+// result.js
+// Выноса в константы более не требуется
 // Функция для создания ячейки таблицы
 function createTableCell(cellContent, isLink = false, colspan = 1, isHeader = false) {
     const cell = document.createElement(isHeader ? 'th' : 'td');
@@ -73,18 +75,9 @@ function createTableFromData(data, panelId) {
     $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
 }
 
-// Функция для получения ID таблицы через Google Apps Script
-async function getSheetId() {
-    const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
-    const response = await fetch(url);
-    return response.text();
-}
-
 // Функция для загрузки данных из Google Sheets с кешированием
 async function fetchDataWithCache(sheetName = ResultSheet, range = 'A1:L120') {
     const SHEET_ID = await getSheetId(); // Получаем ID динамически
-//    const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
-    const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
     const cacheKey = `cachedData_${sheetName}_${range}`;
     const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
 
