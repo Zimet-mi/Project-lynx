@@ -128,4 +128,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Автообновление каждые 30 секунд
-setInterval(renderTable, 5000);
+setInterval(renderTable, 30000);
