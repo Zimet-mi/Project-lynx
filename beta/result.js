@@ -1,5 +1,3 @@
-// result.js
-// Выноса в константы более не требуется
 // Функция для создания ячейки таблицы
 function createTableCell(cellContent, isLink = false, colspan = 1, isHeader = false) {
     const cell = document.createElement(isHeader ? 'th' : 'td');
@@ -73,19 +71,9 @@ function createTableFromData(data, panelId) {
     $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
 }
 
-// Функция для загрузки данных из Google Sheets с кешированием
-async function fetchDataWithCache(sheetName = ResultSheet, range = rangeRes) {
+// Функция для загрузки данных из Google Sheets без кеширования
+async function fetchData(sheetName = ResultSheet, range = rangeRes) {
     const SHEET_ID = await getSheetId();
-    const cacheKey = `cachedData_${sheetName}_${range}`;
-    const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
-
-    const cached = localStorage.getItem(cacheKey);
-    const cachedTime = localStorage.getItem(cacheTimeKey);
-
-    if (cached && cachedTime && (Date.now() - parseInt(cachedTime) < CACHE_EXPIRY)) {
-        return JSON.parse(cached);
-    }
-
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
     const response = await fetch(url);
 
@@ -94,21 +82,18 @@ async function fetchDataWithCache(sheetName = ResultSheet, range = rangeRes) {
     }
 
     const data = await response.json();
-    localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(cacheTimeKey, Date.now().toString());
-
     return data;
 }
 
 // Функция для рендеринга таблицы с данными
 async function renderTable() {
     try {
-        const dataParts = await Promise.all(RANGE_PARTS.map(range => fetchDataWithCache(ResultSheet, range).catch(err => {
+        const dataParts = await Promise.all(RANGE_PARTS.map(range => fetchData(ResultSheet, range).catch(err => {
             console.error(`Ошибка при загрузке данных для диапазона ${range}:`, err);
             return null;
         })));
 
-        // Создание таблиц для каждой части
+        // Обновление таблиц для каждой части
         createTableFromData(dataParts[0] || {}, 'panel1');
         createTableFromData(dataParts[1] || {}, 'panel2');
         createTableFromData(dataParts[2] || {}, 'panel3');
@@ -117,7 +102,6 @@ async function renderTable() {
         console.error('Ошибка при загрузке данных:', error);
     }
 }
-
 
 // Функция для отображения данных
 async function renderData(sheetName = ResultSheet) {
@@ -138,9 +122,10 @@ async function renderData(sheetName = ResultSheet) {
     }
 }
 
-
-
 // Инициализация загрузки данных и отображение таблицы
 document.addEventListener('DOMContentLoaded', function() {
     renderData(ResultSheet);
 });
+
+// Автообновление каждые 30 секунд
+setInterval(renderTable, 5000);
