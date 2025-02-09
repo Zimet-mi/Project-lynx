@@ -31,20 +31,20 @@ function createTableFromData(data, panelId) {
     const panel = document.getElementById(panelId);
     if (!panel) return;
 
-    // Проверяем, есть ли данные и содержат ли они значения
     if (!data || !data.values || data.values.length === 0) {
         console.warn(`Нет данных для панели ${panelId}`);
         panel.innerHTML = 'Нет данных для отображения.';
         return;
     }
 
+    const fragment = document.createDocumentFragment();
     const table = document.createElement('table');
-    table.classList.add('data-table'); // Класс для стилизации таблицы
+    table.classList.add('data-table');
 
     const thead = document.createElement('thead');
     const tbody = document.createElement('tbody');
 
-    // Создание заголовков таблицы (если нужно)
+    // Заголовки таблицы
     const headerRow = document.createElement('tr');
     data.values[0].forEach(cellContent => {
         const th = document.createElement('th');
@@ -53,44 +53,37 @@ function createTableFromData(data, panelId) {
     });
     thead.appendChild(headerRow);
 
-    // Создание строк таблицы
+    // Тело таблицы
     data.values.slice(1).forEach(row => {
         const tr = document.createElement('tr');
         row.forEach((cellContent, colIndex) => {
-            const isLink = colIndex === 0; // Предполагаем, что ссылки на изображения находятся в первом столбце
-            const td = createTableCell(cellContent, isLink);
-            tr.appendChild(td);
+            tr.appendChild(createTableCell(cellContent, colIndex === 0));
         });
         tbody.appendChild(tr);
     });
 
     table.appendChild(thead);
     table.appendChild(tbody);
+    fragment.appendChild(table);
 
-    // Очистка панели и добавление новой таблицы
-    panel.innerHTML = '';
-    panel.appendChild(table);
+    panel.innerHTML = ''; // Очистка перед добавлением
+    panel.appendChild(fragment); // Добавление всей таблицы сразу
 
-    // Инициализируем lightzoom для изображений в таблице
+    // Инициализация lightzoom
     $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
 }
 
 // Функция для загрузки данных из Google Sheets с кешированием
-async function fetchDataWithCache(sheetName = ResultSheet, range = 'A1:L120') {
-    const SHEET_ID = await getSheetId(); // Получаем ID динамически
+async function fetchDataWithCache(sheetName = ResultSheet, range = rangeRes) {
+    const SHEET_ID = await getSheetId();
     const cacheKey = `cachedData_${sheetName}_${range}`;
     const cacheTimeKey = `cachedTime_${sheetName}_${range}`;
 
-    const cachedData = localStorage.getItem(cacheKey);
+    const cached = localStorage.getItem(cacheKey);
     const cachedTime = localStorage.getItem(cacheTimeKey);
 
-    if (cachedData && cachedTime) {
-        const currentTime = new Date().getTime();
-        const timeDiff = currentTime - parseInt(cachedTime);
-
-        if (timeDiff < CACHE_EXPIRY) {
-            return JSON.parse(cachedData);
-        }
+    if (cached && cachedTime && (Date.now() - parseInt(cachedTime) < CACHE_EXPIRY)) {
+        return JSON.parse(cached);
     }
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
@@ -101,50 +94,51 @@ async function fetchDataWithCache(sheetName = ResultSheet, range = 'A1:L120') {
     }
 
     const data = await response.json();
-
     localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+    localStorage.setItem(cacheTimeKey, Date.now().toString());
 
     return data;
 }
 
-
 // Функция для рендеринга таблицы с данными
 async function renderTable() {
-    const parts = [];
-    for (const range of RANGE_PARTS) {
-        try {
-            const data = await fetchDataWithCache(ResultSheet, range);
-            if (!data || !data.values) {
-                console.warn(`Нет данных для диапазона ${range}`);
-                continue;
-            }
-            parts.push(data);
-        } catch (error) {
-            console.error(`Ошибка при загрузке данных для диапазона ${range}:`, error);
-        }
-    }
+    try {
+        const dataParts = await Promise.all(RANGE_PARTS.map(range => fetchDataWithCache(ResultSheet, range).catch(err => {
+            console.error(`Ошибка при загрузке данных для диапазона ${range}:`, err);
+            return null;
+        })));
 
-    // Создание таблиц для каждой части и добавление в соответствующие аккордеоны
-    createTableFromData(parts[0] || {}, 'panel1');
-    createTableFromData(parts[1] || {}, 'panel2');
-    createTableFromData(parts[2] || {}, 'panel3');
-    createTableFromData(parts[3] || {}, 'panel4');
+        // Создание таблиц для каждой части
+        createTableFromData(dataParts[0] || {}, 'panel1');
+        createTableFromData(dataParts[1] || {}, 'panel2');
+        createTableFromData(dataParts[2] || {}, 'panel3');
+        createTableFromData(dataParts[3] || {}, 'panel4');
+    } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
+    }
 }
+
 
 // Функция для отображения данных
 async function renderData(sheetName = ResultSheet) {
     try {
-        // Рендеринг итоговой таблицы с данными
         await renderTable();
 
-        // Инициализация аккордеонов
-        initializeAccordions();
+        // Проверяем, загружена ли функция initializeAccordions
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof initializeAccordions === "function") {
+                initializeAccordions();
+            } else {
+                console.warn("Функция initializeAccordions не найдена, возможно, скрипт не загружен.");
+            }
+        });
 
     } catch (error) {
-        console.error('Error rendering data:', error);
+        console.error("Ошибка при рендеринге данных:", error);
     }
 }
+
+
 
 // Инициализация загрузки данных и отображение таблицы
 document.addEventListener('DOMContentLoaded', function() {

@@ -360,27 +360,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
         document.dispatchEvent(new Event('tableUpdated'));
     }
 
-    // Функция для инициализации аккордеонов
-    function initializeAccordions() {
-        const accordions = document.getElementsByClassName("accordion");
 
-        for (let i = 0; i < accordions.length; i++) {
-            accordions[i].addEventListener("click", function () {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
-                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
-                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-                }
-            });
-        }
-
-        // Инициализация lightzoom для всех элементов с классом lightzoom
-        $('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-    }
 
 
  

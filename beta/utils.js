@@ -18,6 +18,9 @@ const RANGE_PARTS = [
     'A114:C500'  // Диапазон для четвертой части
 ];
 
+//Диапазон для данных итоговой таблицы каждого жюри. Общий парсинг
+const rangeRes = 'A1:L500';
+
 //Страница и диапазон расписания
     const timetableID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
     const timetableRANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
@@ -28,7 +31,7 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 //Время жизни кеша для вкладок участников. Нужно для сохранения выставленных оценок, чтобы каждый раз их не запрашивать
 const CACHE_PARICIPANTS_EXPIRY = 120000; // 2 минуты в миллисекундах	
 	
-//ДАЛЬШЕ ИДУТ ФУНКЦИИ
+//___________________ДАЛЬШЕ ИДУТ ФУНКЦИИ_________________________
 // Функция для получения ID таблицы через Google Apps Script
 async function getSheetId() {
     const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
@@ -66,6 +69,28 @@ async function fetchDataWithCache(sheetName, range, cacheKey, cacheTimeKey, cach
 
     return data;
 }
+
+    // Функция для инициализации аккордеонов
+    function initializeAccordions() {
+        const accordions = document.getElementsByClassName("accordion");
+
+        for (let i = 0; i < accordions.length; i++) {
+            accordions[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
+                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+                }
+            });
+        }
+
+        // Инициализация lightzoom для всех элементов с классом lightzoom
+        $('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+    }
 
 // Делаем функции и переменные глобальными
 window.API_KEY = API_KEY;
