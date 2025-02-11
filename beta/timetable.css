@@ -1,74 +1,54 @@
 .table_blur {
-    background: #f5ffff;
-    text-align: left;
-    font-size: 1.07em;
-    padding-bottom: 150px;
-    max-width: 90em;
+    background: #ffffff;
     border-collapse: collapse;
-    }
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.table_blur th,
+.table_blur td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
 
 .table_blur th {
-    border-top: 1px solid #777777; 
-    border-bottom: 1px solid #777777;
-    box-shadow: inset 0 1px 0 #999999, inset 0 -1px 0 #999999;
-    color: white;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    padding-left: 20px;
-    position: relative;
-    text-align: center;
-    }
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
 
-.table_blur th:after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 0;
-    top: 25%;
-    height: 25%;
-    width: 100%;
-    background: linear-gradient(rgba(255, 255, 255, 0), rgba(255,255,255,.08));
-    }
 
-.table_blur tr:nth-child(odd) {
-    background: #ebf3f9;
-    }
+.table_blur tr:hover {
+    background-color: #f1f1f1;
+}
 
-.table_blur th:first-child {
-    border-left: 1px solid #777777;
-    border-bottom:  1px solid #777777; 
-    box-shadow: inset 1px 1px 0 #999999, inset 0 -1px 0 #999999;
-    }
 
-.table_blur th:last-child {
-    border-left: 1px solid #777777;
-    border-bottom:  1px solid #777777;
-    box-shadow: inset -1px 1px 0 #999999, inset 0 -1px 0 #999999;
-    }
-
-.table_blur td {
-    border: 1px solid #e3eef7;
-    padding: 15px 20px;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    position: relative;
-    transition: all 0.5s ease;
-    word-wrap: break-word;
-    }
-
+/* Стили для выделенных строк */
 .smort {
-    background: linear-gradient(#571508, #f06559) !important;
-	font-weight: bold !important;
-	font-size: 1.1em !important;
-	text-align: center !important; /* Градиент для плашки СМОТР в расписании  */
-    }
+    background-color: #ffebee !important;
+    font-weight: bold !important;
+    color: #c62828 !important;
+}
 
 .block {
-	font-weight: bold !important;
-	font-size: 1.1em !important;
-	text-align: center !important;
-    background: linear-gradient(#082254, #5c91f2) !important; /* Градиент для плашки БЛОК № в расписании  */
-    }
+    background-color: #e3f2fd !important;
+    font-weight: bold !important;
+    color: #1565c0 !important;
+}
+
+.B {
+    font-weight: bold !important;
+    color: #2e7d32 !important;
+    background-color: #e8f5e9 !important;
+}
 
 table {
     margin-left: auto;
@@ -119,6 +99,22 @@ table {
     border-top: none;
     position: relative; /*Таблицу делаем поверх картинок*/
     }
+	
+	@media (max-width: 768px) {
+    .table_blur th,
+    .table_blur td {
+        padding: 10px;
+    }
+
+    .tab button {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+
+    .tabcontent {
+        padding: 15px;
+    }
+}
 
 /*Аккордеон*/
 .accordion {
