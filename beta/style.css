@@ -182,9 +182,6 @@ input[type="checkbox"] {
 		overflow-x: auto;
 		width: 100%; /* Ширина контейнера таблицы */
 	}
-	.accordion {
-		width: 95%;
-	}
 
 	/* Ограничение ширины таблицы и предотвращение её выхода за пределы контейнера */
 	table {
@@ -216,10 +213,79 @@ input[type="checkbox"] {
 	}
 }
 
+/* Стили для таблицы в аккордеоне */
+.panel table {
+    width: 100%; /* Ширина таблицы 100% от родительского контейнера */
+    max-width: 100%; /* Ограничиваем максимальную ширину таблицы */
+    border-collapse: collapse; /* Убираем двойные границы */
+    table-layout: auto; /* Автоматическая ширина ячеек */
+    font-size: 14px; /* Размер текста в таблице */
+    overflow-x: auto; /* Горизонтальная прокрутка, если таблица не влезает */
+    display: block; /* Для корректной работы overflow-x */
+}
+
+.panel th,
+.panel td {
+    padding: 8px; /* Отступы внутри ячеек */
+    text-align: left; /* Выравнивание текста по левому краю */
+    border: 1px solid #ddd; /* Границы ячеек */
+    word-wrap: break-word; /* Перенос длинных слов */
+    min-width: 100px; /* Минимальная ширина ячеек */
+    max-width: 200px; /* Максимальная ширина ячеек */
+    overflow: hidden; /* Прячем переполняющий текст */
+    box-sizing: border-box; /* Учитываем padding в ширине */
+    white-space: normal; /* Разрешаем перенос текста */
+}
+
+/* Стили для заголовков таблицы */
+.panel th {
+    background-color: #f2f2f2; /* Фон заголовков */
+    font-weight: bold; /* Жирный шрифт */
+    min-width: 100px; /* Минимальная ширина заголовков */
+    max-width: 200px; /* Максимальная ширина заголовков */
+    font-size: 16px; /* Размер текста в заголовках */
+}
+
+.panel th.tableHead {
+    background-color: #FFB040; /* Оранжевый цвет фона */
+    text-align: center !important;
+    font-size: 18px; /* Размер текста */
+    padding: 8px; /* Отступы внутри ячейки */
+    width: 100%; /* Ширина ячейки 100% */
+    display: table-cell; /* Убедимся, что ячейка растягивается на всю ширину */
+    border: 1px solid #ddd; /* Границы ячейки */
+}
+
+/* Стили для ячеек с классом tableHead */
 .tableHead {
-    font-weight: bold; 
-    background-color: #FFB040; 
-    text-align: center !important; 
-	font-size: 20px;
-    padding: 8px;
+    font-weight: bold;
+    background-color: #FFB040; /* Оранжевый цвет фона */
+    text-align: center !important;
+    font-size: 18px; /* Размер текста */
+    padding: 8px; /* Отступы внутри ячейки */
+    width: 100%; /* Ширина ячейки 100% */
+    display: table-cell; /* Убедимся, что ячейка растягивается на всю ширину */
+    border: 1px solid #ddd; /* Границы ячейки */
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .panel table {
+        font-size: 12px; /* Уменьшаем размер текста на мобильных устройствах */
+    }
+
+    .panel th,
+    .panel td {
+        min-width: 80px; /* Уменьшаем минимальную ширину ячеек на мобильных устройствах */
+        max-width: 150px; /* Уменьшаем максимальную ширину ячеек на мобильных устройствах */
+        padding: 6px; /* Уменьшаем отступы на мобильных устройствах */
+    }
+
+    .panel th {
+        font-size: 14px; /* Уменьшаем размер текста в заголовках на мобильных устройствах */
+    }
+
+    .tableHead {
+        font-size: 16px; /* Уменьшаем размер текста в tableHead на мобильных устройствах */
+    }
 }
