@@ -72,25 +72,34 @@ async function fetchDataWithCache(sheetName, range, cacheKey, cacheTimeKey, cach
 
     // Функция для инициализации аккордеонов
     function initializeAccordions() {
-        const accordions = document.getElementsByClassName("accordion");
+    const accordions = document.getElementsByClassName("accordion");
 
-        for (let i = 0; i < accordions.length; i++) {
-            accordions[i].addEventListener("click", function () {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
-                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
-                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+    for (let i = 0; i < accordions.length; i++) {
+        accordions[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            const panel = this.nextElementSibling;
+
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+
+                // Ленивая загрузка данных для аккордеона
+                if (!panel.dataset.loaded) {
+                    loadAccordionData(panel);
+                    panel.dataset.loaded = true;
                 }
-            });
-        }
 
-        // Инициализация lightzoom для всех элементов с классом lightzoom
-        $('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+                $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
+            }
+        });
     }
+}
+
+async function loadAccordionData(panel) {
+    // Загрузите данные для аккордеона, если это необходимо
+    // Например, можно загрузить дополнительные данные с сервера
+}
 
 // Делаем функции и переменные глобальными
 window.API_KEY = API_KEY;

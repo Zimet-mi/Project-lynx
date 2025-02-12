@@ -1,25 +1,56 @@
 // JavaScript.js
 // Выноса в константы более не требуется
 // Функции для работы аккордеона
-function openCity(evt, cityName) {
-    // Объявляем все переменные
-    var i, tabcontent, tablinks;
+document.addEventListener('DOMContentLoaded', async function () {
+    const tabButtons = document.querySelectorAll('.tablinks');
+    const tabContents = document.querySelectorAll('.tabcontent');
 
-    // Получаем все элементы с классом "tabcontent" и скрываем их
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
+    tabButtons.forEach(button => {
+        button.addEventListener('click', async function (event) {
+            const targetTab = event.currentTarget.getAttribute('data-tab'); // Используем data-tab
+            const tabContent = document.getElementById(targetTab);
+
+            // Скрываем все вкладки
+            tabContents.forEach(content => {
+                content.style.display = 'none';
+            });
+
+            // Убираем активный класс у всех кнопок
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Показываем текущую вкладку и добавляем класс active
+            if (tabContent) {
+                tabContent.style.display = 'block';
+                event.currentTarget.classList.add('active');
+
+                // Загружаем данные только при первом открытии вкладки
+                if (!tabContent.dataset.loaded) {
+                    await loadTabData(targetTab);
+                    tabContent.dataset.loaded = true;
+                }
+            }
+        });
+    });
+});
+
+async function loadTabData(tabId) {
+    switch (tabId) {
+        case 'One':
+        case 'Two':
+        case 'Three':
+            await renderData(sheet_Name);
+            break;
+        case 'table':
+            // Убедитесь, что функция renderScheduleData определена
+            // await renderScheduleData();
+            break;
+        case 'red':
+            await renderTable();
+            break;
+        // Добавьте другие вкладки по аналогии
     }
-
-    // Получаем все элементы с классом "tablinks" и удаляем класс "active"
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
-    // Отображаем текущую вкладку и добавляем класс "active" к кнопке, открывшей вкладку
-    document.getElementById(cityName).style.display = "block";
-    evt.currentTarget.className += " active";
 }
 
 // Для заполнения расписания

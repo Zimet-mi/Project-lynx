@@ -160,9 +160,18 @@ function createInputFields(container, rowId, placeholders, options = []) {
     textarea.setAttribute('data-row', rowId);
     textarea.value = placeholders['comment'] || '';
 
-    textarea.addEventListener('input', debounce(function () {
-        saveData(this.value, 'F', rowId, sheet_Name);
-    }, 300));
+	function debounce(func, wait) {
+		let timeout;
+		return function (...args) {
+			const context = this;
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func.apply(context, args), wait);
+		};
+	}
+
+	textarea.addEventListener('input', debounce(function () {
+		saveData(this.value, 'F', rowId, sheet_Name);
+	}, 300));
 
     textareaRow.appendChild(commentLabelDiv);
     textareaRow.appendChild(textarea);

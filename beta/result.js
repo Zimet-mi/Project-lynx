@@ -35,7 +35,7 @@ function createTableFromData(data, panelId) {
         return;
     }
 
-    const fragment = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment(); // Используем DocumentFragment
     const table = document.createElement('table');
     table.classList.add('data-table');
 
