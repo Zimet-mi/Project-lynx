@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     tabButtons.forEach(button => {
         button.addEventListener('click', async function (event) {
-            const targetTab = event.currentTarget.getAttribute('data-tab'); // Используем data-tab
+            const targetTab = event.currentTarget.getAttribute('data-tab');
             const tabContent = document.getElementById(targetTab);
 
             // Скрываем все вкладки
@@ -30,6 +30,21 @@ document.addEventListener('DOMContentLoaded', async function () {
                     await loadTabData(targetTab);
                     tabContent.dataset.loaded = true;
                 }
+            }
+        });
+    });
+	
+	document.querySelectorAll('.lightzoom').forEach(img => {
+        img.addEventListener('click', function (event) {
+            event.preventDefault(); // Отменяем стандартное поведение ссылки
+            const imageUrl = this.href; // Получаем URL изображения
+
+            if (isTelegramApp()) {
+                // В Telegram Mini App используем Telegram.WebApp.openPhoto
+                Telegram.WebApp.openPhoto(imageUrl);
+            } else {
+                // На сайте оставляем lightzoom
+                $(this).lightzoom({ speed: 400, overlayOpacity: 0.5 });
             }
         });
     });

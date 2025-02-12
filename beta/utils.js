@@ -30,6 +30,11 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
 //Время жизни кеша для вкладок участников. Нужно для сохранения выставленных оценок, чтобы каждый раз их не запрашивать
 const CACHE_PARICIPANTS_EXPIRY = 120000; // 2 минуты в миллисекундах	
+
+// Определение, что мы используем TgApp
+const isTelegramApp = () => {
+    return window.Telegram && Telegram.WebApp && Telegram.WebApp.openPhoto;
+};
 	
 //___________________ДАЛЬШЕ ИДУТ ФУНКЦИИ_________________________
 // Функция для получения ID таблицы через Google Apps Script
@@ -101,21 +106,6 @@ async function loadAccordionData(panel) {
     // Например, можно загрузить дополнительные данные с сервера
 }
 
-// Добавляем обработчик для изображений с классом lightzoom
-document.querySelectorAll('.lightzoom').forEach(img => {
-    img.addEventListener('click', function (event) {
-        event.preventDefault(); // Отменяем стандартное поведение ссылки
-        const imageUrl = this.href; // Получаем URL изображения
-
-        // Открываем изображение в полноэкранном режиме через Telegram API
-        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.openPhoto) {
-            Telegram.WebApp.openPhoto(imageUrl);
-        } else {
-            // Если Telegram API недоступен, открываем изображение в новой вкладке
-            window.open(imageUrl, '_blank');
-        }
-    });
-});
 
 // Делаем функции и переменные глобальными
 window.API_KEY = API_KEY;
