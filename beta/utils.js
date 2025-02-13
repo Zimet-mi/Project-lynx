@@ -31,11 +31,6 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 //Время жизни кеша для вкладок участников. Нужно для сохранения выставленных оценок, чтобы каждый раз их не запрашивать
 const CACHE_PARICIPANTS_EXPIRY = 120000; // 2 минуты в миллисекундах	
 	
-// Функция для проверки, находится ли пользователь в Telegram Mini App
-const isTelegramApp = () => {
-    return window.Telegram && Telegram.WebApp;
-};
-	
 //___________________ДАЛЬШЕ ИДУТ ФУНКЦИИ_________________________
 // Функция для получения ID таблицы через Google Apps Script
 async function getSheetId() {
@@ -110,4 +105,3 @@ async function loadAccordionData(panel) {
 window.API_KEY = API_KEY;
 window.getSheetId = getSheetId;
 window.fetchDataWithCache = fetchDataWithCache;
-window.isTelegramApp = isTelegramApp;
