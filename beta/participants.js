@@ -205,7 +205,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 }
 
     // Функция для создания панели участника
- function createParticipantPanel(participant, placeholders) {
+function createParticipantPanel(participant, placeholders) {
     const panel = document.createElement('div');
     panel.className = 'panel';
 
@@ -213,16 +213,26 @@ function createInputFields(container, rowId, placeholders, options = []) {
     button.className = 'accordion';
     button.textContent = `${participant.id} ${participant.name}`;
 
-    const imgLink = document.createElement('a');
-    imgLink.href = `../card/${participant.img}`;
-    imgLink.className = 'lightzoom';
-
+    // Создаем изображение
     const img = document.createElement('img');
     img.src = `../card/${participant.img}`;
     img.className = 'thumbnail';
 
-    imgLink.appendChild(img);
-    panel.appendChild(imgLink);
+    // Добавляем обработчик клика для открытия изображения через web_app_open_photo
+    img.addEventListener('click', function () {
+    if (window.Telegram && window.Telegram.WebApp) {
+        try {
+            window.Telegram.WebApp.openPhoto(`../card/${participant.img}`);
+        } catch (error) {
+            console.error('Ошибка при открытии изображения:', error);
+        }
+    } else {
+        console.error('Telegram Web App API не доступен');
+    }
+});
+
+    // Добавляем изображение в панель
+    panel.appendChild(img);
 
     const inputFieldsDiv = document.createElement('div');
     inputFieldsDiv.id = `inputFields${participant.id}`;
