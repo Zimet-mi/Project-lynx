@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     tabButtons.forEach(button => {
         button.addEventListener('click', async function (event) {
-            const targetTab = event.currentTarget.getAttribute('data-tab'); // Используем data-tab
+            const targetTab = event.currentTarget.getAttribute('data-tab');
             const tabContent = document.getElementById(targetTab);
 
             // Скрываем все вкладки
@@ -33,7 +33,46 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     });
+	
+	// Обработчик для изображений с классом lightzoom
+    document.querySelectorAll('.lightzoom').forEach(img => {
+        img.addEventListener('click', function (event) {
+            event.preventDefault(); // Отменяем стандартное поведение ссылки
+            const imageUrl = this.href; // Получаем URL изображения
+
+            if (isTelegramApp()) {
+                // В Telegram Mini App используем Telegram.WebApp.openPhoto
+                if (Telegram.WebApp.openPhoto) {
+                    Telegram.WebApp.openPhoto(imageUrl);
+                } else {
+                    // Если openPhoto недоступен, открываем изображение в новой вкладке
+                    window.open(imageUrl, '_blank');
+                }
+            } else {
+                // На сайте используем lightzoom
+                $(this).lightzoom({ speed: 400, overlayOpacity: 0.5 });
+            }
+        });
+    });
 });
+
+async function loadTabData(tabId) {
+    switch (tabId) {
+        case 'One':
+        case 'Two':
+        case 'Three':
+            await renderData(sheet_Name);
+            break;
+        case 'table':
+            // Убедитесь, что функция renderScheduleData определена
+            // await renderScheduleData();
+            break;
+        case 'red':
+            await renderTable();
+            break;
+        // Добавьте другие вкладки по аналогии
+    }
+}
 
 async function loadTabData(tabId) {
     switch (tabId) {
