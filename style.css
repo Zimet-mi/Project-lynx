@@ -1,32 +1,39 @@
-/*main лучше заменить, т.к. будет афектить весь сайт. Нужен для мобилок, чтобы кнопки для каждого блока не пытались ужаться в экран телефона, а занимали всё пространство*/
-.main{
-	min-width:100vh;
-	padding-bottom:10px;
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden; /* Скрываем горизонтальную прокрутку */
+    margin: 0;
+    padding: 0;
+}
+
+.main {
+    width: 100%;
+    max-width: 100%; /* Ограничиваем максимальную ширину */
+    padding-bottom: 10px;
+    box-sizing: border-box;
 }
 
 body {
 	margin: 0;
 	font-family: Helvetica, sans-serif;
+	height: 100%; 
+	margin: 0;
 	padding: 0;
 	background-image: url(icons/city.jpg);
 	background-repeat: no-repeat; 
     background-size: cover; 
     background-attachment: fixed; 
     background-position: center;
-	width: 100%;
+}
+
+.content {
+	max-width: 100%;
 }
 		
 /* Убираем подчёркивание  ссылок*/ 
 a {
 	text-decoration: none;
 	color: black;
-}
-/*Для вкладки HELP. Центрирование картинок и создание полупрозрачного фона за ними*/
-#red {
-	margin-left: auto;
-	margin-right: auto; 
-	background-color: rgba(255, 255, 255, 0.5);
-	max-width: 800px;
 }
 
 /*Расположение картинок по центру*/
@@ -38,11 +45,111 @@ img {
 	display: flex;
 }
 
+/* Общие стили для контейнеров */
+.input-container {
+    display: flex;
+    flex-direction: column; /* Элементы в столбик */
+    align-items: center; /* Центрируем по горизонтали */
+    gap: 20px; /* Отступы между группами */
+    width: 100%;
+    padding: 10px; /* Добавляем отступы */
+    box-sizing: border-box; /* Учитываем padding в ширине */
+}
+
+/* Контейнер для селектов */
+.select-group {
+    display: flex;
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем по горизонтали */
+    gap: 10px; /* Отступы между элементами */
+    width: 100%;
+}
+
+/* Стили для каждого селекта */
+.select-row {
+    display: flex;
+    flex-direction: column; /* Элементы внутри строки в столбик */
+    align-items: center; /* Центрируем по горизонтали */
+    flex: 1 1 calc(50% - 10px); /* Два элемента в строке с отступами */
+    max-width: calc(50% - 10px); /* Ограничиваем ширину */
+    margin: 0.5em 0; /* Уменьшаем отступы */
+    font-size: 1em; /* Уменьшаем размер шрифта */
+    text-align: center;
+}
+
+/* Контейнер для текстового поля */
+.textarea-group {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Центрируем по горизонтали */
+}
+
+/* Стили для текстового поля */
+.textarea-row {
+    width: 90%;
+    max-width: 400px; /* Ограничиваем максимальную ширину */
+}
+
+/* Контейнер для чекбоксов */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap; /* Перенос элементов на новую строку, если не помещаются */
+    justify-content: center; /* Центрируем по горизонтали */
+    gap: 10px; /* Отступы между элементами */
+    width: 100%;
+}
+
+/* Стили для каждого чекбокса */
+.checkbox-row {
+    display: flex;
+    flex-direction: column; /* Элементы внутри строки в столбик */
+    align-items: center; /* Центрируем по горизонтали */
+    flex: 1 1 calc(50% - 10px); /* Два элемента в строке с отступами */
+    max-width: calc(50% - 10px); /* Ограничиваем ширину */
+    margin: 0.5em 0; /* Уменьшаем отступы */
+    font-size: 1em; /* Уменьшаем размер шрифта */
+    text-align: center;
+}
+
+/* Стили для элементов ввода */
+.data-input {
+    font-size: 16px;
+    margin: 0.5em 0; /* Отступы сверху и снизу */
+    width: 100%; /* Ширина 100% от родительского контейнера */
+    max-width: 100%; /* Ограничиваем максимальную ширину */
+}
+
+select {
+    width: 100%; /* Ширина 100% */
+    line-height: 1.3;
+    margin: 0.5em 0; /* Отступы сверху и снизу */
+    border: 2px solid #aaa;
+    font-size: 16px;
+    padding: 8px; /* Увеличиваем padding для удобства */
+    border-radius: 5px; /* Скругление углов */
+}
+
+textarea {
+    width: 100%; /* Ширина 100% */
+    height: 100px; /* Фиксированная высота */
+    font-size: 16px;
+    padding: 8px; /* Увеличиваем padding для удобства */
+    margin: 0.5em 0; /* Отступы сверху и снизу */
+    border: 2px solid #aaa;
+    border-radius: 5px; /* Скругление углов */
+    resize: vertical; /* Разрешаем изменение высоты только по вертикали */
+}
+
+input[type="checkbox"] {
+    transform: scale(1.5); /* Увеличиваем размер чекбокса */
+    margin: 0.5em 0; /* Отступы сверху и снизу */
+}
+
 .thumbnail {
             max-height: 700px;
             width: auto;
         }
-		
+
 .tyan {
     position: fixed; /* Фиксируем изображение на экране */
 	bottom: 0%; /* Центрируем по вертикали */
@@ -65,24 +172,120 @@ img {
     }
 }
 
-/*СТАРЫЕ СТИЛИ. Сохранил на случай, если что-то отвалится*/
+#red {
+	margin-left: auto;
+	margin-right: auto; 
+	background-color: rgba(255, 255, 255, 0.5);
+	max-width: 800px;
+	/* Обертка таблицы для управления прокруткой */
+	.table-container {
+		overflow-x: auto;
+		width: 100%; /* Ширина контейнера таблицы */
+	}
 
-/*Таблица */
-/*.B {font-weight: bold; font-size: 1.1em; text-align: center;}
-.table_blur {background: #f5ffff; border-collapse: collapse; text-align: left; font-size: 1.07em;}
-.table_blur th {border-top: 1px solid #777777; border-bottom: 1px solid #777777; box-shadow: inset 0 1px 0 #999999, inset 0 -1px 0 #999999; color: white; padding: 15px 20px; position: relative; text-align: center;}
-.table_blur th:after {content: ""; display: block; position: absolute; left: 0; top: 25%; height: 25%; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0), rgba(255,255,255,.08));}
-.table_blur tr:nth-child(odd) {background: #ebf3f9;}
-.table_blur th:first-child { border-left: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset 1px 1px 0 #999999, inset 0 -1px 0 #999999;}
-.table_blur th:last-child {border-right: 1px solid #777777; border-bottom:  1px solid #777777; box-shadow: inset -1px 1px 0 #999999, inset 0 -1px 0 #999999;}
-.table_blur td {border: 1px solid #e3eef7; padding: 15px 20px; position: relative; transition: all 0.5s ease;}*/
+	/* Ограничение ширины таблицы и предотвращение её выхода за пределы контейнера */
+	table {
+		width: 100%;
+		max-width: 100%;
+		border-collapse: collapse;
+	}
 
+	/* Ограничение ширины ячеек и перенос текста */
+	th, td {
+		border: 1px solid #ddd;
+		padding: 5px;
+		text-align: left;
+		word-wrap: break-word; /* Перенос длинных слов */
+		min-width: 30px;
+		max-width: 150px; /* Максимальная ширина ячейки */
+		overflow: hidden; /* Прячем переполняющий текст */
+		text-overflow: ellipsis; /* Добавление многоточия, если текст слишком длинный */
+	}
 
+	/* Добавление отступа для правой стороны в последней ячейке */
+	td:last-child {
+		padding-right: 12px; /* Отступ справа для последней ячейки */
+	}
 
+	/* Фон для заголовков таблицы */
+	th {
+		background-color: #f2f2f2;
+	}
+}
 
-/*Для текста "СМОТР В 11:50 на вкладках. Для анимау может быть не нужно.
-h3 {color: white;}*/
+/* Стили для таблицы в аккордеоне */
+.panel table {
+    width: 100%; /* Ширина таблицы 100% от родительского контейнера */
+    max-width: 100%; /* Ограничиваем максимальную ширину таблицы */
+    border-collapse: collapse; /* Убираем двойные границы */
+    table-layout: auto; /* Автоматическая ширина ячеек */
+    font-size: 14px; /* Размер текста в таблице */
+    overflow-x: auto; /* Горизонтальная прокрутка, если таблица не влезает */
+    display: block; /* Для корректной работы overflow-x */
+}
 
-/*body {background-image: url("Background.jpg"); background-size: cover; background-repeat: no-repeat; background-attachment: fixed; margin: 0; font-family: Helvetica, sans-serif; background-color:#495e66;}*/
-/*.background-container {width: 100%; height: 100vh; /* 100% высоты viewport */ /*background-image: url('path/to/your/image.jpg');  background-size: cover;  background-position: center; background-repeat: no-repeat;}*/
+.panel th,
+.panel td {
+    padding: 8px; /* Отступы внутри ячеек */
+    text-align: left; /* Выравнивание текста по левому краю */
+    border: 1px solid #ddd; /* Границы ячеек */
+    word-wrap: break-word; /* Перенос длинных слов */
+    min-width: 100px; /* Минимальная ширина ячеек */
+    max-width: 200px; /* Максимальная ширина ячеек */
+    overflow: hidden; /* Прячем переполняющий текст */
+    box-sizing: border-box; /* Учитываем padding в ширине */
+    white-space: normal; /* Разрешаем перенос текста */
+}
 
+/* Стили для заголовков таблицы */
+.panel th {
+    background-color: #f2f2f2; /* Фон заголовков */
+    font-weight: bold; /* Жирный шрифт */
+    min-width: 100px; /* Минимальная ширина заголовков */
+    max-width: 200px; /* Максимальная ширина заголовков */
+    font-size: 16px; /* Размер текста в заголовках */
+}
+
+.panel th.tableHead {
+    background-color: #FFB040; /* Оранжевый цвет фона */
+    text-align: center !important;
+    font-size: 18px; /* Размер текста */
+    padding: 8px; /* Отступы внутри ячейки */
+    width: 100%; /* Ширина ячейки 100% */
+    display: table-cell; /* Убедимся, что ячейка растягивается на всю ширину */
+    border: 1px solid #ddd; /* Границы ячейки */
+}
+
+/* Стили для ячеек с классом tableHead */
+.tableHead {
+    font-weight: bold;
+    background-color: #FFB040; /* Оранжевый цвет фона */
+    text-align: center !important;
+    font-size: 18px; /* Размер текста */
+    padding: 8px; /* Отступы внутри ячейки */
+    width: 100%; /* Ширина ячейки 100% */
+    display: table-cell; /* Убедимся, что ячейка растягивается на всю ширину */
+    border: 1px solid #ddd; /* Границы ячейки */
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .panel table {
+        font-size: 12px; /* Уменьшаем размер текста на мобильных устройствах */
+    }
+
+    .panel th,
+    .panel td {
+        min-width: 80px; /* Уменьшаем минимальную ширину ячеек на мобильных устройствах */
+        max-width: 150px; /* Уменьшаем максимальную ширину ячеек на мобильных устройствах */
+        padding: 6px; /* Уменьшаем отступы на мобильных устройствах */
+    }
+
+    .panel th {
+        font-size: 14px; /* Уменьшаем размер текста в заголовках на мобильных устройствах */
+    }
+
+    .tableHead {
+        font-size: 16px; /* Уменьшаем размер текста в tableHead на мобильных устройствах */
+    }
+}
