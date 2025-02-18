@@ -25,7 +25,7 @@
 
 
 document.addEventListener('DOMContentLoaded', async function() {
-    const SHEET_ID = '1ib2932BhZqfIcAj2oBk_zETt9JYRbHVptvm9ThAVDiU';
+    const SHEET_ID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds';
     const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM';
     const TABLE_RANGE = 'Day1!A1:B230'; // Укажите правильный диапазон для расписания
     const ACCORDION_RANGE = 'accordionDay1!A1:B150'; // Укажите правильный диапазон для аккордеона
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const cell = document.createElement('td');
         if (isLink) {
             const link = document.createElement('a');
-            link.href = `card/${cellContent}.jpg`;
+            link.href = `../card/${cellContent}.jpg`;
             link.textContent = cellContent;
             link.setAttribute('data-lightzoom', ''); // Настройка lightzoom
             cell.appendChild(link);
@@ -152,12 +152,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         button.textContent = `${participant.id} ${participant.name}`;
 
         const imgLink = document.createElement('a');
-        imgLink.href = `card/${participant.img}`;
+        imgLink.href = `../card/${participant.img}`;
         imgLink.className = 'lightzoom';
         imgLink.setAttribute('data-lightzoom', ''); // Настройка lightzoom
 
         const img = document.createElement('img');
-        img.src = `card/${participant.img}`;
+        img.src = `../card/${participant.img}`;
         img.className = 'thumbnail';
 
         imgLink.appendChild(img);

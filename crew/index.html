@@ -13,21 +13,14 @@
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="./accordion.js"></script>
 	<script async defer src="https://apis.google.com/js/api.js"></script>
-	<script type="text/javascript" src="lightzoom/lightzoom.js"></script>
+	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
 	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>   
 	<!--Стили-->
-	<link rel="stylesheet" href="./style.css">
-    <link rel="stylesheet" type="text/css" href="./timetable.css">
-	<link rel="stylesheet" href="lightzoom/lightzoom.css" type="text/css">
-	<link rel="manifest" href="icons/site.webmanifest">
-	<link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+	<link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" type="text/css" href="../timetable.css">
+	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
 	<!-- Favicons -->
-	<link type="image/png" sizes="16x16" rel="icon" href="icons/favicon-16x16.png">
-	<link type="image/png" sizes="32x32" rel="icon" href="icons/favicon-32x32.png">
-	<link type="image/png" sizes="72x72" rel="icon" href="icons/android-icon-72x72.png">
-	<link type="image/png" sizes="96x96" rel="icon" href="icons/android-icon-96x96.png">
-	<link type="image/png" sizes="144x144" rel="icon" href="icons/android-icon-144x144.png">
-	<link rel="manifest" href="./manifest.json">
+	<link type="../image/png" rel="icon" href="../icons/web-app.png">
 </head>
 <body>
 <div class="main">
@@ -37,12 +30,11 @@
     <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
     <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
     <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
-	<button class="tablinks"><a href="map.jpg" class="lightzoom" data-lightzoom>Карта ДК</a></button>
     <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
 	<button class="tablinks" onclick="openCity(event, 'red')">HELP</button>
     </div></div>
 
-	<img class="tyan"src="icons/girl.png" alt="tyan">
+	<img class="tyan"src="../icons/girl.png" alt="tyan">
 <!-- Вкладка 1 -->
 <div id="One" class="tabcontent"><!--<h3>1 часть(от 04 до 07) смотр в 11:15. 2 часть(от 08 до 10) смотр в 13:35</h3>-->
 <div id="section1"></div>
