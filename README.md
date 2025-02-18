@@ -1,5 +1,2 @@
-# Festival website for volunteers
-
-Что было изменено по сравнению с первой версией:
-* Добавлен JS. Теперь расписание берётся из гугл таблицы, а не прописывается вручную в html
-* Избавились от дублирования картинок. Теперь оригинал масштабируется под заданный стиль
+# Here I am trying to create my platform. This is only a web part, but it is a core for the whole project. If you somehow got to this page, and want to participate in the development platform, ask questions or use it at yours event - write to me in telegram.
+@vedro_deteu
