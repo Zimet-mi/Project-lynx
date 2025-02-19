@@ -14,11 +14,21 @@ const SECTION_RANGES = {
 const createTableCell = (cellContent, isLink = false) => {
     const cell = document.createElement('td');
     if (isLink) {
-        const link = document.createElement('a');
-        link.href = `../card/${cellContent}.jpg`; // Предполагаем, что изображения хранятся в папке card
-        link.textContent = cellContent;
-        link.setAttribute('data-lightzoom', ''); // Настройка lightzoom
-        cell.appendChild(link);
+        const img = document.createElement('img');
+        img.src = `../card/${cellContent}.jpg`;
+        img.className = 'thumbnail';
+
+        // Добавляем обработчик клика для открытия изображения в нативном просмотрщике
+        img.addEventListener('click', () => {
+            const tg = window.Telegram.WebApp;
+            if (tg && tg.openMediaViewer) {
+                tg.openMediaViewer(`../card/${cellContent}.jpg`);
+            } else {
+                console.error('Telegram WebApp API недоступен');
+            }
+        });
+
+        cell.appendChild(img);
     } else {
         cell.textContent = cellContent;
     }
@@ -50,7 +60,7 @@ const filterParticipantsByRange = (participants, range) => {
 };
 
 // Функция для создания панели участника
-const createParticipantPanel = (participant) => {
+function createParticipantPanel(participant) {
     const panel = document.createElement('div');
     panel.className = 'panel';
 
@@ -58,20 +68,25 @@ const createParticipantPanel = (participant) => {
     button.className = 'accordion';
     button.textContent = `${participant.id} ${participant.name}`;
 
-    const imgLink = document.createElement('a');
-    imgLink.href = `../card/${participant.img}`;
-    imgLink.className = 'lightzoom';
-    imgLink.setAttribute('data-lightzoom', ''); // Настройка lightzoom
-
     const img = document.createElement('img');
     img.src = `../card/${participant.img}`;
     img.className = 'thumbnail';
 
-    imgLink.appendChild(img);
-    panel.appendChild(imgLink);
+    // Добавляем обработчик клика для открытия изображения в нативном просмотрщике
+    img.addEventListener('click', () => {
+        const tg = window.Telegram.WebApp;
+        if (tg && tg.openMediaViewer) {
+            tg.openMediaViewer(`../card/${participant.img}`);
+        } else {
+            console.error('Telegram WebApp API недоступен');
+        }
+    });
+
+    panel.appendChild(img);
+    panel.appendChild(button);
 
     return { button, panel };
-};
+}
 
 // Функция для инициализации аккордеона
 const initializeAccordions = () => {
