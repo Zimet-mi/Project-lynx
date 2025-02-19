@@ -25,6 +25,8 @@ const createTableCell = (cellContent, isLink = false) => {
                 tg.openMediaViewer(`../card/${cellContent}.jpg`);
             } else {
                 console.error('Telegram WebApp API недоступен');
+                // Альтернативное поведение, если приложение запущено вне Telegram
+                window.open(`../card/${cellContent}.jpg`, '_blank');
             }
         });
 
@@ -79,6 +81,8 @@ function createParticipantPanel(participant) {
             tg.openMediaViewer(`../card/${participant.img}`);
         } else {
             console.error('Telegram WebApp API недоступен');
+            // Альтернативное поведение, если приложение запущено вне Telegram
+            window.open(`../card/${participant.img}`, '_blank');
         }
     });
 
@@ -228,14 +232,8 @@ const renderAccordions = (data) => {
     initializeAccordions();
 };
 
-// Инициализация Lightzoom и рендеринг данных
+// Инициализация и рендеринг данных
 document.addEventListener('DOMContentLoaded', async function() {
-    await renderData();
-    $('a[data-lightzoom]').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-});
-
-// Объявление renderData
-const renderData = async () => {
     try {
         const [tableData, accordionData] = await Promise.all([
             fetchDataWithCache(TABLE_RANGE, 'table'),
@@ -248,4 +246,4 @@ const renderData = async () => {
         console.error(error);
         alert(`Error: ${error.message}`);
     }
-};
+});
