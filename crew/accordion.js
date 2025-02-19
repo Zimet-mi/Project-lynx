@@ -18,13 +18,15 @@ const createTableCell = (cellContent, isLink = false) => {
         img.src = `../card/${cellContent}.jpg`;
         img.className = 'thumbnail';
 
-        // Добавляем обработчик клика для открытия изображения
+        // Добавляем обработчик клика для открытия изображения в нативном просмотрщике
         img.addEventListener('click', () => {
-            const tg = window.Telegram?.WebApp;
+            const tg = window.Telegram.WebApp;
             if (tg && tg.openMediaViewer) {
                 tg.openMediaViewer(`../card/${cellContent}.jpg`);
             } else {
                 console.error('Telegram WebApp API недоступен');
+                // Альтернативное поведение, если приложение запущено вне Telegram
+                window.open(`../card/${cellContent}.jpg`, '_blank');
             }
         });
 
@@ -72,13 +74,15 @@ function createParticipantPanel(participant) {
     img.src = `../card/${participant.img}`;
     img.className = 'thumbnail';
 
-    // Добавляем обработчик клика для открытия изображения
+    // Добавляем обработчик клика для открытия изображения в нативном просмотрщике
     img.addEventListener('click', () => {
-        const tg = window.Telegram?.WebApp;
+        const tg = window.Telegram.WebApp;
         if (tg && tg.openMediaViewer) {
             tg.openMediaViewer(`../card/${participant.img}`);
         } else {
             console.error('Telegram WebApp API недоступен');
+            // Альтернативное поведение, если приложение запущено вне Telegram
+            window.open(`../card/${participant.img}`, '_blank');
         }
     });
 
@@ -229,16 +233,7 @@ const renderAccordions = (data) => {
 };
 
 // Инициализация и рендеринг данных
-document.addEventListener('DOMContentLoaded', async function () {
-    // Ожидаем инициализации Telegram WebApp
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.ready) {
-        Telegram.WebApp.ready(); // Инициализируем Telegram WebApp
-        console.log('Telegram WebApp инициализирован');
-    } else {
-        console.error('Telegram WebApp недоступен');
-    }
-
-    // Загружаем данные и рендерим интерфейс
+document.addEventListener('DOMContentLoaded', async function() {
     try {
         const [tableData, accordionData] = await Promise.all([
             fetchDataWithCache(TABLE_RANGE, 'table'),
