@@ -15,59 +15,46 @@
 	<script async defer src="https://apis.google.com/js/api.js"></script>
 	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
 	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>  
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
 	<!--Стили-->
 	<link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" type="text/css" href="../timetable.css">
 	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
 	<!-- Favicons -->
 	<link type="../image/png" rel="icon" href="../icons/web-app.png">
+	
+	
+	<!-- Подключение стилей -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/css/lightgallery.min.css" />
+
+<!-- Подключение скриптов -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/lightgallery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightgallery/2.7.2/plugins/zoom/lg-zoom.min.js"></script>
+	
 </head>
 <body>
-<div id="zoom-container" style="overflow: hidden; width: 100%; height: 100%;">
-  <img id="zoom-image" src="med.png" style="width: 100%; height: auto;">
+
+
+<div id="gallery">
+  <a href="med.png">
+    <img src="med.png" alt="Image">
+  </a>
 </div>
-
 <script>
-  // Получаем элементы
-  const container = document.getElementById('zoom-container');
-  const image = document.getElementById('zoom-image');
-
-  // Создаем экземпляр Hammer для контейнера
-  const hammer = new Hammer(container);
-
-  // Настройка жестов
-  hammer.get('pinch').set({ enable: true });
-
-  let scale = 1;
-  let lastScale = 1;
-  let posX = 0;
-  let posY = 0;
-  let lastPosX = 0;
-  let lastPosY = 0;
-
-  // Обработка жеста pinch (масштабирование)
-  hammer.on('pinchmove', function(event) {
-    scale = Math.max(1, Math.min(lastScale * event.scale, 4)); // Ограничиваем масштаб
-    image.style.transform = `scale(${scale}) translate(${posX}px, ${posY}px)`;
-  });
-
-  hammer.on('pinchend', function() {
-    lastScale = scale;
-  });
-
-  // Обработка жеста pan (перемещение)
-  hammer.on('panmove', function(event) {
-    posX = lastPosX + event.deltaX;
-    posY = lastPosY + event.deltaY;
-    image.style.transform = `scale(${scale}) translate(${posX}px, ${posY}px)`;
-  });
-
-  hammer.on('panend', function() {
-    lastPosX = posX;
-    lastPosY = posY;
+  document.addEventListener('DOMContentLoaded', function() {
+    lightGallery(document.getElementById('gallery'), {
+      plugins: [lgZoom],
+      speed: 200,
+      zoom: true,
+      download: false, // Отключить кнопку скачивания
+    });
   });
 </script>
+
+
+
+
+
+
 <div class="main">
     <div>
 	<header>
