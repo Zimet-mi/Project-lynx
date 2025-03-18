@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8" />
+	<title>Mocon</title>
+	<base href=".">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+  	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<!--Скрипты для аккардеона и таблицы-->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="./accordion.js"></script>
+	<script async defer src="https://apis.google.com/js/api.js"></script>
+	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
+	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>  
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+	<!--Стили-->
+	<link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" type="text/css" href="../timetable.css">
+	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
+	<!-- Favicons -->
+	<link type="../image/png" rel="icon" href="../icons/web-app.png">
+</head>
+<body>
+<div id="zoom-container" style="overflow: hidden; width: 100%; height: 100%;">
+  <img id="zoom-image" src="med.png" style="width: 100%; height: auto;">
+</div>
+
+<script>
+  // Получаем элементы
+  const container = document.getElementById('zoom-container');
+  const image = document.getElementById('zoom-image');
+
+  // Создаем экземпляр Hammer для контейнера
+  const hammer = new Hammer(container);
+
+  // Настройка жестов
+  hammer.get('pinch').set({ enable: true });
+
+  let scale = 1;
+  let lastScale = 1;
+  let posX = 0;
+  let posY = 0;
+  let lastPosX = 0;
+  let lastPosY = 0;
+
+  // Обработка жеста pinch (масштабирование)
+  hammer.on('pinchmove', function(event) {
+    scale = Math.max(1, Math.min(lastScale * event.scale, 4)); // Ограничиваем масштаб
+    image.style.transform = `scale(${scale}) translate(${posX}px, ${posY}px)`;
+  });
+
+  hammer.on('pinchend', function() {
+    lastScale = scale;
+  });
+
+  // Обработка жеста pan (перемещение)
+  hammer.on('panmove', function(event) {
+    posX = lastPosX + event.deltaX;
+    posY = lastPosY + event.deltaY;
+    image.style.transform = `scale(${scale}) translate(${posX}px, ${posY}px)`;
+  });
+
+  hammer.on('panend', function() {
+    lastPosX = posX;
+    lastPosY = posY;
+  });
+</script>
+<div class="main">
+    <div>
+	<header>
+    <!-- Верхняя панель -->
+    <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
+    <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
+    <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
+    <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
+	<button class="tablinks" onclick="openCity(event, 'red')">HELP</button>
+    </div></div>
+
+	<img class="tyan"src="../icons/girl.png" alt="tyan">
+<!-- Вкладка 1 -->
+<div id="One" class="tabcontent"><!--<h3>1 часть(от 04 до 07) смотр в 11:15. 2 часть(от 08 до 10) смотр в 13:35</h3>-->
+<div id="section1"></div>
+	</div>
+
+<!-- Вкладка 2 -->
+<div id="Two" class="tabcontent">
+<div id="section2"></div>
+</div>
+<!-- Вкладка 3 -->
+<div id="Three" class="tabcontent">
+<div id="section3"></div>
+</div>
+
+<!--  Таблица -->
+<div id="table" class="tabcontent">
+<table id="schedule" class="table_blur">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+    </table></div>
+<div id="red" class="tabcontent">
+<div><a href="tel:+7919608-19-69"><img src="help/med.png" alt="МЕДИК"/></a> <a href="tel:+7952523-41-75"><img src="help/tina.png" alt="ВОЛОНТЁРЫ"/></a><a href="tel:+7982761-52-38"><img src="help/sb.png" alt="ОХРАНА"/></a></div>
+</div>
+</body>
+</html>
