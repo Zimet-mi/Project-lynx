@@ -30,6 +30,13 @@
     background-color: #f1f1f1;
 }
 
+.panel {
+    display: none; /* Панель скрыта по умолчанию */
+}
+
+.panel.active {
+    display: block; /* Панель видима, когда добавлен класс active */
+}
 
 /* Стили для выделенных строк */
 .smort {
