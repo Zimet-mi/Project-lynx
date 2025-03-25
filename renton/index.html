@@ -4,19 +4,21 @@
 	<base href=".">
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<meta name="viewport" content="width=device-width">
     <meta name="Keywords" content="">
     <meta name="Description" content="">
 	<meta name="msapplication-TileColor" content="#da532c">
 	<meta name="theme-color" content="#ffffff">
-	<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="utils.js"></script>
 	<script src="JavaScript.js"></script>
 	<script src="participants.js"></script>
 	<script src="result.js"></script>
-	<script src="lightbox-plus-jquery.js"></script>
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="../lightbox-plus-jquery.js"></script>
 	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
-	<script type="text/javascript">jQuery('.lightzoom').lightzoom({speed: 400, viewTitle: true});</script>
 	<script src="https://telegram.org/js/telegram-web-app.js"></script>
+	<!-- Подключить, если не будет работать ТГ 
+	<script src="miniApp.js"></script>-->
 	<link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" type="text/css" href="../timetable.css">
 	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
@@ -29,13 +31,12 @@
     <div class="head">
         <header>
             <div class="tab">
-                <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button>
-                <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
-                <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
-                <button class="tablinks"><a href="map.jpg" class="lightzoom">Карта</a></button>
-                <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button>
-                <button class="tablinks" onclick="openCity(event, 'red')">Итог</button>
-                <button class="tablinks" id="sendCacheButton">Отправить данные</button>
+				<button class="tablinks" data-tab="One">Первый блок</button>
+				<button class="tablinks" data-tab="Two">Второй блок</button>
+				<button class="tablinks" data-tab="Three">Третий блок</button>
+				<button class="tablinks" data-tab="table">Расписание</button>
+				<button class="tablinks" data-tab="red">Итог</button>
+				<button class="tablinks" id="sendCacheButton">Отправить данные</button>
             </div>
         </header>
     </div>
@@ -67,21 +68,5 @@
         </div>
     </div>
 </div>
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-
-    // Пример использования данных пользователя
-    const user = tg.initDataUnsafe.user;
-    if (user) {
-        console.log(`Привет, ${user.first_name}!`);
-    }
-
-    // Отправка данных через Telegram Bot
-    document.getElementById('sendCacheButton').addEventListener('click', () => {
-        const data = { action: 'saveData', sheet: 'jury', row: 5, column: 'A', value: 'Test' };
-        tg.sendData(JSON.stringify(data));
-    });
-</script>
 </body>
 </html>

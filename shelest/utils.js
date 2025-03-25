@@ -2,8 +2,8 @@
 
 // Глобальные переменные
 const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
-const sheet_Name = 'jury'; //Основная страница с выставлением оценок жюри
-const ResultSheet = 'juryRes'; // страница с итогами конкретного жюри
+const sheet_Name = 'shelest'; //Основная страница с выставлением оценок жюри
+const ResultSheet = 'shelestRes'; // страница с итогами конкретного жюри
 
 // Диапазоны для секций с участниками для аккардеона
     const section1Range = [2, 38];

@@ -1,9 +1,8 @@
+// participants.js
+// Нужно вынести в констаны создание полей ввода для оценок, чекбоксов
+// А так же, не понятно за что отвечающий, диапазон.
 document.addEventListener('DOMContentLoaded', function () {
-    // Диапазоны для секций
-    const section1Range = [2, 38];
-    const section2Range = [39, 84];
-    const section3Range = [85, 90];
-	
+    	
     // Функция для фильтрации участников по диапазону
     function filterParticipantsByRange(participants, range) {
         return participants.filter(participant => {
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         select.addEventListener('input', function () {
-            saveData(select.value, dataColumn, dataRow, 'jury');
+            saveData(select.value, dataColumn, dataRow, sheet_Name);
         });
 
         return select;
@@ -82,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     select.addEventListener('input', function () {
-        saveData(select.value, dataColumn, dataRow, 'jury');
+        saveData(select.value, dataColumn, dataRow, sheet_Name);
     });
 
     return select;
@@ -103,9 +102,9 @@ function createCheckbox(id, dataColumn, dataRow, initialValue) {
 
     checkbox.addEventListener('change', function () {
         if (checkbox.checked) {
-            saveData('Номинант', dataColumn, dataRow, 'jury');
+            saveData('Номинант', dataColumn, dataRow, sheet_Name);
         } else {
-            saveData('', dataColumn, dataRow, 'jury');
+            saveData('', dataColumn, dataRow, sheet_Name);
         }
     });
 
@@ -119,63 +118,76 @@ function createInputFields(container, rowId, placeholders, options = []) {
         { label: 'Костюм', column: 'C', placeholder: placeholders['costum'] },
         { label: 'Схожесть', column: 'D', placeholder: placeholders['shozhest'] },
         { label: 'Выход', column: 'E', placeholder: placeholders['vistup'] }
-//        { label: 'Аксессуары', column: 'F', placeholder: placeholders['dropdown'] }
     ];
 
     const inputContainer = document.createElement('div');
     inputContainer.className = 'input-container';
 
+    // Контейнер для селектов
+    const selectGroup = document.createElement('div');
+    selectGroup.className = 'select-group';
+
     parameters.forEach(param => {
-        const inputRow = document.createElement('div');
-        inputRow.className = 'input-row';
+        const selectRow = document.createElement('div');
+        selectRow.className = 'select-row';
 
         const labelDiv = document.createElement('div');
         labelDiv.textContent = param.label;
 
-        const selectContainer = document.createElement('div');
-        const select = (param.column === 'F')
-            ? createDropdown(`data${param.column}${rowId}`, param.column, rowId, param.placeholder)
-            : createSelect(`data${param.column}${rowId}`, param.column, rowId, param.placeholder);
+        const select = createSelect(`data${param.column}${rowId}`, param.column, rowId, param.placeholder);
 
-        selectContainer.appendChild(select);
-
-        inputRow.appendChild(labelDiv);
-        inputRow.appendChild(selectContainer);
-        inputContainer.appendChild(inputRow);
+        selectRow.appendChild(labelDiv);
+        selectRow.appendChild(select);
+        selectGroup.appendChild(selectRow);
     });
 
-    const commentRow = document.createElement('div');
-    commentRow.className = 'input-row';
+    inputContainer.appendChild(selectGroup);
+
+    // Контейнер для текстового поля
+    const textareaGroup = document.createElement('div');
+    textareaGroup.className = 'textarea-group';
+
+    const textareaRow = document.createElement('div');
+    textareaRow.className = 'textarea-row';
 
     const commentLabelDiv = document.createElement('div');
     commentLabelDiv.textContent = 'Комментарий';
 
-    const commentInputDiv = document.createElement('div');
     const textarea = document.createElement('textarea');
     textarea.className = 'data-input input-field';
     textarea.id = `dataG${rowId}`;
     textarea.setAttribute('data-column', 'G');
     textarea.setAttribute('data-row', rowId);
-    textarea.value = placeholders['comment'] || ''; // Инициализируем значение из placeholders
+    textarea.value = placeholders['comment'] || '';
 
-    textarea.addEventListener('input', debounce(function () {
-    saveData(this.value, 'F', rowId, 'jury');
-	}, 300));  // Задержка 300 мс
+	function debounce(func, wait) {
+		let timeout;
+		return function (...args) {
+			const context = this;
+			clearTimeout(timeout);
+			timeout = setTimeout(() => func.apply(context, args), wait);
+		};
+	}
 
-    commentInputDiv.appendChild(textarea);
-    commentRow.appendChild(commentLabelDiv);
-    commentRow.appendChild(commentInputDiv);
-    inputContainer.appendChild(commentRow);
+	textarea.addEventListener('input', debounce(function () {
+		saveData(this.value, 'F', rowId, sheet_Name);
+	}, 300));
 
-    const checkboxContainer = document.createElement('div');
-    checkboxContainer.className = 'checkbox-container';
+    textareaRow.appendChild(commentLabelDiv);
+    textareaRow.appendChild(textarea);
+    textareaGroup.appendChild(textareaRow);
+    inputContainer.appendChild(textareaGroup);
+
+    // Контейнер для чекбоксов
+    const checkboxGroup = document.createElement('div');
+    checkboxGroup.className = 'checkbox-group';
 
     const checkboxLabels = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Гран-при'];
     const checkboxColumns = ['H', 'I', 'J', 'K', 'L'];
 
     checkboxLabels.forEach((label, index) => {
         const checkboxRow = document.createElement('div');
-        checkboxRow.className = 'input-row';
+        checkboxRow.className = 'checkbox-row';
 
         const labelDiv = document.createElement('div');
         labelDiv.textContent = label;
@@ -184,10 +196,10 @@ function createInputFields(container, rowId, placeholders, options = []) {
 
         checkboxRow.appendChild(labelDiv);
         checkboxRow.appendChild(checkbox);
-        checkboxContainer.appendChild(checkboxRow);
+        checkboxGroup.appendChild(checkboxRow);
     });
 
-    inputContainer.appendChild(checkboxContainer);
+    inputContainer.appendChild(checkboxGroup);
 
     container.appendChild(inputContainer);
 }
@@ -251,11 +263,9 @@ function createInputFields(container, rowId, placeholders, options = []) {
 	}
 
     // Функция для загрузки данных из Google Sheets с кешированием
-    async function fetchDataWithCache(sheetName = 'jury', includeParticipants = false) {
+    async function fetchDataWithCache(sheetName = sheet_Name, includeParticipants = false) {
         const SHEET_ID = await getSheetId(); // Получаем ID динамически
-        const API_KEY = 'AIzaSyCYgExuxs0Kme9-tWRCsz4gVD9yRjHY74g'; // Замените YOUR_API_KEY на ваш ключ API
         const RANGE = 'A1:L200';
-        const CACHE_EXPIRY = 120000; // 2 минуты в миллисекундах
         const cacheKey = `cachedData_${sheetName}`;
         const cacheTimeKey = `cachedTime_${sheetName}`;
 
@@ -266,7 +276,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
             const currentTime = new Date().getTime();
             const timeDiff = currentTime - parseInt(cachedTime);
 
-            if (timeDiff < CACHE_EXPIRY) {
+            if (timeDiff < CACHE_PARICIPANTS_EXPIRY) {
                 const parsedData = JSON.parse(cachedData);
                 if (includeParticipants) {
                     return { data: parsedData, participants: extractParticipants(parsedData) };
@@ -316,7 +326,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 	}
 
     // Функция для отображения данных
-    async function renderData(sheetName = 'jury') {
+    async function renderData(sheetName = sheet_Name) {
         const { data, participants } = await fetchDataWithCache(sheetName, true);
         
         const section1Container = document.getElementById('section1');
@@ -359,37 +369,14 @@ function createInputFields(container, rowId, placeholders, options = []) {
         document.dispatchEvent(new Event('tableUpdated'));
     }
 
-    // Функция для инициализации аккордеонов
-    function initializeAccordions() {
-        const accordions = document.getElementsByClassName("accordion");
 
-        for (let i = 0; i < accordions.length; i++) {
-            accordions[i].addEventListener("click", function () {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
-                    // Инициализируем lightzoom для изображений в этом открытом аккордеоне
-                    $(panel).find('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-                }
-            });
-        }
-
-        // Инициализация lightzoom для всех элементов с классом lightzoom
-        $('a.lightzoom').lightzoom({ speed: 400, overlayOpacity: 0.5 });
-    }
 
 
  
 
 // Функция для сохранения данных в кеш
-function saveData(value, column, row, sheetName = 'jury') {
+function saveData(value, column, row, sheetName = sheet_Name) {
     const cacheKey = `unsavedData_${row}_${column}`;
-    
-    // Логируем данные, которые сохраняем в кеш
-    // console.log(`Сохраняем данные в кеш: ${value}, row: ${row}, column: ${column}, sheet: ${sheetName}`);
     
     // Сохраняем данные в локальное хранилище
     localStorage.setItem(cacheKey, JSON.stringify({
@@ -399,12 +386,9 @@ function saveData(value, column, row, sheetName = 'jury') {
         sheet: sheetName
     }));
     
-    // Попытка отправить данные на сервер, если интернет есть
     if (navigator.onLine) {
-        // console.log('Интернет доступен, пробуем отправить данные...');
         sendDataToServer(cacheKey);
     } else {
-     //   console.warn('Интернет недоступен, данные сохранены в кеш.');
     }
 }
 
@@ -412,7 +396,6 @@ function saveData(value, column, row, sheetName = 'jury') {
 async function sendDataToServer(cacheKey) {
     const cachedData = localStorage.getItem(cacheKey);
     if (!cachedData) {
-    //    console.error(`Нет данных в кеше для ключа: ${cacheKey}`);
         return;
     }
 
@@ -425,47 +408,44 @@ async function sendDataToServer(cacheKey) {
         sheet: sheet
     });
 
-    // console.log(`Отправляем данные на сервер: ${params.toString()}`);
-
     try {
         const response = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
 
         if (response.ok) {
-     //       console.log(`Данные успешно отправлены для ключа ${cacheKey}`);
-            localStorage.removeItem(cacheKey); // Удаляем из кеша при успешной отправке
+            localStorage.removeItem(cacheKey); 
         } else {
-     //       console.error(`Ошибка отправки данных на сервер для ключа ${cacheKey}: ${response.statusText}`);
         }
     } catch (error) {
-     //   console.error('Ошибка сети при отправке данных:', error);
     }
 }
 
 // Функция для отправки всех кешированных данных
 async function sendAllCachedData() {
+    const promises = []; // Массив для хранения промисов
+
     for (let i = 0; i < localStorage.length; i++) {
         const cacheKey = localStorage.key(i);
         if (cacheKey.startsWith('unsavedData_')) {
-          //  console.log(`Отправляем кешированные данные для ключа: ${cacheKey}`);
-            await sendDataToServer(cacheKey);
+            // Добавляем промис для отправки данных в массив
+            promises.push(sendDataToServer(cacheKey));
         }
     }
+
+    // Ожидаем завершения всех промисов параллельно
+    await Promise.all(promises);
 }
 
 // Обработчик кнопки для отправки кешированных данных
 document.getElementById('sendCacheButton').addEventListener('click', async () => {
-   // console.log('Пытаемся отправить все кешированные данные...');
     await sendAllCachedData();
 });
 
 // Событие при потере интернета
 window.addEventListener('offline', () => {
-   // console.warn('Интернет пропал. Оценки будут сохранены в кеше.');
 });
 
 // Событие при восстановлении интернета
 window.addEventListener('online', () => {
-   // console.info('Интернет появился. Вы можете отправить кешированные данные.');
 });
 
 // Привязка события change к функции сохранения данных
@@ -473,7 +453,7 @@ function attachInputListeners() {
     const textareas = document.querySelectorAll('textarea.data-input');
     textareas.forEach(textarea => {
         textarea.addEventListener('change', function () {
-            saveData(this.value, this.getAttribute('data-column'), this.getAttribute('data-row'), 'jury');
+            saveData(this.value, this.getAttribute('data-column'), this.getAttribute('data-row'), sheet_Name);
         });
     });
 }
@@ -485,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 	
 	// Инициализация загрузки данных и отображение таблицы
-    renderData('jury');
+    renderData(sheet_Name);
 
 
 });
