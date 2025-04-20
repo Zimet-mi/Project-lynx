@@ -13,7 +13,7 @@ function createTableCell(cellContent, isLink = false, colspan = 1, isHeader = fa
     }
 
     // Устанавливаем colspan только для ячеек, содержащих ключевые слова
-    if (cellContent.toLowerCase().includes('лучш') || cellContent.toLowerCase().includes('дефиле')) {
+    if (cellContent.toLowerCase().includes('лучш') || cellContent.toLowerCase().includes('дефиле') || cellContent.toLowerCase().includes('гран-при')) {
         cell.classList.add('tableHead'); // Применение класса
         cell.setAttribute('colspan', '8'); // Устанавливаем colspan для ячеек с ключевыми словами
     } else {

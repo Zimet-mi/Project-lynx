@@ -2,12 +2,12 @@
 const SHEET_ID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // Идентификатор таблицы
 const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // Ключ API
 const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
-const TABLE_RANGE = 'Day1!A1:B230'; // Диапазон для таблицы
-const ACCORDION_RANGE = 'accordionDay1!A1:B150'; // Диапазон для аккордеона
+const TABLE_RANGE = 'Day1!A1:B196'; // Диапазон для таблицы
+const ACCORDION_RANGE = 'accordionDay1!A1:B110'; // Диапазон для аккордеона
 const SECTION_RANGES = {
-    section1: [1, 38],
-    section2: [39, 84],
-    section3: [85, 90]
+    section1: [1, 41],
+    section2: [42, 77],
+    section3: [78, 110]
 };
 
 // Функция для создания ячейки таблицы

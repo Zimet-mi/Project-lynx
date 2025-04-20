@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return select;
     }
 
-    // Функция для создания нового выпадающего списка (с вариантами от 1 до 3)
+    // Функция для создания нового выпадающего списка 
  function createDropdown(id, dataColumn, dataRow, placeholder) {
     const select = document.createElement('select');
     select.className = 'data-input input-field';
@@ -112,12 +112,37 @@ function createCheckbox(id, dataColumn, dataRow, initialValue) {
 }
 
 
+function createUniversalDropdown(id, dataColumn, dataRow, placeholder, optionsCount) {
+    const select = document.createElement('select');
+    select.className = 'data-input input-field';
+    select.id = id;
+    select.setAttribute('data-column', dataColumn);
+    select.setAttribute('data-row', dataRow);
+
+    for (let i = 1; i <= optionsCount; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i == placeholder) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    }
+
+    select.addEventListener('input', function() {
+        saveData(select.value, dataColumn, dataRow, sheet_Name);
+    });
+
+    return select;
+}
+
 //Функция создания полей ввода
 function createInputFields(container, rowId, placeholders, options = []) {
     const parameters = [
-        { label: 'Костюм', column: 'C', placeholder: placeholders['costum'] },
-        { label: 'Схожесть', column: 'D', placeholder: placeholders['shozhest'] },
-        { label: 'Выход', column: 'E', placeholder: placeholders['vistup'] }
+        { label: 'Костюм', column: 'C', options: 5, placeholder: placeholders['costum'] },
+        { label: 'Схожесть', column: 'D', options: 5, placeholder: placeholders['shozhest'] },
+        { label: 'Выход', column: 'E', options: 5, placeholder: placeholders['vistup'] },
+        { label: 'Аксессуар', column: 'F', options: 3, placeholder: placeholders['aks'] }
     ];
 
     const inputContainer = document.createElement('div');
@@ -134,7 +159,14 @@ function createInputFields(container, rowId, placeholders, options = []) {
         const labelDiv = document.createElement('div');
         labelDiv.textContent = param.label;
 
-        const select = createSelect(`data${param.column}${rowId}`, param.column, rowId, param.placeholder);
+        // Создаем выпадающий список с указанным количеством вариантов
+        const select = createUniversalDropdown(
+            `data${param.column}${rowId}`,
+            param.column,
+            rowId,
+            param.placeholder,
+            param.options // Количество вариантов из параметра
+        );
 
         selectRow.appendChild(labelDiv);
         selectRow.appendChild(select);
@@ -156,7 +188,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     const textarea = document.createElement('textarea');
     textarea.className = 'data-input input-field';
     textarea.id = `dataG${rowId}`;
-    textarea.setAttribute('data-column', 'G');
+    textarea.setAttribute('data-column', 'H');
     textarea.setAttribute('data-row', rowId);
     textarea.value = placeholders['comment'] || '';
 
@@ -170,7 +202,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 	}
 
 	textarea.addEventListener('input', debounce(function () {
-		saveData(this.value, 'F', rowId, sheet_Name);
+		saveData(this.value, 'G', rowId, sheet_Name);
 	}, 300));
 
     textareaRow.appendChild(commentLabelDiv);
@@ -183,7 +215,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     checkboxGroup.className = 'checkbox-group';
 
     const checkboxLabels = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Гран-при'];
-    const checkboxColumns = ['H', 'I', 'J', 'K', 'L'];
+    const checkboxColumns = ['I', 'J', 'K', 'L', 'M'];
 
     checkboxLabels.forEach((label, index) => {
         const checkboxRow = document.createElement('div');
@@ -265,7 +297,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     // Функция для загрузки данных из Google Sheets с кешированием
     async function fetchDataWithCache(sheetName = sheet_Name, includeParticipants = false) {
         const SHEET_ID = await getSheetId(); // Получаем ID динамически
-        const RANGE = 'A1:L200';
+        const RANGE = 'A1:M200';
         const cacheKey = `cachedData_${sheetName}`;
         const cacheTimeKey = `cachedTime_${sheetName}`;
 
@@ -313,14 +345,15 @@ function createInputFields(container, rowId, placeholders, options = []) {
 		return {
 			'costum': row[2] || '',      // Значение для соответствия (столбец C)
 			'shozhest': row[3] || '',    // Значение для качества костюма (столбец D)
-			'vistup': row[4] || '',      // Значение для аксессуаров (столбец E)
-			'comment': row[5] || '',     // Значение для комментария (столбец F)
+			'vistup': row[4] || '',			// Значение для аксессуаров (столбец E)
+			'aks': row[5] || '',
+			'comment': row[6] || '',
 			'checkboxes': [
-				row[7] || '',   // Значение для чекбокса 1 (столбец H)
-				row[8] || '',   // Значение для чекбокса 2 (столбец I)
-				row[9] || '',  // Значение для чекбокса 3 (столбец J)
-				row[10] || '',   // Значение для чекбокса 4 (столбец K)	
-				row[11] || ''   // Значение для чекбокса 5 (столбец L)	
+				row[8] || '',
+				row[9] || '',
+				row[10] || '',
+				row[11] || '',
+				row[12] || ''
 			]
 		};
 	}
