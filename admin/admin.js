@@ -12,44 +12,66 @@ let appData = {
     scores: []
 };
 
+// Глобальные переменные для DOM-элементов
+let tabs, tabContents, nominationFilter, specialNominationFilter;
+let participantsNomination, participantsFilter, scoreCards, scoresList;
+let specialPrizesList, participantsList, isAdminHtml;
+
 // Ждем загрузки DOM перед инициализацией
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM загружен, начинаем инициализацию...');
     
     // Получаем элементы DOM
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-    const nominationFilter = document.getElementById('nominationFilter');
-    const leadersNomination = document.getElementById('leadersNomination');
-    const leadersLimit = document.getElementById('leadersLimit');
-    const participantsNomination = document.getElementById('participantsNomination');
-    const participantsFilter = document.getElementById('participantsFilter');
-    const scoreCards = document.getElementById('scoreCards');
-    const leadersList = document.getElementById('leadersList');
-    const participantsList = document.getElementById('participantsList');
-
+    tabs = document.querySelectorAll('.tab');
+    tabContents = document.querySelectorAll('.tab-content');
+    
+    // Получаем элементы формы, которые могут быть в любой из структур HTML
+    nominationFilter = document.getElementById('nominationFilter');
+    specialNominationFilter = document.getElementById('specialNominationFilter');
+    participantsNomination = document.getElementById('participantsNomination') || document.getElementById('participantsBlock'); // Учитываем разные имена в разных HTML
+    participantsFilter = document.getElementById('participantsFilter');
+    
+    // Получаем контейнеры для контента
+    scoreCards = document.getElementById('scoreCards');
+    scoresList = document.getElementById('scoresList');
+    specialPrizesList = document.getElementById('specialPrizesList');
+    participantsList = document.getElementById('participantsList');
+    
+    // Адаптивная логика для проверки структуры HTML
+    isAdminHtml = !!document.getElementById('scoresTab');
+    
     // Подробное логирование для отладки
     console.log('Проверка элементов:');
     console.log('tabs:', tabs.length > 0 ? 'найдены' : 'не найдены');
     console.log('tabContents:', tabContents.length > 0 ? 'найдены' : 'не найдены');
+    console.log('Обнаружен тип HTML:', isAdminHtml ? 'admin.html' : 'index.html');
     console.log('nominationFilter:', nominationFilter ? 'найден' : 'не найден');
-    console.log('leadersNomination:', leadersNomination ? 'найден' : 'не найден');
-    console.log('leadersLimit:', leadersLimit ? 'найден' : 'не найден');
-    console.log('participantsNomination:', participantsNomination ? 'найден' : 'не найден');
+    console.log('specialNominationFilter:', specialNominationFilter ? 'найден' : 'не найден');
+    console.log('participantsNomination/Block:', participantsNomination ? 'найден' : 'не найден');
     console.log('participantsFilter:', participantsFilter ? 'найден' : 'не найден');
     console.log('scoreCards:', scoreCards ? 'найден' : 'не найден');
-    console.log('leadersList:', leadersList ? 'найден' : 'не найден');
+    console.log('scoresList:', scoresList ? 'найден' : 'не найден');
+    console.log('specialPrizesList:', specialPrizesList ? 'найден' : 'не найден');
     console.log('participantsList:', participantsList ? 'найден' : 'не найден');
 
-    // Проверяем наличие всех необходимых элементов
+    // Проверяем наличие всех необходимых элементов для текущей структуры HTML
     const missingElements = [];
+    
+    // Проверяем обязательные элементы, общие для обеих структур
     if (!nominationFilter) missingElements.push('nominationFilter');
-    if (!leadersNomination) missingElements.push('leadersNomination');
-    if (!leadersLimit) missingElements.push('leadersLimit');
-    if (!participantsNomination) missingElements.push('participantsNomination');
-    if (!participantsFilter) missingElements.push('participantsFilter');
-    if (!scoreCards) missingElements.push('scoreCards');
-    if (!leadersList) missingElements.push('leadersList');
+    if (!specialNominationFilter) missingElements.push('specialNominationFilter');
+    if (!participantsNomination) missingElements.push('participantsNomination/Block');
+    
+    // Проверяем элементы, специфичные для admin.html
+    if (isAdminHtml) {
+        if (!participantsFilter) missingElements.push('participantsFilter');
+        if (!scoreCards) missingElements.push('scoreCards');
+    } else { // index.html
+        if (!scoresList) missingElements.push('scoresList');
+    }
+    
+    // Общие для обеих структур
+    if (!specialPrizesList) missingElements.push('specialPrizesList');
     if (!participantsList) missingElements.push('participantsList');
 
     if (missingElements.length > 0) {
@@ -63,14 +85,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         await loadScores();
     });
 
-    leadersNomination.addEventListener('change', () => {
-        console.log('Выбрана номинация для лидеров:', leadersNomination.value);
-        loadLeaders();
-    });
-
-    leadersLimit.addEventListener('change', () => {
-        console.log('Выбран лимит для лидеров:', leadersLimit.value);
-        loadLeaders();
+    specialNominationFilter.addEventListener('change', async () => {
+        console.log('Выбран спецприз:', specialNominationFilter.value);
+        await loadSpecialPrizes();
     });
 
     participantsNomination.addEventListener('change', () => {
@@ -78,10 +95,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadParticipants();
     });
 
-    participantsFilter.addEventListener('input', () => {
-        console.log('Поиск участников:', participantsFilter.value);
-        loadParticipants();
-    });
+    if (participantsFilter) {
+        participantsFilter.addEventListener('input', () => {
+            console.log('Поиск участников:', participantsFilter.value);
+            loadParticipants();
+        });
+    }
 
     // Инициализация вкладок
     tabs.forEach(tab => {
@@ -107,6 +126,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         
         console.log('Данные загружены:', appData);
+        
+        // Загружаем номинации спецпризов
+        await loadSpecialNominations();
         
         // Заполняем фильтры
         await updateFilters();
@@ -146,9 +168,15 @@ function showLoading(isLoading) {
 async function updateFilters() {
     try {
         // Заполняем выпадающие списки номинаций
-        const nominationSelects = [nominationFilter, leadersNomination, participantsNomination];
+        const nominationSelects = [nominationFilter];
+        
+        if (participantsNomination) {
+            nominationSelects.push(participantsNomination);
+        }
         
         nominationSelects.forEach(select => {
+            if (!select) return;
+            
             select.innerHTML = '<option value="">Все номинации</option>';
             appData.nominations.forEach(nomination => {
                 const option = document.createElement('option');
@@ -177,25 +205,44 @@ function showError(message) {
 
 // Функция для переключения вкладок
 function switchTab(tabId) {
-    // Скрываем все вкладки
-    tabContents.forEach(content => {
-        content.classList.remove('active');
-    });
+    console.log('Переключение на вкладку:', tabId);
     
-    // Показываем выбранную вкладку
-    const selectedTab = document.getElementById(`${tabId}Tab`);
-    if (selectedTab) {
-        selectedTab.classList.add('active');
+    // Скрываем все вкладки с классом .tab-content (для admin.html)
+    if (tabContents && tabContents.length > 0) {
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+        });
     }
     
-    // Обновляем активную кнопку
-    tabs.forEach(tab => {
-        if (tab.getAttribute('data-tab') === tabId) {
-            tab.classList.add('active');
-        } else {
-            tab.classList.remove('active');
-        }
-    });
+    // Для admin.html - используем класс .tab-content
+    const selectedTabContent = document.getElementById(`${tabId}Tab`);
+    if (selectedTabContent) {
+        selectedTabContent.classList.add('active');
+    }
+    
+    // Для index.html - используем ID без суффикса и класс .content
+    const alternativeTabContent = document.getElementById(tabId);
+    if (alternativeTabContent && alternativeTabContent.classList.contains('content')) {
+        // Скрываем все вкладки в index.html
+        const indexTabs = document.querySelectorAll('.content');
+        indexTabs.forEach(tab => {
+            tab.style.display = 'none';
+        });
+        
+        // Показываем выбранную вкладку
+        alternativeTabContent.style.display = 'block';
+    }
+    
+    // Обновляем активные кнопки
+    if (tabs && tabs.length > 0) {
+        tabs.forEach(tab => {
+            if (tab.getAttribute('data-tab') === tabId) {
+                tab.classList.add('active');
+            } else {
+                tab.classList.remove('active');
+            }
+        });
+    }
     
     // Загружаем данные для выбранной вкладки
     loadTabData(tabId);
@@ -203,21 +250,18 @@ function switchTab(tabId) {
 
 // Функция для загрузки данных вкладки
 async function loadTabData(tabId) {
-    try {
-        switch (tabId) {
-            case 'scores':
-                await loadScores();
-                break;
-            case 'leaders':
-                await loadLeaders();
-                break;
-            case 'participants':
-                await loadParticipants();
-                break;
-        }
-    } catch (error) {
-        console.error(`Ошибка загрузки данных для вкладки ${tabId}:`, error);
-        showError(`Ошибка загрузки данных для вкладки ${tabId}`);
+    console.log('Загрузка данных для вкладки:', tabId);
+    
+    switch (tabId) {
+        case 'scores':
+            await loadScores();
+            break;
+        case 'specialPrizes':
+            await loadSpecialPrizes();
+            break;
+        case 'participants':
+            await loadParticipants();
+            break;
     }
 }
 
@@ -243,137 +287,235 @@ async function loadScores() {
         
         console.log('Отфильтрованные оценки:', filteredScores);
         
+        // Определяем, какой контейнер использовать в зависимости от структуры HTML
+        const container = scoreCards || scoresList;
+        
         // Очищаем контейнер
-        scoreCards.innerHTML = '';
-        
-        if (filteredScores.length === 0) {
-            scoreCards.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
-            return;
+        if (container) {
+            container.innerHTML = '';
+            
+            if (filteredScores.length === 0) {
+                container.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+                return;
+            }
+            
+            // Если это admin.html (используем scoreCards)
+            if (scoreCards) {
+                // Создаем карточки для каждого участника
+                filteredScores.forEach(score => {
+                    const card = document.createElement('div');
+                    card.className = 'score-card';
+                    
+                    // Создаем путь к изображению (предполагаем, что номер участника используется в имени файла)
+                    const imgPath = `../card/${score.participant}.jpg`;
+                    
+                    card.innerHTML = `
+                        <div class="score-header">
+                            <div class="score-info">
+                                <h3>${score.nomination}</h3>
+                                <p>Участник ${score.participant} - ${score.name}</p>
+                            </div>
+                            <div class="score-image">
+                                <a href="${imgPath}" class="lightzoom" data-lightzoom>
+                                    <img src="${imgPath}" alt="Участник ${score.participant}" onerror="this.src='../card/no-image.jpg';">
+                                </a>
+                            </div>
+                        </div>
+                        <div class="score-details">
+                            <div class="score-item">
+                                <span class="score-label">Оценка 1:</span>
+                                <span class="score-value">${score.score1 !== null ? score.score1.toFixed(2) : 'Нет данных'}</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Оценка 2:</span>
+                                <span class="score-value">${score.score2 !== null ? score.score2.toFixed(2) : 'Нет данных'}</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-label">Оценка 3:</span>
+                                <span class="score-value">${score.score3 !== null ? score.score3.toFixed(2) : 'Нет данных'}</span>
+                            </div>
+                            <div class="score-item final">
+                                <span class="score-label">Итоговая оценка:</span>
+                                <span class="score-value">${score.finalScore !== null ? score.finalScore.toFixed(2) : 'Нет данных'}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+                
+                // Инициализация lightzoom после добавления всех карточек
+                if (typeof $ !== 'undefined' && $.lightzoom) {
+                    $('.lightzoom').lightzoom({
+                        speed: 400,
+                        overlayOpacity: 0.5
+                    });
+                }
+            } else if (scoresList) { // Если это index.html (используем scoresList)
+                // Создаем список для index.html
+                filteredScores.forEach(score => {
+                    const item = document.createElement('div');
+                    item.className = 'score-item';
+                    
+                    item.innerHTML = `
+                        <div class="score-header">
+                            <strong>${score.nomination} - Участник ${score.participant}</strong>
+                            <span class="score-value">${score.finalScore !== null ? score.finalScore.toFixed(2) : 'Нет оценки'}</span>
+                        </div>
+                    `;
+                    
+                    container.appendChild(item);
+                });
+            }
         }
-        
-        // Создаем карточки для каждого участника
-        filteredScores.forEach(score => {
-            const card = document.createElement('div');
-            card.className = 'score-card';
-            
-            // Создаем путь к изображению (предполагаем, что номер участника используется в имени файла)
-            const imgPath = `../card/${score.participant}.jpg`;
-            
-            card.innerHTML = `
-                <div class="score-header">
-                    <div class="score-info">
-                        <h3>${score.nomination}</h3>
-                        <p>Участник ${score.participant} - ${score.name}</p>
-                    </div>
-                    <div class="score-image">
-                        <a href="${imgPath}" class="lightzoom" data-lightzoom>
-                            <img src="${imgPath}" alt="Участник ${score.participant}" onerror="this.src='../card/no-image.jpg';">
-                        </a>
-                    </div>
-                </div>
-                <div class="score-details">
-                    <div class="score-item">
-                        <span class="score-label">Оценка 1:</span>
-                        <span class="score-value">${score.score1 !== null ? score.score1.toFixed(2) : 'Нет данных'}</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">Оценка 2:</span>
-                        <span class="score-value">${score.score2 !== null ? score.score2.toFixed(2) : 'Нет данных'}</span>
-                    </div>
-                    <div class="score-item">
-                        <span class="score-label">Оценка 3:</span>
-                        <span class="score-value">${score.score3 !== null ? score.score3.toFixed(2) : 'Нет данных'}</span>
-                    </div>
-                    <div class="score-item final">
-                        <span class="score-label">Итоговая оценка:</span>
-                        <span class="score-value">${score.finalScore !== null ? score.finalScore.toFixed(2) : 'Нет данных'}</span>
-                    </div>
-                </div>
-            `;
-            
-            scoreCards.appendChild(card);
-        });
-        
-        // Инициализация lightzoom после добавления всех карточек
-        $('.lightzoom').lightzoom({
-            speed: 400,
-            overlayOpacity: 0.5
-        });
     } catch (error) {
         console.error('Ошибка при загрузке оценок:', error);
         showError('Ошибка при загрузке оценок');
     }
 }
 
-// Функция для загрузки лидеров
-async function loadLeaders() {
+// Функция для загрузки номинаций спецпризов
+async function loadSpecialNominations() {
     try {
-        const nomination = leadersNomination.value;
-        const limit = parseInt(leadersLimit.value);
-        console.log('Загрузка лидеров для номинации:', nomination, 'с лимитом:', limit);
-        
-        // Фильтруем оценки из глобальных данных
-        let filteredScores = appData.scores;
-        
-        if (nomination) {
-            filteredScores = filteredScores.filter(score => score.nomination === nomination);
-        }
-        
-        // Сортируем по итоговой оценке
-        filteredScores = filteredScores.sort((a, b) => {
-            if (a.finalScore === null) return 1;
-            if (b.finalScore === null) return -1;
-            return b.finalScore - a.finalScore;
-        });
-        
-        // Ограничиваем количество лидеров
-        const leaders = filteredScores.slice(0, limit);
-        
-        console.log('Лидеры:', leaders);
-        
-        // Очищаем контейнер
-        leadersList.innerHTML = '';
-        
-        if (leaders.length === 0) {
-            leadersList.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+        // Проверяем, что модуль SpecialPrizes доступен
+        if (!window.SpecialPrizes) {
+            console.error('Модуль SpecialPrizes не найден');
             return;
         }
         
-        // Создаем список лидеров
-        leaders.forEach((leader, index) => {
-            const leaderItem = document.createElement('div');
-            leaderItem.className = 'leader-item';
+        // Получаем номинации спецпризов
+        const nominations = await SpecialPrizes.getSpecialNominations();
+        console.log('Загружены номинации спецпризов:', nominations);
+        
+        // Заполняем выпадающий список
+        if (specialNominationFilter) {
+            specialNominationFilter.innerHTML = '<option value="">Все спецпризы</option>';
             
-            // Создаем путь к изображению
-            const imgPath = `../card/${leader.participant}.jpg`;
-            
-            leaderItem.innerHTML = `
-                <div class="leader-rank">${index + 1}</div>
-                <div class="leader-info">
-                    <h3>${leader.nomination}</h3>
-                    <p>Участник ${leader.participant} - ${leader.name}</p>
-                </div>
-                <div class="leader-image">
-                    <a href="${imgPath}" class="lightzoom" data-lightzoom>
-                        <img src="${imgPath}" alt="Участник ${leader.participant}" onerror="this.src='../card/no-image.jpg';">
-                    </a>
-                </div>
-                <div class="leader-score">
-                    <span class="score-value">${leader.finalScore !== null ? leader.finalScore.toFixed(2) : 'Нет данных'}</span>
-                </div>
-            `;
-            
-            leadersList.appendChild(leaderItem);
+            nominations.forEach(nomination => {
+                const option = document.createElement('option');
+                option.value = nomination;
+                option.textContent = nomination;
+                specialNominationFilter.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке номинаций спецпризов:', error);
+        showError('Ошибка при загрузке номинаций спецпризов');
+    }
+}
+
+// Функция для загрузки данных спецпризов
+async function loadSpecialPrizes() {
+    try {
+        // Получаем выбранную номинацию из фильтра
+        const nomination = specialNominationFilter.value;
+        console.log('Загрузка спецпризов для номинации:', nomination || 'все');
+        
+        // Проверяем, что модуль SpecialPrizes доступен
+        if (!window.SpecialPrizes) {
+            console.error('Модуль SpecialPrizes не найден');
+            specialPrizesList.innerHTML = '<div class="error">Модуль SpecialPrizes не найден</div>';
+            return;
+        }
+        
+        // Показываем статус загрузки
+        specialPrizesList.innerHTML = '<div class="loading">Загрузка спецпризов...</div>';
+        
+        // Получаем данные из API
+        let winners;
+        if (nomination) {
+            winners = await SpecialPrizes.getSpecialPrizeWinners(nomination);
+        } else {
+            winners = await SpecialPrizes.getAllSpecialPrizeWinners();
+        }
+        
+        console.log('Получены победители спецпризов:', winners);
+        
+        // Очищаем контейнер
+        specialPrizesList.innerHTML = '';
+        
+        // Проверяем, есть ли данные для отображения
+        if (!winners || winners.length === 0) {
+            specialPrizesList.innerHTML = '<div class="no-data">Нет данных о спецпризах</div>';
+            return;
+        }
+        
+        // Группируем победителей по номинациям
+        const winnersByNomination = {};
+        winners.forEach(winner => {
+            if (!winnersByNomination[winner.nomination]) {
+                winnersByNomination[winner.nomination] = [];
+            }
+            winnersByNomination[winner.nomination].push(winner);
         });
         
-        // Инициализация lightzoom после добавления всех лидеров
-        $('.lightzoom').lightzoom({
-            speed: 400,
-            overlayOpacity: 0.5
+        // Создаем DOM-элементы для отображения данных
+        Object.keys(winnersByNomination).forEach(nominationName => {
+            const nominationWinners = winnersByNomination[nominationName];
+            
+            // Создаем контейнер для номинации
+            const nominationContainer = document.createElement('div');
+            nominationContainer.className = 'special-prize-category';
+            
+            // Добавляем заголовок номинации
+            const nominationHeader = document.createElement('h3');
+            nominationHeader.className = 'special-prize-header';
+            nominationHeader.textContent = nominationName;
+            nominationContainer.appendChild(nominationHeader);
+            
+            // Добавляем победителей
+            const winnersContainer = document.createElement('div');
+            winnersContainer.className = 'special-prize-winners';
+            
+            nominationWinners.forEach((winner, index) => {
+                const winnerItem = document.createElement('div');
+                winnerItem.className = 'special-prize-winner';
+                
+                // Создаем путь к изображению
+                const imgPath = `../card/${winner.participant}.jpg`;
+                
+                // Для admin.html - более красивый дизайн с изображениями
+                if (isAdminHtml) {
+                    winnerItem.innerHTML = `
+                        <div class="winner-info">
+                            <div class="winner-place">${winner.place || ''}</div>
+                            <div class="winner-details">
+                                <p>Участник ${winner.participant} - ${winner.name || ''}</p>
+                            </div>
+                            <div class="winner-image">
+                                <a href="${imgPath}" class="lightzoom" data-lightzoom>
+                                    <img src="${imgPath}" alt="Участник ${winner.participant}" onerror="this.src='../card/no-image.jpg';">
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Для index.html - более простой дизайн
+                    winnerItem.innerHTML = `
+                        <div class="winner-header">
+                            <span class="winner-place">${winner.place || ''}</span>
+                            <strong>Участник ${winner.participant} ${winner.name ? '- ' + winner.name : ''}</strong>
+                        </div>
+                    `;
+                }
+                
+                winnersContainer.appendChild(winnerItem);
+            });
+            
+            nominationContainer.appendChild(winnersContainer);
+            specialPrizesList.appendChild(nominationContainer);
         });
+        
+        // Инициализация lightzoom, если есть jQuery и мы в admin.html
+        if (isAdminHtml && typeof $ !== 'undefined' && $.lightzoom) {
+            $('.lightzoom').lightzoom({
+                speed: 400,
+                overlayOpacity: 0.5
+            });
+        }
     } catch (error) {
-        console.error('Ошибка при загрузке лидеров:', error);
-        showError('Ошибка при загрузке лидеров');
+        console.error('Ошибка при загрузке спецпризов:', error);
+        specialPrizesList.innerHTML = `<div class="error">Ошибка при загрузке спецпризов: ${error.message}</div>`;
     }
 }
 

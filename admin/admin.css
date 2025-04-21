@@ -25,11 +25,35 @@
     border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 0;
+    background-color: var(--tg-theme-text-color, #000);
+    transition: width 0.3s ease;
+}
+
+.tab:hover:before {
+    width: 100%;
 }
 
 .tab.active {
     background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
     color: var(--tg-theme-text-color, #000);
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.tab.active:before {
+    width: 100%;
 }
 
 .content {
@@ -359,5 +383,177 @@ body {
     
     .leader-rank {
         margin-bottom: 10px;
+    }
+}
+
+/* Стили для рейтинга в спецпризах */
+.leader-rank {
+    background-color: #3498db;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+/* Стили для списка спецпризов в index.html */
+#specialPrizes .score-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#specialPrizes .score-header .leader-rank {
+    margin-right: 15px;
+}
+
+#specialPrizes .score-header strong {
+    flex-grow: 1;
+}
+
+#specialPrizes .score-header .score-value {
+    font-weight: bold;
+    background-color: #eaf5fe;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .tabs {
+        margin-bottom: 15px;
+    }
+    
+    .tab {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+    }
+    
+    #specialPrizes .score-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    #specialPrizes .score-header .leader-rank {
+        margin-bottom: 5px;
+    }
+    
+    #specialPrizes .score-header .score-value {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+}
+
+/* Стили для специальных призов */
+.special-prize-category {
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.special-prize-header {
+    padding: 15px;
+    margin: 0;
+    background-color: #2481cc;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.special-prize-winners {
+    padding: 10px;
+}
+
+.special-prize-winner {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.special-prize-winner:last-child {
+    border-bottom: none;
+}
+
+.winner-info {
+    display: flex;
+    align-items: center;
+}
+
+.winner-place {
+    background-color: #3498db;
+    color: white;
+    width: auto;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.winner-details {
+    flex-grow: 1;
+}
+
+.winner-details p {
+    margin: 0;
+}
+
+.winner-image {
+    margin-left: 15px;
+}
+
+.winner-image img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #3498db;
+    transition: transform 0.3s ease;
+}
+
+.winner-image img:hover {
+    transform: scale(1.1);
+}
+
+.winner-header {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.winner-header .winner-place {
+    margin-right: 10px;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+    .winner-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .winner-place {
+        margin-bottom: 10px;
+    }
+    
+    .winner-image {
+        margin-left: 0;
+        margin-top: 10px;
+        align-self: center;
     }
 } 

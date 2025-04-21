@@ -312,5 +312,6 @@ module.exports = {
   getBlocks,
   fetchFinalScores,
   getNominationLeaders,
-  getParticipants
+  getParticipants,
+  getSheetService
 }; 

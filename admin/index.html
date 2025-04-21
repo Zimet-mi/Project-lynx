@@ -3,80 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель Lynx</title>
+    <title>Панель администратора</title>
     <link rel="stylesheet" href="admin.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="../lightzoom/lightzoom.js"></script>
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>Админ-панель Lynx</h1>
+            <h1>Панель администратора</h1>
         </header>
         
         <div class="tabs">
-            <button class="tab active" data-tab="scores">Оценки</button>
-            <button class="tab" data-tab="leaders">Лидеры</button>
+            <button class="tab active" data-tab="scores">Итоговые оценки</button>
+            <button class="tab" data-tab="specialPrizes">Спецпризы</button>
             <button class="tab" data-tab="participants">Участники</button>
         </div>
         
-        <div id="scores" class="content">
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="nominationFilter">Номинация:</label>
+        <div class="content">
+            <!-- Вкладка с итоговыми оценками -->
+            <div class="tab-content active" id="scoresTab">
+                <div class="filters">
                     <select id="nominationFilter">
                         <option value="">Все номинации</option>
                     </select>
-                </div>
-                <div class="filter-group">
-                    <label for="blockFilter">Блок:</label>
-                    <select id="blockFilter">
-                        <option value="">Все блоки</option>
+                    <select id="participantFilter">
+                        <option value="">Все участники</option>
                     </select>
                 </div>
-            </div>
-            <div id="scoresList" class="list-container">
-                <div class="loading">Загрузка оценок...</div>
-            </div>
-        </div>
-        
-        <div id="leaders" class="content" style="display: none;">
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="leadersNomination">Номинация:</label>
-                    <select id="leadersNomination">
-                        <option value="">Выберите номинацию</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="leadersLimit">Количество:</label>
-                    <select id="leadersLimit">
-                        <option value="5">Топ-5</option>
-                        <option value="10">Топ-10</option>
-                        <option value="20">Топ-20</option>
-                    </select>
+                
+                <div class="score-cards" id="scoreCards">
+                    <!-- Карточки с оценками будут добавлены через JavaScript -->
                 </div>
             </div>
-            <div id="leadersList" class="list-container">
-                <div class="loading">Загрузка лидеров...</div>
-            </div>
-        </div>
-        
-        <div id="participants" class="content" style="display: none;">
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="participantsBlock">Блок:</label>
-                    <select id="participantsBlock">
-                        <option value="">Все блоки</option>
+            
+            <!-- Вкладка со спецпризами -->
+            <div class="tab-content" id="specialPrizesTab">
+                <div class="filters">
+                    <select id="specialNominationFilter">
+                        <option value="">Все спецпризы</option>
                     </select>
                 </div>
+                
+                <div class="special-prizes-list" id="specialPrizesList">
+                    <div class="loading">Загрузка спецпризов...</div>
+                </div>
             </div>
-            <div id="participantsList" class="list-container">
-                <div class="loading">Загрузка участников...</div>
+            
+            <!-- Вкладка с участниками -->
+            <div class="tab-content" id="participantsTab">
+                <div class="filters">
+                    <select id="participantsNomination">
+                        <option value="">Все номинации</option>
+                    </select>
+                    <input type="text" id="participantsFilter" placeholder="Поиск участников...">
+                </div>
+                
+                <div class="participants-list" id="participantsList">
+                    <!-- Список участников будет добавлен через JavaScript -->
+                </div>
             </div>
         </div>
     </div>
     
-    <script src="utils.js"></script>
-    <script src="admin.js"></script>
+    <script src="utils.js" defer></script>
+    <script src="special_prizes.js" defer></script>
+    <script src="admin.js" defer></script>
 </body>
 </html> 
