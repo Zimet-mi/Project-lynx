@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель Lynx</title>
+    <link rel="stylesheet" href="admin.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Админ-панель Lynx</h1>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab active" data-tab="scores">Оценки</button>
+            <button class="tab" data-tab="leaders">Лидеры</button>
+            <button class="tab" data-tab="participants">Участники</button>
+        </div>
+        
+        <div id="scores" class="content">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="nominationFilter">Номинация:</label>
+                    <select id="nominationFilter">
+                        <option value="">Все номинации</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="blockFilter">Блок:</label>
+                    <select id="blockFilter">
+                        <option value="">Все блоки</option>
+                    </select>
+                </div>
+            </div>
+            <div id="scoresList" class="list-container">
+                <div class="loading">Загрузка оценок...</div>
+            </div>
+        </div>
+        
+        <div id="leaders" class="content" style="display: none;">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="leadersNomination">Номинация:</label>
+                    <select id="leadersNomination">
+                        <option value="">Выберите номинацию</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="leadersLimit">Количество:</label>
+                    <select id="leadersLimit">
+                        <option value="5">Топ-5</option>
+                        <option value="10">Топ-10</option>
+                        <option value="20">Топ-20</option>
+                    </select>
+                </div>
+            </div>
+            <div id="leadersList" class="list-container">
+                <div class="loading">Загрузка лидеров...</div>
+            </div>
+        </div>
+        
+        <div id="participants" class="content" style="display: none;">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="participantsBlock">Блок:</label>
+                    <select id="participantsBlock">
+                        <option value="">Все блоки</option>
+                    </select>
+                </div>
+            </div>
+            <div id="participantsList" class="list-container">
+                <div class="loading">Загрузка участников...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="utils.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html> 
