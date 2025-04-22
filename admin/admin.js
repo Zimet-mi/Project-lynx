@@ -303,8 +303,9 @@ async function loadScores() {
         if (container) {
             container.innerHTML = '';
             
+            // Если нет данных для отображения
             if (filteredScores.length === 0) {
-                container.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
+                container.innerHTML = '<div class="no-data">Нет оценок для отображения</div>';
                 return;
             }
             
@@ -332,16 +333,16 @@ async function loadScores() {
                         </div>
                         <div class="score-details">
                             <div class="score-item">
-                                <span class="score-label">Оценка 1:</span>
-                                <span class="score-value">${score.score1 !== null ? score.score1.toFixed(2) : 'Нет данных'}</span>
+                                <span class="score-label">${score.jury1.name}:</span>
+                                <span class="score-value">${score.jury1.score !== null ? score.jury1.score.toFixed(2) : 'Нет данных'}</span>
                             </div>
                             <div class="score-item">
-                                <span class="score-label">Оценка 2:</span>
-                                <span class="score-value">${score.score2 !== null ? score.score2.toFixed(2) : 'Нет данных'}</span>
+                                <span class="score-label">${score.jury2.name}:</span>
+                                <span class="score-value">${score.jury2.score !== null ? score.jury2.score.toFixed(2) : 'Нет данных'}</span>
                             </div>
                             <div class="score-item">
-                                <span class="score-label">Оценка 3:</span>
-                                <span class="score-value">${score.score3 !== null ? score.score3.toFixed(2) : 'Нет данных'}</span>
+                                <span class="score-label">${score.jury3.name}:</span>
+                                <span class="score-value">${score.jury3.score !== null ? score.jury3.score.toFixed(2) : 'Нет данных'}</span>
                             </div>
                             <div class="score-item final">
                                 <span class="score-label">Итоговая оценка:</span>
@@ -519,6 +520,13 @@ async function loadSpecialPrizes() {
             // Создаем контейнер для номинации
             const nominationContainer = document.createElement('div');
             nominationContainer.className = 'special-prize-category';
+            
+            // Дополнительный класс для выделения особых номинаций
+            if (nominationName.toLowerCase().includes('гран-при')) {
+                nominationContainer.classList.add('grand-prix');
+            } else if (nominationName.toLowerCase().includes('пошив')) {
+                nominationContainer.classList.add('best-sewing');
+            }
             
             // Добавляем заголовок номинации
             const nominationHeader = document.createElement('h3');

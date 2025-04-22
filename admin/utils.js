@@ -5,7 +5,7 @@ const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ дл�
 const SHEET_NAME = 'NewRes'; // Страница с результатами
 
 // Диапазон для данных итоговой таблицы
-const RANGE = 'A1:Z500';
+const RANGE = 'A1:H500';
 
 // Время жизни кеша
 const CACHE_EXPIRY = 10000; // 10 секунд (для тестирования)
@@ -82,6 +82,29 @@ async function parseSheetData() {
         let currentNomination = null;
         let headerRow = -1; // Индекс строки с заголовками (если есть)
         
+        // Получаем имена жюри из ячеек C4, D4, E4
+        let juryNames = ['Оценка 1', 'Оценка 2', 'Оценка 3']; // значения по умолчанию
+        
+        // Ячейки C4, D4, E4 (индексы строк и столбцов начинаются с 0, поэтому [3][2], [3][3], [3][4])
+        if (rows.length > 3) {
+            // Получаем имя жюри 1 из ячейки C4
+            if (rows[3] && rows[3].length > 2 && rows[3][2]) {
+                juryNames[0] = rows[3][2].toString().trim();
+            }
+            
+            // Получаем имя жюри 2 из ячейки D4
+            if (rows[3] && rows[3].length > 3 && rows[3][3]) {
+                juryNames[1] = rows[3][3].toString().trim();
+            }
+            
+            // Получаем имя жюри 3 из ячейки E4
+            if (rows[3] && rows[3].length > 4 && rows[3][4]) {
+                juryNames[2] = rows[3][4].toString().trim();
+            }
+            
+            console.log('Получены имена жюри из ячеек C4, D4, E4:', juryNames);
+        }
+        
         // Выводим информацию о первых строках для отладки
         console.log('Первые 10 строк для анализа:');
         for (let i = 0; i < Math.min(10, rows.length); i++) {
@@ -156,9 +179,18 @@ async function parseSheetData() {
                 nomination: currentNomination,
                 participant: number,
                 name: name,
-                score1: score1,
-                score2: score2,
-                score3: score3,
+                jury1: {
+                    name: juryNames[0],
+                    score: score1
+                },
+                jury2: {
+                    name: juryNames[1],
+                    score: score2
+                },
+                jury3: {
+                    name: juryNames[2],
+                    score: score3
+                },
                 finalScore: finalScore
             };
             

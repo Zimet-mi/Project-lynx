@@ -3,7 +3,7 @@
 // Глобальные переменные
 const SPECIALS_API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
 const SPECIALS_SHEET_NAME = 'Specials'; // Страница со специальными призами
-const SPECIALS_RANGE = 'A1:Z500';
+const SPECIALS_RANGE = 'A1:I670';
 
 // Функция для загрузки данных из Google Sheets со страницы Specials
 async function fetchSpecialsData() {
@@ -78,24 +78,24 @@ async function parseSpecialsData() {
         // Получим имена жюри из конкретных ячеек
         let juryNames = ['Жюри 1', 'Жюри 2', 'Жюри 3']; // значения по умолчанию
         
-        // Ячейки C2, D2, E2 (индексы строк и столбцов начинаются с 0, поэтому [1][2], [1][3], [1][4])
-        if (rows.length > 1) {
-            // Получаем имя жюри 1 из ячейки C2
-            if (rows[1] && rows[1].length > 2 && rows[1][2]) {
-                juryNames[0] = rows[1][2].toString().trim();
+        // Ячейки C4, D4, E4 (индексы строк и столбцов начинаются с 0, поэтому [3][2], [3][3], [3][4])
+        if (rows.length > 3) {
+            // Получаем имя жюри 1 из ячейки C4
+            if (rows[3] && rows[3].length > 2 && rows[3][2]) {
+                juryNames[0] = rows[3][2].toString().trim();
             }
             
-            // Получаем имя жюри 2 из ячейки D2
-            if (rows[1] && rows[1].length > 3 && rows[1][3]) {
-                juryNames[1] = rows[1][3].toString().trim();
+            // Получаем имя жюри 2 из ячейки D4
+            if (rows[3] && rows[3].length > 3 && rows[3][3]) {
+                juryNames[1] = rows[3][3].toString().trim();
             }
             
-            // Получаем имя жюри 3 из ячейки E2
-            if (rows[1] && rows[1].length > 4 && rows[1][4]) {
-                juryNames[2] = rows[1][4].toString().trim();
+            // Получаем имя жюри 3 из ячейки E4
+            if (rows[3] && rows[3].length > 4 && rows[3][4]) {
+                juryNames[2] = rows[3][4].toString().trim();
             }
             
-            console.log('Получены имена жюри из ячеек C2, D2, E2:', juryNames);
+            console.log('Получены имена жюри из ячеек C4, D4, E4:', juryNames);
         }
         
         // Анализ каждой строки
@@ -105,9 +105,26 @@ async function parseSpecialsData() {
             // Пропускаем пустые строки
             if (!row || row.length === 0) continue;
             
-            // Если первая ячейка содержит название приза и вторая пустая - это заголовок номинации
-            if (row[0] && (!row[1] || row[1].trim() === '')) {
-                currentNomination = row[0].trim();
+            // Логируем потенциальные заголовки номинаций для отладки
+            if (row[0] && row[0].trim()) {
+                console.log(`Потенциальная номинация [${i}]:`, row[0], row.length > 1 ? `Вторая ячейка: "${row[1] || ''}"` : 'Вторая ячейка пуста');
+            }
+            
+            // Расширенная логика определения заголовка номинации:
+            // 1. Если первая ячейка содержит текст, а вторая пуста
+            // 2. Если первая ячейка содержит текст, который включает "Гран-при" или "пошив" (без учета регистра)
+            const firstCell = row[0] ? row[0].toString().trim() : '';
+            const secondCell = row[1] ? row[1].toString().trim() : '';
+            
+            const isNominationHeader = 
+                (firstCell && !secondCell) || // стандартный случай - первая ячейка заполнена, вторая пуста
+                (firstCell && (
+                    firstCell.toLowerCase().includes('гран-при') || 
+                    firstCell.toLowerCase().includes('пошив')
+                ));
+            
+            if (isNominationHeader) {
+                currentNomination = firstCell;
                 if (!nominations.includes(currentNomination)) {
                     nominations.push(currentNomination);
                 }

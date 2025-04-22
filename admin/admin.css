@@ -463,6 +463,29 @@ body {
     overflow: hidden;
 }
 
+/* Стили для категории Гран-при */
+.special-prize-category.grand-prix {
+    box-shadow: 0 4px 10px rgba(218, 165, 32, 0.5);
+    border: 1px solid rgba(218, 165, 32, 0.7);
+}
+
+.special-prize-category.grand-prix .special-prize-header {
+    background: linear-gradient(45deg, #c59d5f, #ebd197);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Стили для категории Лучший пошив */
+.special-prize-category.best-sewing {
+    box-shadow: 0 4px 10px rgba(70, 130, 180, 0.5);
+    border: 1px solid rgba(70, 130, 180, 0.7);
+}
+
+.special-prize-category.best-sewing .special-prize-header {
+    background: linear-gradient(45deg, #4682b4, #87ceeb);
+    font-weight: bold;
+}
+
 .special-prize-header {
     padding: 15px;
     margin: 0;
