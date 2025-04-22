@@ -5,6 +5,15 @@ if (window.Telegram && window.Telegram.WebApp) {
     tg.expand();
 }
 
+// Флаг для отслеживания инициализации модуля SpecialPrizes
+let specialPrizesModuleReady = false;
+
+// Добавляем слушатель события загрузки модуля SpecialPrizes
+document.addEventListener('specialPrizesReady', (event) => {
+    console.log('Получено событие specialPrizesReady, модуль загружен');
+    specialPrizesModuleReady = true;
+});
+
 // Глобальные переменные для хранения данных
 let appData = {
     nominations: [],
@@ -377,10 +386,37 @@ async function loadScores() {
 // Функция для загрузки номинаций спецпризов
 async function loadSpecialNominations() {
     try {
-        // Проверяем, что модуль SpecialPrizes доступен
-        if (!window.SpecialPrizes) {
-            console.error('Модуль SpecialPrizes не найден');
-            return;
+        // Проверяем готовность модуля
+        if (!window.SpecialPrizes && !specialPrizesModuleReady) {
+            console.log('Модуль SpecialPrizes не найден, создаем пустой модуль');
+            // Создаем заглушку объекта, пока скрипт не загрузится
+            window.SpecialPrizes = {
+                getSpecialNominations: async () => {
+                    console.log('Используется временный метод getSpecialNominations');
+                    return [];
+                },
+                getSpecialPrizeWinners: async () => {
+                    console.log('Используется временный метод getSpecialPrizeWinners');
+                    return [];
+                },
+                getAllSpecialPrizeWinners: async () => {
+                    console.log('Используется временный метод getAllSpecialPrizeWinners');
+                    return [];
+                }
+            };
+            
+            // Ждем событие инициализации модуля
+            console.log('Ожидание инициализации модуля SpecialPrizes...');
+            
+            // Ждем небольшую паузу, чтобы дать шанс подгрузиться скрипту
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Проверяем еще раз после паузы
+            if (!specialPrizesModuleReady && !window.SpecialPrizes.isInitialized) {
+                console.error('Модуль SpecialPrizes все еще не загружен после ожидания');
+            } else {
+                console.log('Модуль SpecialPrizes успешно инициализирован');
+            }
         }
         
         // Получаем номинации спецпризов
@@ -411,11 +447,38 @@ async function loadSpecialPrizes() {
         const nomination = specialNominationFilter.value;
         console.log('Загрузка спецпризов для номинации:', nomination || 'все');
         
-        // Проверяем, что модуль SpecialPrizes доступен
-        if (!window.SpecialPrizes) {
-            console.error('Модуль SpecialPrizes не найден');
-            specialPrizesList.innerHTML = '<div class="error">Модуль SpecialPrizes не найден</div>';
-            return;
+        // Проверяем готовность модуля
+        if (!window.SpecialPrizes && !specialPrizesModuleReady) {
+            console.log('Модуль SpecialPrizes не найден для loadSpecialPrizes, создаем пустой модуль');
+            // Создаем заглушку объекта, пока скрипт не загрузится
+            window.SpecialPrizes = {
+                getSpecialNominations: async () => {
+                    console.log('Используется временный метод getSpecialNominations');
+                    return [];
+                },
+                getSpecialPrizeWinners: async () => {
+                    console.log('Используется временный метод getSpecialPrizeWinners');
+                    return [];
+                },
+                getAllSpecialPrizeWinners: async () => {
+                    console.log('Используется временный метод getAllSpecialPrizeWinners');
+                    return [];
+                }
+            };
+            
+            // Ждем событие инициализации модуля
+            console.log('Ожидание инициализации модуля SpecialPrizes...');
+            
+            // Ждем небольшую паузу, чтобы дать шанс подгрузиться скрипту
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Проверяем еще раз после паузы
+            if (!specialPrizesModuleReady && !window.SpecialPrizes.isInitialized) {
+                specialPrizesList.innerHTML = '<div class="error">Модуль SpecialPrizes не загружен</div>';
+                return;
+            } else {
+                console.log('Модуль SpecialPrizes успешно инициализирован');
+            }
         }
         
         // Показываем статус загрузки
