@@ -21,6 +21,12 @@ let appData = {
     scores: []
 };
 
+// Глобальный объект для хранения победителей
+let winners = {
+    scores: {}, // формат: {номинация: [номераУчастников]}
+    specialPrizes: {} // формат: {номинация: [номераУчастников]}
+};
+
 // Глобальные переменные для DOM-элементов
 let tabs, tabContents, nominationFilter, specialNominationFilter;
 let participantsNomination, participantsFilter, scoreCards, scoresList;
@@ -29,6 +35,49 @@ let specialPrizesList, participantsList, isAdminHtml;
 // Ждем загрузки DOM перед инициализацией
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM загружен, начинаем инициализацию...');
+    
+    // Загружаем сохраненных победителей из localStorage
+    const savedWinners = localStorage.getItem('lynxWinners');
+    if (savedWinners) {
+        try {
+            const parsedWinners = JSON.parse(savedWinners);
+            
+            // Проверяем и конвертируем старый формат в новый если нужно
+            if (parsedWinners && typeof parsedWinners === 'object') {
+                // Создаем новую структуру
+                winners = {
+                    scores: {},
+                    specialPrizes: {}
+                };
+                
+                // Обрабатываем секцию scores
+                if (parsedWinners.scores) {
+                    Object.keys(parsedWinners.scores).forEach(nomination => {
+                        const value = parsedWinners.scores[nomination];
+                        // Если значение - строка (старый формат), преобразуем в массив
+                        winners.scores[nomination] = Array.isArray(value) ? value : [value];
+                    });
+                }
+                
+                // Обрабатываем секцию specialPrizes
+                if (parsedWinners.specialPrizes) {
+                    Object.keys(parsedWinners.specialPrizes).forEach(nomination => {
+                        const value = parsedWinners.specialPrizes[nomination];
+                        // Если значение - строка (старый формат), преобразуем в массив
+                        winners.specialPrizes[nomination] = Array.isArray(value) ? value : [value];
+                    });
+                }
+            } else {
+                winners = { scores: {}, specialPrizes: {} };
+            }
+            
+            console.log('Загружены сохраненные победители:', winners);
+        } catch (error) {
+            console.error('Ошибка при загрузке сохраненных победителей:', error);
+            // Сбрасываем к пустым объектам при ошибке
+            winners = { scores: {}, specialPrizes: {} };
+        }
+    }
     
     // Получаем элементы DOM
     tabs = document.querySelectorAll('.tab');
@@ -100,11 +149,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     nominationFilter.addEventListener('change', async () => {
         console.log('Выбрана номинация:', nominationFilter.value);
         await loadScores();
+        // Применяем сохраненные отметки после загрузки данных
+        setTimeout(() => applyWinnerMarks('scores'), 100);
     });
 
     specialNominationFilter.addEventListener('change', async () => {
         console.log('Выбран спецприз:', specialNominationFilter.value);
         await loadSpecialPrizes();
+        // Применяем сохраненные отметки после загрузки данных
+        setTimeout(() => applyWinnerMarks('specialPrizes'), 100);
     });
 
     participantsNomination.addEventListener('change', () => {
@@ -125,6 +178,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tabId = tab.getAttribute('data-tab');
             switchTab(tabId);
         });
+    });
+
+    // Инициализация обработчика для кнопок отметки победителя
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('winner-btn')) {
+            const participant = event.target.dataset.participant;
+            const nomination = event.target.dataset.nomination;
+            markAsWinner(participant, nomination);
+        }
     });
 
     // Загрузка начальных данных
@@ -155,6 +217,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         showLoading(false);
         console.log('Инициализация завершена успешно');
+        
+        // Сразу применяем сохраненные отметки для активной вкладки
+        const activeTab = document.querySelector('.tab.active');
+        if (activeTab) {
+            const tabId = activeTab.getAttribute('data-tab');
+            if (tabId === 'scores' || tabId === 'specialPrizes') {
+                setTimeout(() => applyWinnerMarks(tabId), 100);
+            }
+        }
     } catch (error) {
         console.error('Ошибка при инициализации:', error);
         showError('Ошибка загрузки данных: ' + error.message);
@@ -278,11 +349,15 @@ async function loadTabData(tabId) {
                 // Используем уже загруженные данные
                 loadScores();
             }
+            // Применяем сохраненные отметки победителей после загрузки данных
+            setTimeout(() => applyWinnerMarks('scores'), 100);
             break;
             
         case 'specialPrizes':
             // Загружаем спецпризы
             loadSpecialPrizes();
+            // Применяем сохраненные отметки победителей после загрузки данных
+            setTimeout(() => applyWinnerMarks('specialPrizes'), 100);
             break;
             
         case 'participants':
@@ -292,6 +367,139 @@ async function loadTabData(tabId) {
             
         default:
             console.warn('Неизвестная вкладка:', tabId);
+    }
+}
+
+// Функция для применения отметок победителей из кеша
+function applyWinnerMarks(category) {
+    console.log(`Применяем сохраненные отметки победителей для категории: ${category}`);
+    
+    try {
+        if (category === 'scores') {
+            // Применяем отметки для итоговых оценок
+            const scoreCards = document.querySelectorAll('.score-card');
+            const currentNomination = nominationFilter.value;
+            
+            // Сначала очищаем все существующие метки в текущей номинации
+            scoreCards.forEach(card => {
+                const button = card.querySelector('.winner-btn');
+                if (button) {
+                    const cardNomination = button.dataset.nomination;
+                    // Если выбрана номинация, очищаем только в ней, иначе очищаем все
+                    if (!currentNomination || cardNomination === currentNomination) {
+                        // Сбрасываем стиль
+                        card.classList.remove('winner');
+                        
+                        // Удаляем значок победителя если есть
+                        const badge = card.querySelector('.winner-badge');
+                        if (badge) badge.remove();
+                        
+                        // Восстанавливаем кнопку
+                        button.textContent = 'Отметить как победителя';
+                    }
+                }
+            });
+            
+            // Проходим по всем номинациям с победителями
+            Object.keys(winners.scores).forEach(nomination => {
+                // Если выбрана определенная номинация, пропускаем остальные
+                if (currentNomination && nomination !== currentNomination) return;
+                
+                // Получаем список победителей в этой номинации
+                const participants = winners.scores[nomination] || [];
+                
+                if (participants.length === 0) return;
+                
+                // Для каждого победителя находим и отмечаем карточку
+                participants.forEach(participant => {
+                    // Ищем соответствующую карточку
+                    scoreCards.forEach(card => {
+                        const button = card.querySelector('.winner-btn');
+                        if (button && button.dataset.participant === participant && button.dataset.nomination === nomination) {
+                            // Выделяем карточку
+                            card.classList.add('winner');
+                            
+                            // Меняем кнопку
+                            button.textContent = 'Снять отметку победителя';
+                            
+                            // Добавляем значок победителя, если его нет
+                            if (!card.querySelector('.winner-badge')) {
+                                const header = card.querySelector('.score-header');
+                                if (header) {
+                                    const winnerBadge = document.createElement('div');
+                                    winnerBadge.className = 'winner-badge';
+                                    winnerBadge.textContent = 'Победитель';
+                                    header.prepend(winnerBadge);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        } else if (category === 'specialPrizes') {
+            // Применяем отметки для спецпризов
+            const winnerElements = document.querySelectorAll('.special-prize-winner');
+            const currentNomination = specialNominationFilter.value;
+            
+            // Сначала очищаем все существующие метки в текущей номинации
+            winnerElements.forEach(item => {
+                const button = item.querySelector('.winner-btn');
+                if (button) {
+                    const itemNomination = button.dataset.nomination;
+                    // Если выбрана номинация, очищаем только в ней, иначе очищаем все
+                    if (!currentNomination || itemNomination === currentNomination) {
+                        // Сбрасываем стиль
+                        item.classList.remove('winner');
+                        
+                        // Удаляем значок победителя если есть
+                        const badge = item.querySelector('.winner-badge');
+                        if (badge) badge.remove();
+                        
+                        // Восстанавливаем кнопку
+                        button.textContent = 'Отметить как победителя';
+                    }
+                }
+            });
+            
+            // Проходим по всем номинациям с победителями
+            Object.keys(winners.specialPrizes).forEach(nomination => {
+                // Если выбрана определенная номинация, пропускаем остальные
+                if (currentNomination && nomination !== currentNomination) return;
+                
+                // Получаем список победителей в этой номинации
+                const participants = winners.specialPrizes[nomination] || [];
+                
+                if (participants.length === 0) return;
+                
+                // Для каждого победителя находим и отмечаем элемент
+                participants.forEach(participant => {
+                    // Ищем соответствующий элемент
+                    winnerElements.forEach(item => {
+                        const button = item.querySelector('.winner-btn');
+                        if (button && button.dataset.participant === participant && button.dataset.nomination === nomination) {
+                            // Выделяем элемент
+                            item.classList.add('winner');
+                            
+                            // Меняем кнопку
+                            button.textContent = 'Снять отметку победителя';
+                            
+                            // Добавляем значок победителя, если его нет
+                            if (!item.querySelector('.winner-badge')) {
+                                const winnerInfo = item.querySelector('.winner-info');
+                                if (winnerInfo) {
+                                    const winnerBadge = document.createElement('div');
+                                    winnerBadge.className = 'winner-badge';
+                                    winnerBadge.textContent = 'Победитель';
+                                    winnerInfo.prepend(winnerBadge);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    } catch (error) {
+        console.error(`Ошибка при применении отметок победителей для ${category}:`, error);
     }
 }
 
@@ -368,6 +576,9 @@ async function loadScores() {
                             <div class="score-item final">
                                 <span class="score-label">Итоговая оценка:</span>
                                 <span class="score-value">${score.finalScore !== null ? score.finalScore.toFixed(2) : 'Нет данных'}</span>
+                            </div>
+                            <div class="score-actions">
+                                <button class="winner-btn" data-participant="${score.participant}" data-nomination="${score.nomination}">Отметить как победителя</button>
                             </div>
                         </div>
                     `;
@@ -614,6 +825,9 @@ async function loadSpecialPrizes() {
                                     <img src="${imgPath}" alt="Участник ${winner.participant}" onerror="this.src='../card/no-image.jpg';">
                                 </a>
                             </div>
+                            <div class="winner-actions">
+                                <button class="winner-btn" data-participant="${winner.participant}" data-nomination="${winner.nomination}">Отметить как победителя</button>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -628,6 +842,9 @@ async function loadSpecialPrizes() {
                             <strong>Участник ${winner.participant} ${winner.name ? '- ' + winner.name : ''}</strong>
                             <span class="jury-marks-count">Отметок: ${winner.marksCount || 0}</span>
                             <span class="jury-names">${votedJuryText}</span>
+                            <div class="winner-actions">
+                                <button class="winner-btn" data-participant="${winner.participant}" data-nomination="${winner.nomination}">Отметить как победителя</button>
+                            </div>
                         </div>
                     `;
                 }
@@ -745,4 +962,65 @@ async function loadParticipants() {
         console.error('Ошибка при загрузке участников:', error);
         showError('Ошибка при загрузке участников');
     }
+}
+
+// Функция для отметки победителя номинации
+async function markAsWinner(participant, nomination) {
+    try {
+        const isSpecialPrize = document.querySelector('.tab[data-tab="specialPrizes"]')?.classList.contains('active') || false;
+        const category = isSpecialPrize ? 'specialPrizes' : 'scores';
+        
+        console.log(`Работаем с победителем: участник ${participant} в номинации "${nomination}" (категория: ${category})`);
+        
+        // Инициализируем массив победителей для номинации, если его еще нет
+        if (!winners[category][nomination]) {
+            winners[category][nomination] = [];
+        }
+        
+        // Проверяем текущее состояние
+        const currentWinners = winners[category][nomination];
+        const isCurrentlyWinner = currentWinners.includes(participant);
+        
+        if (isCurrentlyWinner) {
+            // Если этот участник уже победитель - снимаем отметку
+            winners[category][nomination] = currentWinners.filter(p => p !== participant);
+            console.log(`Убираем отметку победителя у участника ${participant} в номинации "${nomination}"`);
+        } else {
+            // Добавляем нового победителя
+            winners[category][nomination].push(participant);
+            console.log(`Отмечаем участника ${participant} как победителя в номинации "${nomination}"`);
+        }
+        
+        // Сохраняем в localStorage
+        localStorage.setItem('lynxWinners', JSON.stringify(winners));
+        
+        // Применяем визуальные изменения для обновления всех элементов
+        applyWinnerMarks(category);
+        
+        // Сообщение об успехе
+        let successMessage = '';
+        if (isCurrentlyWinner) {
+            successMessage = `Отметка победителя снята с участника ${participant} в ${isSpecialPrize ? 'спецпризе' : 'номинации'} "${nomination}"!`;
+        } else {
+            successMessage = `Участник ${participant} отмечен как победитель в ${isSpecialPrize ? 'спецпризе' : 'номинации'} "${nomination}"!`;
+        }
+        
+        // Показываем уведомление
+        showSuccessMessage(successMessage);
+    } catch (error) {
+        console.error('Ошибка при работе с победителем:', error);
+        showError(`Ошибка: ${error.message}`);
+    }
+}
+
+// Функция для отображения уведомлений об успехе
+function showSuccessMessage(message) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.textContent = message;
+    document.body.appendChild(successDiv);
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
 } 
