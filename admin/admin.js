@@ -539,11 +539,24 @@ async function loadSpecialPrizes() {
                 
                 // Для admin.html - более красивый дизайн с изображениями
                 if (isAdminHtml) {
+                    // Создаем HTML для отображения оценок жюри
+                    const juryMarksHtml = winner.juryMarks ? 
+                        winner.juryMarks.map(jury => 
+                            `<div class="jury-mark ${jury.hasVoted ? 'voted' : 'not-voted'}">
+                                <span class="jury-name">${jury.juryName}:</span>
+                                <span class="jury-vote">${jury.hasVoted ? (jury.mark || '✓') : '—'}</span>
+                            </div>`
+                        ).join('') : '';
+                
                     winnerItem.innerHTML = `
                         <div class="winner-info">
                             <div class="winner-place">${winner.place || ''}</div>
                             <div class="winner-details">
                                 <p>Участник ${winner.participant} - ${winner.name || ''}</p>
+                                <p class="jury-marks">Отметок жюри: ${winner.marksCount || 0}</p>
+                                <div class="jury-marks-details">
+                                    ${juryMarksHtml}
+                                </div>
                             </div>
                             <div class="winner-image">
                                 <a href="${imgPath}" class="lightzoom" data-lightzoom>
@@ -553,11 +566,17 @@ async function loadSpecialPrizes() {
                         </div>
                     `;
                 } else {
+                    // Формируем строку с именами проголосовавших жюри
+                    const votedJuryText = winner.votedJury && winner.votedJury.length > 0 ? 
+                        `(${winner.votedJury.join(', ')})` : '';
+                        
                     // Для index.html - более простой дизайн
                     winnerItem.innerHTML = `
                         <div class="winner-header">
                             <span class="winner-place">${winner.place || ''}</span>
                             <strong>Участник ${winner.participant} ${winner.name ? '- ' + winner.name : ''}</strong>
+                            <span class="jury-marks-count">Отметок: ${winner.marksCount || 0}</span>
+                            <span class="jury-names">${votedJuryText}</span>
                         </div>
                     `;
                 }

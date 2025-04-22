@@ -63,6 +63,11 @@ async function parseSpecialsData() {
 
         const rows = data.values;
         console.log('Всего строк в таблице специальных призов:', rows.length);
+        
+        // Выводим первые несколько строк для отладки
+        if (rows.length > 0) console.log('Строка 1 (заголовок):', rows[0]);
+        if (rows.length > 1) console.log('Строка 2 (жюри):', rows[1]);
+        if (rows.length > 2) console.log('Строка 3 (пример данных):', rows[2]);
 
         // Структуры для хранения распарсенных данных
         const nominations = [];
@@ -70,8 +75,31 @@ async function parseSpecialsData() {
 
         let currentNomination = null;
         
+        // Получим имена жюри из конкретных ячеек
+        let juryNames = ['Жюри 1', 'Жюри 2', 'Жюри 3']; // значения по умолчанию
+        
+        // Ячейки C2, D2, E2 (индексы строк и столбцов начинаются с 0, поэтому [1][2], [1][3], [1][4])
+        if (rows.length > 1) {
+            // Получаем имя жюри 1 из ячейки C2
+            if (rows[1] && rows[1].length > 2 && rows[1][2]) {
+                juryNames[0] = rows[1][2].toString().trim();
+            }
+            
+            // Получаем имя жюри 2 из ячейки D2
+            if (rows[1] && rows[1].length > 3 && rows[1][3]) {
+                juryNames[1] = rows[1][3].toString().trim();
+            }
+            
+            // Получаем имя жюри 3 из ячейки E2
+            if (rows[1] && rows[1].length > 4 && rows[1][4]) {
+                juryNames[2] = rows[1][4].toString().trim();
+            }
+            
+            console.log('Получены имена жюри из ячеек C2, D2, E2:', juryNames);
+        }
+        
         // Анализ каждой строки
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = 2; i < rows.length; i++) { // Начинаем с 2, чтобы пропустить заголовки и строку с именами жюри
             const row = rows[i];
             
             // Пропускаем пустые строки
@@ -94,16 +122,44 @@ async function parseSpecialsData() {
             const participantNumber = row[0] ? row[0].toString().trim() : '';
             if (participantNumber && !isNaN(parseInt(participantNumber))) {
                 const name = row[1] ? row[1].toString().trim() : '';
-                const place = row[2] ? row[2].toString().trim() : '';
+                
+                // Проверяем отметки жюри (столбцы C, D, E)
+                const juryMarkValues = [
+                    row[2] ? row[2].toString().trim() : '',  // столбец C (индекс 2)
+                    row[3] ? row[3].toString().trim() : '',  // столбец D (индекс 3)
+                    row[4] ? row[4].toString().trim() : ''   // столбец E (индекс 4)
+                ];
+                
+                // Создаем объект с отметками жюри
+                const juryMarks = juryMarkValues.map((mark, index) => ({
+                    juryName: juryNames[index],
+                    mark: mark,
+                    hasVoted: mark !== ''
+                }));
+                
+                // Считаем количество отметок (непустых ячеек)
+                const marksCount = juryMarkValues.filter(mark => mark !== '').length;
+                
+                // Получаем отметивших жюри для отображения
+                const votedJury = juryMarks
+                    .filter(jury => jury.hasVoted)
+                    .map(jury => jury.juryName);
+                
+                // Место можно получить из одного из столбцов с отметками
+                const place = juryMarkValues.find(mark => mark !== '') || '';
                 
                 winners.push({
                     nomination: currentNomination,
                     participant: participantNumber,
                     name: name,
-                    place: place
+                    place: place,
+                    juryMarks: juryMarks,
+                    juryMarkValues: juryMarkValues,
+                    marksCount: marksCount,
+                    votedJury: votedJury
                 });
                 
-                console.log(`Добавлен победитель [${i}]: "${currentNomination}" - ${participantNumber} (${name}), место: ${place}`);
+                console.log(`Добавлен победитель [${i}]: "${currentNomination}" - ${participantNumber} (${name}), отметок жюри: ${marksCount}, жюри: ${votedJury.join(', ')}`);
             }
         }
 
@@ -136,7 +192,10 @@ async function getSpecialNominations() {
 async function getSpecialPrizeWinners(nomination) {
     try {
         const parsed = await parseSpecialsData();
-        return parsed.winners.filter(winner => winner.nomination === nomination);
+        const winners = parsed.winners.filter(winner => winner.nomination === nomination);
+        
+        // Сортируем по количеству отметок (от большего к меньшему)
+        return winners.sort((a, b) => b.marksCount - a.marksCount);
     } catch (error) {
         console.error('Ошибка при получении победителей спецприза:', error);
         return [];
@@ -147,7 +206,16 @@ async function getSpecialPrizeWinners(nomination) {
 async function getAllSpecialPrizeWinners() {
     try {
         const parsed = await parseSpecialsData();
-        return parsed.winners;
+        
+        // Сортируем сначала по номинации, затем по количеству отметок
+        return parsed.winners.sort((a, b) => {
+            // Сначала сортировка по номинации
+            if (a.nomination !== b.nomination) {
+                return a.nomination.localeCompare(b.nomination);
+            }
+            // Затем по количеству отметок (от большего к меньшему)
+            return b.marksCount - a.marksCount;
+        });
     } catch (error) {
         console.error('Ошибка при получении всех победителей спецпризов:', error);
         return [];
