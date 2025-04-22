@@ -441,6 +441,12 @@ async function loadSpecialNominations() {
             }
         }
         
+        // Показываем индикатор загрузки
+        if (specialNominationFilter) {
+            specialNominationFilter.disabled = true;
+            specialNominationFilter.innerHTML = '<option value="">Загрузка номинаций...</option>';
+        }
+        
         // Получаем номинации спецпризов
         const nominations = await SpecialPrizes.getSpecialNominations();
         console.log('Загружены номинации спецпризов:', nominations);
@@ -455,10 +461,26 @@ async function loadSpecialNominations() {
                 option.textContent = nomination;
                 specialNominationFilter.appendChild(option);
             });
+            
+            specialNominationFilter.disabled = false;
         }
+        
+        // После загрузки номинаций сразу загружаем все данные спецпризов в фоне,
+        // чтобы они были готовы при выборе номинации
+        SpecialPrizes.getAllSpecialPrizeWinners().then(() => {
+            console.log('Предварительная загрузка данных спецпризов завершена');
+        }).catch(error => {
+            console.error('Ошибка при предварительной загрузке данных спецпризов:', error);
+        });
     } catch (error) {
         console.error('Ошибка при загрузке номинаций спецпризов:', error);
         showError('Ошибка при загрузке номинаций спецпризов');
+        
+        // Восстанавливаем выпадающий список в случае ошибки
+        if (specialNominationFilter) {
+            specialNominationFilter.innerHTML = '<option value="">Все спецпризы</option>';
+            specialNominationFilter.disabled = false;
+        }
     }
 }
 
@@ -467,7 +489,7 @@ async function loadSpecialPrizes() {
     try {
         // Получаем выбранную номинацию из фильтра
         const nomination = specialNominationFilter.value;
-        console.log('Загрузка спецпризов для номинации:', nomination || 'все');
+        console.log('Отображение спецпризов для номинации:', nomination || 'все');
         
         // Проверяем готовность модуля
         if (!window.SpecialPrizes && !specialPrizesModuleReady) {
@@ -506,7 +528,7 @@ async function loadSpecialPrizes() {
         // Показываем статус загрузки
         specialPrizesList.innerHTML = '<div class="loading">Загрузка спецпризов...</div>';
         
-        // Получаем данные из API
+        // Получаем данные из кэша
         let winners;
         if (nomination) {
             winners = await SpecialPrizes.getSpecialPrizeWinners(nomination);
