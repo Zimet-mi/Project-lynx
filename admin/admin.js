@@ -49,6 +49,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Адаптивная логика для проверки структуры HTML
     isAdminHtml = !!document.getElementById('scoresTab');
     
+    // Инициализация lightzoom
+    if (typeof $ !== 'undefined') {
+        $('a.lightzoom').lightzoom({
+            speed: 400,
+            overlayOpacity: 0.5
+        });
+    }
+    
     // Подробное логирование для отладки
     console.log('Проверка элементов:');
     console.log('tabs:', tabs.length > 0 ? 'найдены' : 'не найдены');
@@ -257,20 +265,33 @@ function switchTab(tabId) {
     loadTabData(tabId);
 }
 
-// Функция для загрузки данных вкладки
+// Функция для загрузки данных для выбранной вкладки
 async function loadTabData(tabId) {
     console.log('Загрузка данных для вкладки:', tabId);
     
-    switch (tabId) {
+    switch(tabId) {
         case 'scores':
-            await loadScores();
+            if (!appData.scores || appData.scores.length === 0) {
+                // Загружаем данные из глобальных данных, полученных при инициализации
+                await loadScores();
+            } else {
+                // Используем уже загруженные данные
+                loadScores();
+            }
             break;
+            
         case 'specialPrizes':
-            await loadSpecialPrizes();
+            // Загружаем спецпризы
+            loadSpecialPrizes();
             break;
+            
         case 'participants':
-            await loadParticipants();
+            // Загружаем участников
+            loadParticipants();
             break;
+            
+        default:
+            console.warn('Неизвестная вкладка:', tabId);
     }
 }
 
@@ -354,9 +375,9 @@ async function loadScores() {
                     container.appendChild(card);
                 });
                 
-                // Инициализация lightzoom после добавления всех карточек
-                if (typeof $ !== 'undefined' && $.lightzoom) {
-                    $('.lightzoom').lightzoom({
+                // Инициализация lightzoom для карточек с оценками
+                if (typeof $ !== 'undefined') {
+                    $('a.lightzoom').lightzoom({
                         speed: 400,
                         overlayOpacity: 0.5
                     });
@@ -596,9 +617,9 @@ async function loadSpecialPrizes() {
             specialPrizesList.appendChild(nominationContainer);
         });
         
-        // Инициализация lightzoom, если есть jQuery и мы в admin.html
-        if (isAdminHtml && typeof $ !== 'undefined' && $.lightzoom) {
-            $('.lightzoom').lightzoom({
+        // Инициализация lightzoom для спецпризов
+        if (typeof $ !== 'undefined') {
+            $('a.lightzoom').lightzoom({
                 speed: 400,
                 overlayOpacity: 0.5
             });
@@ -691,11 +712,13 @@ async function loadParticipants() {
             participantsList.appendChild(participantItem);
         });
         
-        // Инициализация lightzoom после добавления всех участников
-        $('.lightzoom').lightzoom({
-            speed: 400,
-            overlayOpacity: 0.5
-        });
+        // Инициализация lightzoom для участников
+        if (typeof $ !== 'undefined') {
+            $('a.lightzoom').lightzoom({
+                speed: 400,
+                overlayOpacity: 0.5
+            });
+        }
     } catch (error) {
         console.error('Ошибка при загрузке участников:', error);
         showError('Ошибка при загрузке участников');
