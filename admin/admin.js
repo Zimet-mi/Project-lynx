@@ -869,7 +869,69 @@ async function loadSpecialPrizes() {
     }
 }
 
-// Функция для загрузки участников
+// Функция для отображения коллажа участников
+function renderParticipantsCollage(participants) {
+    // Очищаем контейнер
+    participantsList.innerHTML = '';
+
+    // Создаем контейнер для коллажа
+    const collage = document.createElement('div');
+    collage.className = 'participants-collage';
+
+    participants.forEach(participant => {
+        const imgWrapper = document.createElement('div');
+        imgWrapper.className = 'collage-img-wrapper';
+
+        const img = document.createElement('img');
+        img.className = 'collage-img';
+        img.src = `../card/${participant.number}.jpg`;
+        img.alt = `Участник ${participant.number}`;
+        img.title = `${participant.name} (${participant.number})`;
+        img.onerror = function() {
+            if (!this.dataset.errorHandled) {
+                this.src = '../card/no-image.jpg';
+                this.dataset.errorHandled = 'true';
+            }
+        };
+
+        // При клике открываем модальное окно с инфой
+        img.addEventListener('click', () => showParticipantModal(participant));
+
+        imgWrapper.appendChild(img);
+        collage.appendChild(imgWrapper);
+    });
+
+    participantsList.appendChild(collage);
+}
+
+// Функция для показа модального окна с информацией об участнике
+function showParticipantModal(participant) {
+    // Удаляем предыдущее модальное окно, если оно есть
+    const oldModal = document.getElementById('participantModal');
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'participantModal';
+    modal.className = 'participant-modal';
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="modal-close" id="closeModalBtn">&times;</span>
+            <img src="../card/${participant.number}.jpg" alt="Фото участника" class="modal-img" onerror="if (!this.dataset.errorHandled) { this.src = '../card/no-image.jpg'; this.dataset.errorHandled = 'true'; }">
+            <h2>${participant.name}</h2>
+            <p><b>Номер:</b> ${participant.number}</p>
+            <p><b>Номинация:</b> ${participant.nomination || '-'}</p>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Закрытие по крестику или клику вне окна
+    document.getElementById('closeModalBtn').onclick = () => modal.remove();
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+}
+
+// Модифицируем обработчик для вкладки 'участники'
 async function loadParticipants() {
     try {
         const nomination = participantsNomination.value;
@@ -891,73 +953,8 @@ async function loadParticipants() {
             );
         }
         
-        // Получаем оценки для сортировки участников
-        const participantsWithScores = filteredParticipants.map(participant => {
-            const score = appData.scores.find(s => 
-                s.nomination === participant.nomination && 
-                s.participant === participant.number
-            );
-            
-            return {
-                ...participant,
-                finalScore: score ? score.finalScore : null
-            };
-        });
-        
-        // Сортируем по итоговой оценке
-        participantsWithScores.sort((a, b) => {
-            if (a.finalScore === null) return 1;
-            if (b.finalScore === null) return -1;
-            return b.finalScore - a.finalScore;
-        });
-        
-        console.log('Отфильтрованные участники:', participantsWithScores);
-        
-        // Очищаем контейнер
-        participantsList.innerHTML = '';
-        
-        if (participantsWithScores.length === 0) {
-            participantsList.innerHTML = '<div class="no-data">Нет данных для отображения</div>';
-            return;
-        }
-        
-        // Создаем список участников
-        participantsWithScores.forEach(participant => {
-            const participantItem = document.createElement('div');
-            participantItem.className = 'participant-item';
-            
-            // Создаем путь к изображению
-            const imgPath = `../card/${participant.number}.jpg`;
-            
-            const finalScore = participant.finalScore !== null 
-                ? participant.finalScore.toFixed(2) 
-                : 'Нет оценки';
-            
-            participantItem.innerHTML = `
-                <div class="participant-info">
-                    <div class="participant-details">
-                        <h3>${participant.nomination}</h3>
-                        <p>Участник ${participant.number} - ${participant.name}</p>
-                        <p class="participant-score">Итоговая оценка: ${finalScore}</p>
-                    </div>
-                    <div class="participant-image">
-                        <a href="${imgPath}" class="lightzoom" data-lightzoom>
-                            <img src="${imgPath}" alt="Участник ${participant.number}" onerror="this.src='../card/no-image.jpg';">
-                        </a>
-                    </div>
-                </div>
-            `;
-            
-            participantsList.appendChild(participantItem);
-        });
-        
-        // Инициализация lightzoom для участников
-        if (typeof $ !== 'undefined') {
-            $('a.lightzoom').lightzoom({
-                speed: 400,
-                overlayOpacity: 0.5
-            });
-        }
+        // Показываем коллаж
+        renderParticipantsCollage(filteredParticipants);
     } catch (error) {
         console.error('Ошибка при загрузке участников:', error);
         showError('Ошибка при загрузке участников');

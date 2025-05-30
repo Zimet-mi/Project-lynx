@@ -5,9 +5,9 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 const TABLE_RANGE = 'Day1!A1:B196'; // Диапазон для таблицы
 const ACCORDION_RANGE = 'accordionDay1!A1:B110'; // Диапазон для аккордеона
 const SECTION_RANGES = {
-    section1: [1, 41],
-    section2: [42, 77],
-    section3: [78, 110]
+    section1: [1, 23],
+    section2: [24, 67],
+    section3: [68, 77]
 };
 
 // Функция для создания ячейки таблицы

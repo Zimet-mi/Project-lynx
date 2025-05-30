@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8" />
+	<title>Elizabeth</title>
+	<base href=".">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<script src="utils.js"></script>
+	<script src="JavaScript.js"></script>
+	<script src="participants.js"></script>
+	<script src="result.js"></script>
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="../lightbox-plus-jquery.js"></script>
+	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
+	<script src="https://telegram.org/js/telegram-web-app.js"></script>
+	<!-- Подключить, если не будет работать ТГ 
+	<script src="miniApp.js"></script>-->
+	<link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" type="text/css" href="../timetable.css">
+	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
+	<link rel="stylesheet" href="../lightbox.css">
+	<!-- Favicons -->
+	<link type="../image/png" rel="icon" href="../icons/web-app.png">
+</head>
+<body>
+<div class="main">
+    <div class="head">
+        <header>
+            <div class="tab">
+				<button class="tablinks" data-tab="One">Первый блок</button>
+				<button class="tablinks" data-tab="Two">Второй блок</button>
+				<button class="tablinks" data-tab="Three">Третий блок</button>
+				<button class="tablinks" data-tab="table">Расписание</button>
+				<button class="tablinks" data-tab="red">Итог</button>
+				<button class="tablinks" id="sendCacheButton">Отправить данные</button>
+            </div>
+        </header>
+    </div>
+    <div id="One" class="tabcontent">
+        <div id="section1"></div>
+    </div>
+    <div id="Two" class="tabcontent">
+        <div id="section2"></div>
+    </div>
+    <div id="Three" class="tabcontent">
+        <div id="section3"></div>
+    </div>
+    <div id="table" class="tabcontent">
+        <table id="schedule" class="table_blur">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="red" class="tabcontent">
+        <div id="accordion-container">
+            <div class="accordion" id="accordion1">Конкурс вокала</div>
+            <div class="panel" id="panel1"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
