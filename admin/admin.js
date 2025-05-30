@@ -561,18 +561,12 @@ async function loadScores() {
                             </div>
                         </div>
                         <div class="score-details">
+                            ${score.jury.map(j => `
                             <div class="score-item">
-                                <span class="score-label">${score.jury1.name}:</span>
-                                <span class="score-value">${score.jury1.score !== null ? score.jury1.score.toFixed(2) : 'Нет данных'}</span>
+                                <span class="score-label">${j.name}:</span>
+                                <span class="score-value">${j.score !== null ? j.score.toFixed(2) : 'Нет данных'}</span>
                             </div>
-                            <div class="score-item">
-                                <span class="score-label">${score.jury2.name}:</span>
-                                <span class="score-value">${score.jury2.score !== null ? score.jury2.score.toFixed(2) : 'Нет данных'}</span>
-                            </div>
-                            <div class="score-item">
-                                <span class="score-label">${score.jury3.name}:</span>
-                                <span class="score-value">${score.jury3.score !== null ? score.jury3.score.toFixed(2) : 'Нет данных'}</span>
-                            </div>
+                            `).join('')}
                             <div class="score-item final">
                                 <span class="score-label">Итоговая оценка:</span>
                                 <span class="score-value">${score.finalScore !== null ? score.finalScore.toFixed(2) : 'Нет данных'}</span>

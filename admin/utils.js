@@ -122,18 +122,35 @@ async function parseSheetData() {
             const rowText = row.join(' ').toLowerCase();
             
             // Проверяем, является ли строка заголовком номинации
-            if (rowText.includes('дефиле')) {
-                // Находим ячейку, которая содержит название номинации
-                const nominationText = row.find(cell => cell && cell.toString().toLowerCase().includes('дефиле'));
-                if (nominationText) {
-                    currentNomination = nominationText.trim();
-                    nominations.push(currentNomination);
-                    console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
-                    
-                    // Пропускаем строку после номинации, так как она может содержать заголовки столбцов
-                    headerRow = i + 1;
-                    continue;
+            const nominationText = row.find(cell =>
+                cell && (
+                    cell.toString().toLowerCase().includes('дефиле') ||
+                    cell.toString().toLowerCase().includes('конкурс')
+                )
+            );
+            if (nominationText) {
+                currentNomination = nominationText.trim();
+                nominations.push(currentNomination);
+                console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
+                // Получаем имена жюри из следующей строки
+                const juryRow = rows[i + 1] || [];
+                juryNames = [];
+                // C, D, E (2, 3, 4)
+                for (let col = 2; col <= 4; col++) {
+                    const cell = juryRow[col] ? juryRow[col].toString().trim() : '';
+                    if (cell && cell.toLowerCase() !== 'итог') {
+                        juryNames.push(cell);
+                    }
                 }
+                // Если в C, D, E только 2 жюри, ищем третьего в F (5)
+                if (juryNames.length === 2 && juryRow[5] && juryRow[5].toString().trim().toLowerCase() !== 'итог') {
+                    juryNames.push(juryRow[5].toString().trim());
+                }
+                console.log('Имена жюри для номинации:', juryNames);
+                // Пропускаем строку после номинации, так как она содержит имена жюри
+                headerRow = i + 2;
+                i = i + 1; // чтобы не обработать строку жюри как участника
+                continue;
             }
             
             // Если еще не обнаружили номинацию, пропускаем
@@ -158,12 +175,18 @@ async function parseSheetData() {
             console.log(`Анализ строки участника [${i}]: номер=${number}, имя=${name}, ячейки:`, row);
             
             // Собираем данные об оценках
-            const score1 = parseScore(row[2]);
-            const score2 = parseScore(row[3]);
-            const score3 = parseScore(row[4]);
-            const finalScore = parseScore(row[5]); // Итоговая оценка в столбце F
+            const jury = [];
+            for (let j = 0; j < juryNames.length; j++) {
+                const scoreVal = parseScore(row[2 + j]);
+                jury.push({ name: juryNames[j], score: scoreVal });
+            }
+            // ищем индекс 'итог' в строке жюри
+            const juryRow = rows[headerRow - 1] || [];
+            let finalIdx = juryRow.findIndex(cell => cell && cell.toString().trim().toLowerCase() === 'итог');
+            if (finalIdx === -1) finalIdx = 4 + (juryNames.length === 3 ? 1 : 0); // fallback: 4 для 2 жюри, 5 для 3 жюри
+            const finalScore = parseScore(row[finalIdx]);
             
-            console.log(`  Оценки: ${score1}, ${score2}, ${score3}, итог=${finalScore}`);
+            console.log(`  Оценки: ${jury.map(j => `${j.name}: ${j.score}`).join(', ')}, итог=${finalScore}`);
             
             // Создаем объект участника
             const participant = {
@@ -179,18 +202,7 @@ async function parseSheetData() {
                 nomination: currentNomination,
                 participant: number,
                 name: name,
-                jury1: {
-                    name: juryNames[0],
-                    score: score1
-                },
-                jury2: {
-                    name: juryNames[1],
-                    score: score2
-                },
-                jury3: {
-                    name: juryNames[2],
-                    score: score3
-                },
+                jury: jury,
                 finalScore: finalScore
             };
             
