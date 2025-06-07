@@ -8,7 +8,7 @@ const ResultSheet = 'elizabethRes'; // страница с итогами кон
 // Диапазоны для секций с участниками для аккардеона
     const section1Range = [2, 5];
     const section2Range = [6, 12];
-    const section3Range = [21, 23];
+    const section3Range = [13, 23];
 
 //Диапазоны для таблицы с результатами в личных итогах каждого жюри
 const RANGE_PARTS = [
