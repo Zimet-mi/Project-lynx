@@ -101,7 +101,16 @@ async function loadAccordionData(panel) {
     // Например, можно загрузить дополнительные данные с сервера
 }
 
+// Массив для всех листов/дней с участниками (заполняется вручную)
+const ALL_PARTICIPANTS_SHEETS = [
+    { sheet: 'archangel', range: 'A1:H80' },
+	{ sheet: 'skywalker', range: 'A1:H80' },
+    // Пример: { sheet: 'archangelDay2', range: 'A1:H80' },
+    // Добавляй сюда новые дни/листы и диапазоны
+];
+
 // Делаем функции и переменные глобальными
 window.API_KEY = API_KEY;
 window.getSheetId = getSheetId;
 window.fetchDataWithCache = fetchDataWithCache;
+window.ALL_PARTICIPANTS_SHEETS = ALL_PARTICIPANTS_SHEETS;

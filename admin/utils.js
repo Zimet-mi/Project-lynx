@@ -128,10 +128,10 @@ async function parseSheetData() {
                     cell.toString().toLowerCase().includes('конкурс')
                 )
             );
-            if (nominationText) {
-                currentNomination = nominationText.trim();
-                nominations.push(currentNomination);
-                console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
+                if (nominationText) {
+                    currentNomination = nominationText.trim();
+                    nominations.push(currentNomination);
+                    console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
                 // Получаем имена жюри из следующей строки
                 const juryRow = rows[i + 1] || [];
                 juryNames = [];
@@ -150,7 +150,7 @@ async function parseSheetData() {
                 // Пропускаем строку после номинации, так как она содержит имена жюри
                 headerRow = i + 2;
                 i = i + 1; // чтобы не обработать строку жюри как участника
-                continue;
+                    continue;
             }
             
             // Если еще не обнаружили номинацию, пропускаем

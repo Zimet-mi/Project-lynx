@@ -1,6 +1,19 @@
 // participants.js
 // Нужно вынести в констаны создание полей ввода для оценок, чекбоксов
 // А так же, не понятно за что отвечающий, диапазон.
+
+// Универсальные параметры оценок для всех участников (используются и в createInputFields, и в модалке)
+const PARTICIPANT_PARAMETERS = [
+    { label: 'Костюм', column: 'C', options: 5, field: 'costum' },
+    { label: 'Схожесть', column: 'D', options: 5, field: 'shozhest' },
+    { label: 'Выход', column: 'E', options: 5, field: 'vistup' },
+    { label: 'Аксессуар', column: 'F', options: 3, field: 'aks' }
+];
+
+// Универсальные параметры чекбоксов спецпризов для всех участников
+const CHECKBOX_LABELS = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Гран-при'];
+const CHECKBOX_COLUMNS = ['I', 'J', 'K', 'L', 'M'];
+
 document.addEventListener('DOMContentLoaded', function () {
     	
     // Функция для фильтрации участников по диапазону
@@ -98,7 +111,7 @@ function createCheckbox(id, dataColumn, dataRow, initialValue) {
     checkbox.setAttribute('data-row', dataRow);
 
     // Проверка наличия значения в initialValue
-    checkbox.checked = initialValue !== undefined && initialValue !== null && initialValue.trim() !== '';
+    checkbox.checked = initialValue !== undefined && initialValue !== null && initialValue.toString().trim() !== '';
 
     checkbox.addEventListener('change', function () {
         if (checkbox.checked) {
@@ -110,6 +123,7 @@ function createCheckbox(id, dataColumn, dataRow, initialValue) {
 
     return checkbox;
 }
+window.createCheckbox = createCheckbox;
 
 
 function createUniversalDropdown(id, dataColumn, dataRow, placeholder, optionsCount) {
@@ -138,12 +152,7 @@ function createUniversalDropdown(id, dataColumn, dataRow, placeholder, optionsCo
 
 //Функция создания полей ввода
 function createInputFields(container, rowId, placeholders, options = []) {
-    const parameters = [
-        { label: 'Костюм', column: 'C', options: 5, placeholder: placeholders['costum'] },
-        { label: 'Схожесть', column: 'D', options: 5, placeholder: placeholders['shozhest'] },
-        { label: 'Выход', column: 'E', options: 5, placeholder: placeholders['vistup'] },
-        { label: 'Аксессуар', column: 'F', options: 3, placeholder: placeholders['aks'] }
-    ];
+    const parameters = PARTICIPANT_PARAMETERS;
 
     const inputContainer = document.createElement('div');
     inputContainer.className = 'input-container';
@@ -214,17 +223,14 @@ function createInputFields(container, rowId, placeholders, options = []) {
     const checkboxGroup = document.createElement('div');
     checkboxGroup.className = 'checkbox-group';
 
-    const checkboxLabels = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Гран-при'];
-    const checkboxColumns = ['I', 'J', 'K', 'L', 'M'];
-
-    checkboxLabels.forEach((label, index) => {
+    CHECKBOX_LABELS.forEach((label, index) => {
         const checkboxRow = document.createElement('div');
         checkboxRow.className = 'checkbox-row';
 
         const labelDiv = document.createElement('div');
         labelDiv.textContent = label;
 
-        const checkbox = createCheckbox(`data${checkboxColumns[index]}${rowId}`, checkboxColumns[index], rowId, placeholders.checkboxes[index]);
+        const checkbox = createCheckbox(`data${CHECKBOX_COLUMNS[index]}${rowId}`, CHECKBOX_COLUMNS[index], rowId, placeholders.checkboxes[index]);
 
         checkboxRow.appendChild(labelDiv);
         checkboxRow.appendChild(checkbox);
@@ -338,7 +344,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
     }
 
     // Функция для получения значений placeholder
-	function getPlaceholderValues(data, rowId) {
+function getPlaceholderValues(data, rowId) {
 
     const row = data.values[rowId - 1] || []; // Получаем строку, соответствующую rowId
 
@@ -357,6 +363,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
 			]
 		};
 	}
+window.getPlaceholderValues = getPlaceholderValues;
 
     // Функция для отображения данных
     async function renderData(sheetName = sheet_Name) {
@@ -424,6 +431,7 @@ function saveData(value, column, row, sheetName = sheet_Name) {
     } else {
     }
 }
+window.saveData = saveData;
 
 // Функция отправки данных на сервер
 async function sendDataToServer(cacheKey) {
@@ -501,4 +509,246 @@ document.addEventListener('DOMContentLoaded', function () {
     renderData(sheet_Name);
 
 
+});
+
+// === Вкладка "Все участники" ===
+// Глобальный кеш для данных по листам (только для текущей сессии)
+window.sheetDataCache = window.sheetDataCache || {};
+
+async function loadAllParticipantsPreview() {
+    const previewContainer = document.getElementById('allParticipantsPreview');
+    if (!previewContainer) return;
+    previewContainer.innerHTML = '<div class="loading">Загрузка участников...</div>';
+
+    // Собираем всех участников из всех листов/дней
+    let allParticipants = [];
+    let allDataBySheet = {};
+    for (const { sheet, range } of window.ALL_PARTICIPANTS_SHEETS) {
+        let data;
+        if (window.sheetDataCache[sheet]) {
+            data = window.sheetDataCache[sheet];
+        } else {
+            try {
+                const SHEET_ID = await getSheetId();
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${range}?key=${API_KEY}`;
+                const response = await fetch(url);
+                if (!response.ok) continue;
+                data = await response.json();
+                window.sheetDataCache[sheet] = data;
+            } catch (e) { continue; }
+        }
+        const participants = (data.values || []).slice(1).map((row, idx) => ({
+            id: row[0],
+            name: row[1],
+            img: `${row[0]}.jpg`,
+            row: idx + 2,
+            sheet,
+            dataRow: idx + 2,
+            raw: row
+        }));
+        participants.forEach(p => p.dayIndex = allParticipants.length === 0 ? 1 : allParticipants[allParticipants.length-1].dayIndex + 0);
+        allParticipants = allParticipants.concat(participants);
+        allDataBySheet[sheet] = data;
+    }
+    if (!allParticipants.length) {
+        previewContainer.innerHTML = '<div class="no-data">Нет участников для отображения</div>';
+        return;
+    }
+    // Группируем участников по листу (дню)
+    const bySheet = {};
+    allParticipants.forEach(p => {
+        if (!bySheet[p.sheet]) bySheet[p.sheet] = [];
+        bySheet[p.sheet].push(p);
+    });
+    // Формируем таблицу
+    let html = '<table class="all-participants-table"><thead><tr><th>Фото</th><th>Имя</th><th>Номер</th><th>День</th></tr></thead><tbody>';
+    window.ALL_PARTICIPANTS_SHEETS.forEach(({sheet}, sheetIdx) => {
+        const group = bySheet[sheet] || [];
+        group.forEach(participant => {
+            html += `<tr class="participant-row" data-sheet="${participant.sheet}" data-row="${participant.row}">
+                <td><img src="../card/${participant.img}" alt="${participant.name}" class="participant-preview-img-small" onerror="this.src='../card/no-image.jpg';"></td>
+                <td>${participant.name || ''}</td>
+                <td>${participant.id || ''}</td>
+                <td>${sheet}</td>
+            </tr>`;
+        });
+    });
+    html += '</tbody></table>';
+    previewContainer.innerHTML = html;
+    // Навешиваем обработчик на строки
+    previewContainer.querySelectorAll('.participant-row').forEach(row => {
+        row.addEventListener('click', function() {
+            const sheet = this.getAttribute('data-sheet');
+            const rowNum = parseInt(this.getAttribute('data-row'), 10);
+            const participant = allParticipants.find(p => p.sheet === sheet && p.row === rowNum);
+            if (participant) openParticipantModal(participant, allDataBySheet);
+        });
+    });
+}
+
+// Модальное окно участника для просмотра/редактирования оценок и комментария
+function openParticipantModal(participant, allDataBySheet) {
+    // Получаем данные строки участника
+    const data = allDataBySheet[participant.sheet];
+    const row = data && data.values ? data.values[participant.row - 1] : [];
+    const placeholders = getPlaceholderValues(data, participant.row);
+
+    // Формируем форму для оценок и комментария по универсальным параметрам
+    let marksHtml = PARTICIPANT_PARAMETERS.map((param, idx) => {
+        // Индекс столбца: 'A' = 0, 'B' = 1, ...
+        const colIdx = param.column.charCodeAt(0) - 'A'.charCodeAt(0);
+        const value = row && row[colIdx] ? row[colIdx] : '';
+        let inputHtml = '';
+        if (typeof param.options === 'number') {
+            inputHtml = `<select name="mark${idx}">`;
+            for (let i = 1; i <= param.options; i++) {
+                inputHtml += `<option value="${i}"${value == i ? ' selected' : ''}>${i}</option>`;
+            }
+            inputHtml += '</select>';
+        } else {
+            inputHtml = `<input type="number" min="0" max="10" step="0.01" name="mark${idx}" value="${value}">`;
+        }
+        return `<label>${param.label}: ${inputHtml}</label>`;
+    }).join('<br>');
+
+    // Комментарий (столбец G)
+    const commentValue = placeholders.comment || '';
+    let commentHtml = `<label>Комментарий:<br><textarea name="comment" rows="3" style="width:98%">${commentValue}</textarea></label>`;
+
+    // Чекбоксы спецпризов
+    let checkboxesHtml = '<div class="participant-modal-checkboxes" id="modalCheckboxes"></div>';
+
+    // Модальное окно
+    let modal = document.getElementById('participantModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'participantModal';
+        modal.className = 'participant-modal';
+        document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+        <div class="participant-modal-content">
+            <span class="participant-modal-close" id="closeParticipantModal">×</span>
+            <div class="participant-modal-header">
+                <a href="../card/${participant.img}" class="lightzoom" data-lightzoom>
+                    <img src="../card/${participant.img}" alt="${participant.name}" class="participant-modal-img" onerror="this.src='../card/no-image.jpg';">
+                </a>
+                <div>
+                    <div class="participant-modal-name">${participant.name || ''}</div>
+                    <div class="participant-modal-id">Номер: ${participant.id || ''}</div>
+                    <div class="participant-modal-sheet">День: ${participant.sheet}</div>
+                </div>
+            </div>
+            <form id="participantModalForm" autocomplete="off">
+                <div class="participant-modal-marks">${marksHtml}</div>
+                ${checkboxesHtml}
+                <div class="participant-modal-comment">${commentHtml}</div>
+            </form>
+        </div>
+    `;
+    modal.style.display = 'block';
+
+    // Вставляем чекбоксы через createCheckbox
+    const modalCheckboxes = document.getElementById('modalCheckboxes');
+    if (modalCheckboxes) {
+        CHECKBOX_LABELS.forEach((label, idx) => {
+            const checkbox = createCheckbox(`modalCheckbox${idx}`, CHECKBOX_COLUMNS[idx], participant.row, '');
+            // Выставляем checked по логике из блоков
+            checkbox.checked = placeholders.checkboxes && placeholders.checkboxes[idx] && placeholders.checkboxes[idx].toString().trim() !== '';
+            checkbox.addEventListener('change', function() {
+                if (checkbox.checked) {
+                    saveData('Номинант', CHECKBOX_COLUMNS[idx], participant.row, participant.sheet);
+                } else {
+                    saveData('', CHECKBOX_COLUMNS[idx], participant.row, participant.sheet);
+                }
+            });
+            const labelElem = document.createElement('label');
+            labelElem.style.marginRight = '12px';
+            labelElem.appendChild(checkbox);
+            labelElem.appendChild(document.createTextNode(' ' + label));
+            modalCheckboxes.appendChild(labelElem);
+        });
+    }
+
+    // Инициализация lightzoom для фото
+    if (window.$ && typeof window.$.fn.lightzoom === 'function') {
+        window.$(modal).find('.lightzoom').lightzoom({ speed: 200, isOverlayClickClosing: true });
+    }
+
+    // Автосохранение оценок и комментария
+    const form = document.getElementById('participantModalForm');
+    PARTICIPANT_PARAMETERS.forEach((param, idx) => {
+        const input = form[`mark${idx}`];
+        if (input) {
+            input.addEventListener('input', function() {
+                saveData(this.value, param.column, participant.row, participant.sheet);
+            });
+        }
+    });
+    // Чекбоксы спецпризов
+    CHECKBOX_LABELS.forEach((label, idx) => {
+        const checkbox = form[`checkbox${idx}`];
+        if (checkbox) {
+            checkbox.addEventListener('change', function() {
+                if (checkbox.checked) {
+                    saveData('Номинант', CHECKBOX_COLUMNS[idx], participant.row, participant.sheet);
+                } else {
+                    saveData('', CHECKBOX_COLUMNS[idx], participant.row, participant.sheet);
+                }
+            });
+        }
+    });
+    // Комментарий с debounce
+    const commentInput = form['comment'];
+    if (commentInput) {
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+        commentInput.addEventListener('input', debounce(function() {
+            saveData(this.value, 'G', participant.row, participant.sheet);
+        }, 300));
+    }
+
+    // Закрытие модалки
+    document.getElementById('closeParticipantModal').onclick = () => {
+        modal.style.display = 'none';
+    };
+    window.onclick = function(event) {
+        if (event.target === modal) modal.style.display = 'none';
+    };
+
+    // Сохранение
+    // document.getElementById('participantModalForm').onsubmit = async function(e) {
+    //     e.preventDefault();
+    //     // Собираем оценки
+    //     const form = e.target;
+    //     let updates = [];
+    //     PARTICIPANT_PARAMETERS.forEach((param, idx) => {
+    //         const col = param.column;
+    //         const val = form[`mark${idx}`].value;
+    //         updates.push({ col, val });
+    //     });
+    //     // Комментарий
+    //     updates.push({ col: 'G', val: form.comment.value });
+    //     // Сохраняем через saveData
+    //     for (const upd of updates) {
+    //         await saveData(participant.sheet, participant.row, upd.col, upd.val);
+    //     }
+    //     modal.style.display = 'none';
+    //     // Обновляем превью (можно перезагрузить таблицу или только строку)
+    //     loadAllParticipantsPreview();
+    // };
+}
+
+// Автоматически загружать превью при открытии вкладки "Все участники"
+document.addEventListener('DOMContentLoaded', function() {
+    const allTabBtn = document.querySelector('.tablinks[data-tab="all"]');
+    if (allTabBtn) {
+        allTabBtn.addEventListener('click', loadAllParticipantsPreview);
+    }
 });

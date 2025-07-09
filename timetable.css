@@ -172,3 +172,166 @@ table {
 	font-size: 1.1em;
 	text-align: center;
 	}
+
+/* Таблица превью всех участников */
+.all-participants-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0 0 0;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    font-size: 15px;
+}
+.all-participants-table th, .all-participants-table td {
+    padding: 7px 10px;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+}
+.all-participants-table th {
+    background: #f7f7f7;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+.all-participants-table tr:last-child td {
+    border-bottom: none;
+}
+.participant-preview-img-small {
+    width: 38px;
+    height: 38px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 1px solid #e0e0e0;
+    background: #fafafa;
+}
+.participant-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.participant-row:hover {
+    background: #eaf6ff;
+}
+
+/* Модальное окно участника */
+.participant-modal {
+    display: none;
+    position: fixed;
+    z-index: 1002;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.25);
+    justify-content: center;
+    align-items: center;
+}
+.participant-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    max-width: 370px;
+    width: 96vw;
+    margin: 60px auto 0 auto;
+    padding: 24px 20px 18px 20px;
+    box-shadow: 0 4px 24px rgba(52,152,219,0.13);
+    position: relative;
+    animation: fadeInModal 0.18s;
+}
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: none; }
+}
+.participant-modal-close {
+    position: absolute;
+    right: 16px; top: 12px;
+    font-size: 1.7em;
+    color: #888;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.participant-modal-close:hover {
+    color: #e74c3c;
+}
+.participant-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+}
+.participant-modal-img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fafafa;
+}
+.participant-modal-name {
+    font-size: 1.15em;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.participant-modal-id, .participant-modal-sheet {
+    font-size: 0.97em;
+    color: #888;
+}
+.participant-modal-marks label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 1em;
+}
+.participant-modal-marks select, .participant-modal-marks input[type='number'] {
+    margin-left: 7px;
+    font-size: 1em;
+    padding: 2px 7px;
+    border-radius: 5px;
+    border: 1px solid #d0d0d0;
+    background: #f8f8f8;
+    width: 60px;
+}
+.participant-modal-comment textarea {
+    width: 98%;
+    min-height: 48px;
+    font-size: 1em;
+    border-radius: 6px;
+    border: 1px solid #d0d0d0;
+    background: #f8f8f8;
+    margin-top: 3px;
+    padding: 5px 7px;
+    resize: vertical;
+}
+.participant-modal-save {
+    margin-top: 14px;
+    width: 100%;
+    background: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 1.08em;
+    padding: 8px 0 8px 0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.18s;
+}
+.participant-modal-save:hover {
+    background: #217dbb;
+}
+
+/* Чекбоксы спецпризов в модалке */
+.participant-modal-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 18px;
+    margin: 10px 0 16px 0;
+    align-items: center;
+}
+.participant-modal-checkboxes label {
+    margin: 0;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Оценки (select) — уменьшить вертикальный отступ */
+.participant-modal-marks label {
+    margin-bottom: 3px;
+    font-size: 1em;
+}
