@@ -653,8 +653,8 @@ function openParticipantModal(participant, allDataBySheet) {
     if (modalCheckboxes) {
         CHECKBOX_LABELS.forEach((label, idx) => {
             const checkbox = createCheckbox(`modalCheckbox${idx}`, CHECKBOX_COLUMNS[idx], participant.row, '');
-            // Выставляем checked по логике из блоков
-            checkbox.checked = placeholders.checkboxes && placeholders.checkboxes[idx] && placeholders.checkboxes[idx].toString().trim() !== '';
+            const isChecked = placeholders.checkboxes && placeholders.checkboxes[idx] && placeholders.checkboxes[idx].toString().trim() !== '';
+            checkbox.checked = isChecked;
             checkbox.addEventListener('change', function() {
                 if (checkbox.checked) {
                     saveData('Номинант', CHECKBOX_COLUMNS[idx], participant.row, participant.sheet);

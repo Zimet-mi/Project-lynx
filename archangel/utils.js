@@ -103,8 +103,8 @@ async function loadAccordionData(panel) {
 
 // Массив для всех листов/дней с участниками (заполняется вручную)
 const ALL_PARTICIPANTS_SHEETS = [
-    { sheet: 'archangel', range: 'A1:H80' },
-	{ sheet: 'skywalker', range: 'A1:H80' },
+    { sheet: 'archangel', range: 'A1:N80' },
+	{ sheet: 'skywalker', range: 'A1:N80' },
     // Пример: { sheet: 'archangelDay2', range: 'A1:H80' },
     // Добавляй сюда новые дни/листы и диапазоны
 ];
