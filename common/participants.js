@@ -173,7 +173,7 @@ function createInputFields(container, rowId, placeholders, options = []) {
             `data${param.column}${rowId}`,
             param.column,
             rowId,
-            param.placeholder,
+            placeholders[param.field],
             param.options // Количество вариантов из параметра
         );
 

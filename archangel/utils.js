@@ -18,6 +18,14 @@ const RANGE_PARTS = [
     'A142:H500'  // Диапазон для четвертой части
 ];
 
+// Массив для всех листов/дней с участниками (заполняется вручную)
+const ALL_PARTICIPANTS_SHEETS = [
+    { sheet: 'archangel', range: 'A1:N80' },
+	{ sheet: 'skywalker', range: 'A1:N80' },
+    // Пример: { sheet: 'archangelDay2', range: 'A1:H80' },
+    // Добавляй сюда новые дни/листы и диапазоны
+];
+
 //Диапазон для данных итоговой таблицы каждого жюри. Общий парсинг
 const rangeRes = 'A1:N500';
 
@@ -101,13 +109,7 @@ async function loadAccordionData(panel) {
     // Например, можно загрузить дополнительные данные с сервера
 }
 
-// Массив для всех листов/дней с участниками (заполняется вручную)
-const ALL_PARTICIPANTS_SHEETS = [
-    { sheet: 'archangel', range: 'A1:N80' },
-	{ sheet: 'skywalker', range: 'A1:N80' },
-    // Пример: { sheet: 'archangelDay2', range: 'A1:H80' },
-    // Добавляй сюда новые дни/листы и диапазоны
-];
+
 
 // Делаем функции и переменные глобальными
 window.API_KEY = API_KEY;
