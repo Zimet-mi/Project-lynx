@@ -335,3 +335,12 @@ table {
     margin-bottom: 3px;
     font-size: 1em;
 }
+
+@media (max-width: 600px) {
+  .all-participants-table {
+    margin-left: 8px;
+    margin-right: 8px;
+    width: calc(100vw - 16px);
+    min-width: 0;
+  }
+}
