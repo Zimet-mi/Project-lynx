@@ -26,13 +26,31 @@
 <div class="main">
     <div>
 	<header>
-    <!-- Верхняя панель -->
-    <div class="tab"> <button class="tablinks" onclick="openCity(event, 'One')">Первый блок</button> 
-    <button class="tablinks" onclick="openCity(event, 'Two')">Второй блок</button>
-    <button class="tablinks" onclick="openCity(event, 'Three')">Третий блок</button>
-    <button class="tablinks" onclick="openCity(event, 'table')">Расписание</button> 
-	<button class="tablinks" onclick="openCity(event, 'red')">HELP</button>
-    </div></div>
+    <div class="nav-wrapper">
+        <nav class="top-nav">
+            <button class="tablinks" onclick="openCity(event, 'One')">
+                <span class="nav-icon">1️⃣</span>
+                <span class="nav-label">Первый</span>
+            </button>
+            <button class="tablinks" onclick="openCity(event, 'Two')">
+                <span class="nav-icon">2️⃣</span>
+                <span class="nav-label">Второй</span>
+            </button>
+            <button class="tablinks" onclick="openCity(event, 'Three')">
+                <span class="nav-icon">3️⃣</span>
+                <span class="nav-label">Третий</span>
+            </button>
+            <button class="tablinks" onclick="openCity(event, 'table')">
+                <span class="nav-icon">🗓️</span>
+                <span class="nav-label">Расписание</span>
+            </button>
+            <button class="tablinks" onclick="openCity(event, 'red')">
+                <span class="nav-icon">🆘</span>
+                <span class="nav-label">HELP</span>
+            </button>
+        </nav>
+    </div>
+</header>
 <!-- Вкладка 1 -->
 <div id="One" class="tabcontent"><!--<h3>1 часть(от 04 до 07) смотр в 11:15. 2 часть(от 08 до 10) смотр в 13:35</h3>-->
 <div id="section1"></div>
@@ -56,7 +74,20 @@
         </tbody>
     </table></div>
 <div id="red" class="tabcontent">
-<div><a href="tel:+7919608-19-69"><img src="help/med.png" alt="МЕДИК"/></a> <a href="tel:+7952523-41-75"><img src="help/tina.png" alt="ВОЛОНТЁРЫ"/></a><a href="tel:+7982761-52-38"><img src="help/sb.png" alt="ОХРАНА"/></a></div>
+    <div class="help-contacts">
+        <a href="tel:+7919608-19-69" class="help-card">
+            <img src="help/med.png" alt="МЕДИК"/>
+            <span class="help-label">МЕДИК</span>
+        </a>
+        <a href="tel:+7952523-41-75" class="help-card">
+            <img src="help/tina.png" alt="ВОЛОНТЁРЫ"/>
+            <span class="help-label">ВОЛОНТЁРЫ</span>
+        </a>
+        <a href="tel:+7982761-52-38" class="help-card">
+            <img src="help/sb.png" alt="ОХРАНА"/>
+            <span class="help-label">ОХРАНА</span>
+        </a>
+    </div>
 </div>
 </body>
 </html>
