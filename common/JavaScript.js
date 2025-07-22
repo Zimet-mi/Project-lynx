@@ -1,7 +1,88 @@
 // JavaScript.js
 // Выноса в константы более не требуется
 // Функции для работы аккордеона
+// === PRELOAD ДАННЫХ И ИНДИКАТОР ЗАГРУЗКИ ===
+let preloadComplete = false;
+
+function showPreloadIndicator() {
+    let indicator = document.getElementById('preload-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'preload-indicator';
+        indicator.className = 'preload-indicator';
+        indicator.innerHTML = '<div class="preload-indicator-text">Загрузка данных...</div><div class="preload-loader"></div>';
+        document.body.appendChild(indicator);
+    } else {
+        indicator.style.display = 'flex';
+    }
+}
+
+function hidePreloadIndicator() {
+    const indicator = document.getElementById('preload-indicator');
+    if (indicator) indicator.style.display = 'none';
+}
+
+// Добавлено: preload для всех листов с участниками (без рендера, с кешем в localStorage)
+async function preloadAllParticipantsSheets() {
+    if (!window.ALL_PARTICIPANTS_SHEETS) return;
+    if (!window.sheetDataCache) window.sheetDataCache = {};
+    const SHEET_ID = await window.getSheetId();
+    for (const { sheet, range } of window.ALL_PARTICIPANTS_SHEETS) {
+        if (window.sheetDataCache[sheet]) continue;
+        try {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${range}?key=${window.API_KEY}`;
+            const response = await fetch(url);
+            if (!response.ok) continue; // Не падаем, если листа нет
+            const data = await response.json();
+            window.sheetDataCache[sheet] = data;
+            // Сохраняем в localStorage для loadAllParticipantsPreview
+            localStorage.setItem(`sheetDataCache_${sheet}`, JSON.stringify(data));
+            localStorage.setItem(`sheetDataCacheTime_${sheet}`, new Date().getTime().toString());
+        } catch (e) { continue; }
+    }
+}
+
+async function preloadAllData() {
+    showPreloadIndicator();
+    try {
+        // Участники (основные)
+        if (window.fetchDataWithCache) {
+            await window.fetchDataWithCache(
+                window.sheet_Name,
+                'A1:M200',
+                `cachedData_${window.sheet_Name}`,
+                `cachedTime_${window.sheet_Name}`,
+                window.CACHE_PARICIPANTS_EXPIRY || 120000
+            );
+        }
+        // Все участники (только preload, без рендера, с кешем в localStorage)
+        await preloadAllParticipantsSheets();
+        // Итоги
+        if (window.fetchData && window.ResultSheet && window.rangeRes) {
+            await window.fetchData(window.ResultSheet, window.rangeRes);
+        }
+        // Расписание
+        if (typeof timetableID !== 'undefined' && typeof timetableRANGE !== 'undefined' && typeof API_KEY !== 'undefined') {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${timetableID}/values/${timetableRANGE}?key=${API_KEY}`;
+            await fetch(url);
+        }
+    } catch (e) {
+        // Можно добавить обработку ошибок
+        console.error('Ошибка preload:', e);
+    }
+    preloadComplete = true;
+    hidePreloadIndicator();
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
+    // Сначала preload, потом разрешаем работу вкладок
+    // Явно прокидываем константы из utils.js в window (без ||, только прямое присваивание)
+    window.sheet_Name = 'archangel';
+    window.ResultSheet = 'archangelRes';
+    window.rangeRes = 'A1:N500';
+    window.CACHE_PARICIPANTS_EXPIRY = 120000;
+    await preloadAllData();
+
     const tabButtons = document.querySelectorAll('.tablinks');
     const tabContents = document.querySelectorAll('.tabcontent');
 
