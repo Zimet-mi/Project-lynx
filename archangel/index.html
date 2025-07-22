@@ -30,14 +30,50 @@
 <div class="main">
     <div class="head">
         <header>
-            <div class="tab">
-				<button class="tablinks" data-tab="One">Первый блок</button>
-				<button class="tablinks" data-tab="Two">Второй блок</button>
-				<button class="tablinks" data-tab="Three">Третий блок</button>
-				<button class="tablinks" data-tab="all">Все участники</button>
-				<button class="tablinks" data-tab="table">Расписание</button>
-				<button class="tablinks" data-tab="red">Итог</button>
-				<button class="tablinks" id="sendCacheButton">Отправить данные</button>
+            <div class="nav-wrapper">
+                <nav class="top-nav">
+                    <button class="tablinks" data-tab="One">
+                        <span class="nav-icon">1️⃣</span>
+                        <span class="nav-label">Первый</span>
+                    </button>
+                    <button class="tablinks" data-tab="Two">
+                        <span class="nav-icon">2️⃣</span>
+                        <span class="nav-label">Второй</span>
+                    </button>
+                    <button class="tablinks" data-tab="Three">
+                        <span class="nav-icon">3️⃣</span>
+                        <span class="nav-label">Третий</span>
+                    </button>
+                    <button class="tablinks" data-tab="all">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-label">Участники</span>
+                    </button>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="moreMenuBtn" type="button" aria-label="Меню">
+                            <span class="burger-icon" aria-hidden="true">
+                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect y="6" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                    <rect y="13" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                    <rect y="20" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                </svg>
+                            </span>
+                        </button>
+                        <div class="dropdown-menu" id="moreMenu">
+                            <button class="dropdown-item tablinks" data-tab="table">
+                                <span class="nav-icon">🗓️</span>
+                                <span class="nav-label">Расписание</span>
+                            </button>
+                            <button class="dropdown-item tablinks" data-tab="red">
+                                <span class="nav-icon">📊</span>
+                                <span class="nav-label">Итог</span>
+                            </button>
+                            <button class="dropdown-item send-btn" id="sendCacheButton">
+                                <span class="nav-icon">📤</span>
+                                <span class="nav-label">Отправить</span>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
             </div>
         </header>
     </div>

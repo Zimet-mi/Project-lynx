@@ -114,6 +114,58 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     });
+
+    // --- Dropdown menu logic ---
+    const moreMenuBtn = document.getElementById('moreMenuBtn');
+    const moreMenu = document.getElementById('moreMenu');
+    const dropdown = moreMenuBtn ? moreMenuBtn.closest('.dropdown') : null;
+    if (moreMenuBtn && moreMenu && dropdown) {
+        moreMenuBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.toggle('open');
+            if (isOpen) {
+                // Позиционируем меню под кнопкой
+                const btnRect = moreMenuBtn.getBoundingClientRect();
+                moreMenu.style.position = 'fixed';
+                moreMenu.style.top = (btnRect.bottom + 4) + 'px';
+                // Сначала пытаемся справа, если не влезает — слева
+                const menuWidth = moreMenu.offsetWidth || 180;
+                let left = btnRect.right - menuWidth;
+                if (left < 8) left = 8;
+                moreMenu.style.left = left + 'px';
+                moreMenu.style.right = 'auto';
+                moreMenu.style.zIndex = 3000;
+            } else {
+                // Сбросить стили
+                moreMenu.style.position = '';
+                moreMenu.style.top = '';
+                moreMenu.style.left = '';
+                moreMenu.style.right = '';
+                moreMenu.style.zIndex = '';
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+                moreMenu.style.position = '';
+                moreMenu.style.top = '';
+                moreMenu.style.left = '';
+                moreMenu.style.right = '';
+                moreMenu.style.zIndex = '';
+            }
+        });
+        // Закрытие по Esc
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                dropdown.classList.remove('open');
+                moreMenu.style.position = '';
+                moreMenu.style.top = '';
+                moreMenu.style.left = '';
+                moreMenu.style.right = '';
+                moreMenu.style.zIndex = '';
+            }
+        });
+    }
 });
 
 async function loadTabData(tabId) {
