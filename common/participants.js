@@ -519,6 +519,8 @@ async function loadAllParticipantsPreview() {
     const previewContainer = document.getElementById('allParticipantsPreview');
     if (!previewContainer) return;
     previewContainer.innerHTML = '<div class="loading">Загрузка участников...</div>';
+    // Добавляем padding-right для предотвращения обрезания данных
+    previewContainer.style.paddingRight = '20px';
 
     // Собираем всех участников из всех листов/дней
     let allParticipants = [];
@@ -564,12 +566,14 @@ async function loadAllParticipantsPreview() {
     let html = '<table class="all-participants-table"><thead><tr><th>Фото</th><th>Имя</th><th>Номер</th><th>День</th></tr></thead><tbody>';
     window.ALL_PARTICIPANTS_SHEETS.forEach(({sheet}, sheetIdx) => {
         const group = bySheet[sheet] || [];
+        // Используем "День 1", "День 2" и т.д. вместо названия листа
+        const dayLabel = `День ${sheetIdx + 1}`;
         group.forEach(participant => {
             html += `<tr class="participant-row" data-sheet="${participant.sheet}" data-row="${participant.row}">
                 <td><img src="../card/${participant.img}" alt="${participant.name}" class="participant-preview-img-small" onerror="this.src='../card/no-image.jpg';"></td>
                 <td>${participant.name || ''}</td>
                 <td>${participant.id || ''}</td>
-                <td>${sheet}</td>
+                <td>${dayLabel}</td>
             </tr>`;
         });
     });
