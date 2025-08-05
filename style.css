@@ -715,3 +715,19 @@ input[type="checkbox"] {
         font-size: 0.85em;
     }
 }
+
+#allParticipantsPreview {
+    padding: 0 20px;
+    box-sizing: border-box;
+    width: 100%;
+}
+@media (max-width: 700px) {
+    #allParticipantsPreview {
+        padding: 0 15px;
+    }
+}
+@media (max-width: 400px) {
+    #allParticipantsPreview {
+        padding: 0 10px;
+    }
+}
