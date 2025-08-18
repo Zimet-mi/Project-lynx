@@ -49,33 +49,45 @@ async function getSheetId() {
 
 // Функция для загрузки данных из Google Sheets с кешированием. Основная таблица со страницами жюри
 async function fetchDataWithCache(sheetName, range, cacheKey, cacheTimeKey, cacheExpiry) {
-    const SHEET_ID = await getSheetId();
+	const label = `[utils.fetchDataWithCache] ${sheetName}!${range}`;
+	console.groupCollapsed(label);
+	console.log('Ключи кеша:', { cacheKey, cacheTimeKey, TTL_ms: cacheExpiry });
+	const t0 = performance.now();
+	const SHEET_ID = await getSheetId();
+	console.log('Получен SHEET_ID');
 
-    const cachedData = localStorage.getItem(cacheKey);
-    const cachedTime = localStorage.getItem(cacheTimeKey);
+	const cachedData = localStorage.getItem(cacheKey);
+	const cachedTime = localStorage.getItem(cacheTimeKey);
 
-    if (cachedData && cachedTime) {
-        const currentTime = new Date().getTime();
-        const timeDiff = currentTime - parseInt(cachedTime);
+	if (cachedData && cachedTime) {
+		const currentTime = Date.now();
+		const timeDiff = currentTime - parseInt(cachedTime);
+		console.log('Найден кеш:', { age_ms: timeDiff, isFresh: timeDiff < cacheExpiry });
+		if (timeDiff < cacheExpiry) {
+			console.log('Возвращаю данные из кеша (localStorage).');
+			console.timeEnd?.(label);
+			console.groupEnd();
+			return JSON.parse(cachedData);
+		}
+	}
 
-        if (timeDiff < cacheExpiry) {
-            return JSON.parse(cachedData);
-        }
-    }
+	const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
+	console.log('Запрашиваю из сети:');
+	const response = await fetch(url);
+	console.log('HTTP статус:', response.status);
 
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
-    const response = await fetch(url);
+	if (!response.ok) {
+		console.groupEnd();
+		throw new Error(`Ошибка HTTP: ${response.status}`);
+	}
 
-    if (!response.ok) {
-        throw new Error(`Ошибка HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
-
-    return data;
+	const data = await response.json();
+	localStorage.setItem(cacheKey, JSON.stringify(data));
+	localStorage.setItem(cacheTimeKey, Date.now().toString());
+	console.log('Сохранил в кеш (localStorage).');
+	console.log('Время выполнения, мс:', Math.round(performance.now() - t0));
+	console.groupEnd();
+	return data;
 }
 
     // Функция для инициализации аккордеонов

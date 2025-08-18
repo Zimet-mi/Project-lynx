@@ -24,29 +24,40 @@ function hidePreloadIndicator() {
 
 // Добавлено: preload для всех листов с участниками (без рендера, с кешем в localStorage)
 async function preloadAllParticipantsSheets() {
-    if (!window.ALL_PARTICIPANTS_SHEETS) return;
+    const label = '[preloadAllParticipantsSheets]';
+    console.groupCollapsed(label);
+    const t0 = performance.now();
+    if (!window.ALL_PARTICIPANTS_SHEETS) { console.warn(label, 'ALL_PARTICIPANTS_SHEETS отсутствует'); console.groupEnd(); return; }
     if (!window.sheetDataCache) window.sheetDataCache = {};
     const SHEET_ID = await window.getSheetId();
+    console.log(label, 'SHEET_ID получен');
     for (const { sheet, range } of window.ALL_PARTICIPANTS_SHEETS) {
-        if (window.sheetDataCache[sheet]) continue;
+        if (window.sheetDataCache[sheet]) { console.log(label, sheet, 'пропускаем (уже в памяти)'); continue; }
         try {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${range}?key=${window.API_KEY}`;
+            const tReq = performance.now();
             const response = await fetch(url);
-            if (!response.ok) continue; // Не падаем, если листа нет
+            console.log(label, sheet, 'HTTP', response.status, 'время, мс:', Math.round(performance.now() - tReq));
+            if (!response.ok) continue;
             const data = await response.json();
             window.sheetDataCache[sheet] = data;
-            // Сохраняем в localStorage для loadAllParticipantsPreview
             localStorage.setItem(`sheetDataCache_${sheet}`, JSON.stringify(data));
             localStorage.setItem(`sheetDataCacheTime_${sheet}`, new Date().getTime().toString());
-        } catch (e) { continue; }
+        } catch (e) { console.warn(label, sheet, 'ошибка', e); continue; }
     }
+    console.log(label, 'Готово. Время, мс:', Math.round(performance.now() - t0));
+    console.groupEnd();
 }
 
 async function preloadAllData() {
+    const label = '[preloadAllData]';
+    console.groupCollapsed(label);
+    const t0 = performance.now();
     showPreloadIndicator();
     try {
         // Участники (основные)
         if (window.fetchDataWithCache) {
+            const tA = performance.now();
             await window.fetchDataWithCache(
                 window.sheet_Name,
                 'A1:M200',
@@ -54,29 +65,37 @@ async function preloadAllData() {
                 `cachedTime_${window.sheet_Name}`,
                 window.CACHE_PARICIPANTS_EXPIRY || 120000
             );
+            console.log(label, 'Основные участники загружены. Время, мс:', Math.round(performance.now() - tA));
         }
         // Все участники (только preload, без рендера, с кешем в localStorage)
+        const tB = performance.now();
         await preloadAllParticipantsSheets();
+        console.log(label, 'Все участники (preload) загружены. Время, мс:', Math.round(performance.now() - tB));
         // Итоги
         if (window.fetchData && window.ResultSheet && window.rangeRes) {
+            const tC = performance.now();
             await window.fetchData(window.ResultSheet, window.rangeRes);
+            console.log(label, 'Итоги загружены. Время, мс:', Math.round(performance.now() - tC));
         }
         // Расписание
         if (typeof timetableID !== 'undefined' && typeof timetableRANGE !== 'undefined' && typeof API_KEY !== 'undefined') {
+            const tD = performance.now();
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${timetableID}/values/${timetableRANGE}?key=${API_KEY}`;
-            await fetch(url);
+            const resp = await fetch(url);
+            console.log(label, 'Расписание HTTP', resp.status, 'Время, мс:', Math.round(performance.now() - tD));
         }
     } catch (e) {
-        // Можно добавить обработку ошибок
-        console.error('Ошибка preload:', e);
+        console.error(label, 'Ошибка preload:', e);
     }
     preloadComplete = true;
     hidePreloadIndicator();
+    console.log(label, 'Готово. Общее время, мс:', Math.round(performance.now() - t0));
+    console.groupEnd();
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+    console.time('[DOMContentLoaded]');
     // Сначала preload, потом разрешаем работу вкладок
-    // Явно прокидываем константы из utils.js в window (без ||, только прямое присваивание)
     window.sheet_Name = 'archangel';
     window.ResultSheet = 'archangelRes';
     window.rangeRes = 'A1:N500';
@@ -88,32 +107,26 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     tabButtons.forEach(button => {
         button.addEventListener('click', async function (event) {
-            const targetTab = event.currentTarget.getAttribute('data-tab'); // Используем data-tab
+            const targetTab = event.currentTarget.getAttribute('data-tab');
+            console.log('[Tabs] Клик по вкладке', targetTab);
             const tabContent = document.getElementById(targetTab);
 
-            // Скрываем все вкладки
-            tabContents.forEach(content => {
-                content.style.display = 'none';
-            });
+            tabContents.forEach(content => { content.style.display = 'none'; });
+            tabButtons.forEach(btn => { btn.classList.remove('active'); });
 
-            // Убираем активный класс у всех кнопок
-            tabButtons.forEach(btn => {
-                btn.classList.remove('active');
-            });
-
-            // Показываем текущую вкладку и добавляем класс active
             if (tabContent) {
                 tabContent.style.display = 'block';
                 event.currentTarget.classList.add('active');
-
-                // Загружаем данные только при первом открытии вкладки
                 if (!tabContent.dataset.loaded) {
+                    const tTab = performance.now();
                     await loadTabData(targetTab);
+                    console.log('[Tabs] Данные вкладки загружены', targetTab, 'время, мс:', Math.round(performance.now() - tTab));
                     tabContent.dataset.loaded = true;
                 }
             }
         });
     });
+    console.timeEnd('[DOMContentLoaded]');
 
     // --- Dropdown menu logic ---
     const moreMenuBtn = document.getElementById('moreMenuBtn');
@@ -176,8 +189,9 @@ async function loadTabData(tabId) {
             await renderData(sheet_Name);
             break;
         case 'table':
-            // Убедитесь, что функция renderScheduleData определена
-            // await renderScheduleData();
+            if (typeof window.loadSchedule === 'function') {
+                await window.loadSchedule();
+            }
             break;
         case 'red':
             await renderTable();
@@ -189,6 +203,10 @@ async function loadTabData(tabId) {
 // Для заполнения расписания
 document.addEventListener('DOMContentLoaded', async function() {
 
+    const label = '[schedule]';
+    console.groupCollapsed(label);
+    const t0 = performance.now();
+
     const fetchDataWithCache = async () => {
         const cacheKey = `cachedData`;
         const cacheTimeKey = `cachedTime`;
@@ -199,25 +217,28 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (cachedData && cachedTime) {
             const currentTime = new Date().getTime();
             const timeDiff = currentTime - parseInt(cachedTime);
-
+            console.log(label, 'Кеш:', { age_ms: timeDiff, TTL_ms: CACHE_EXPIRY });
             if (timeDiff < CACHE_EXPIRY) {
+                console.log(label, 'Возвращаю из кеша (localStorage)');
                 return JSON.parse(cachedData);
             }
         }
 
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${timetableID}/values/${timetableRANGE}?key=${API_KEY}`;
+        console.log(label, 'Запрашиваю из сети:', url);
         const response = await fetch(url);
 
         if (!response.ok) {
             const message = `An error has occurred: ${response.status} ${response.statusText}`;
             const errorData = await response.json();
-            console.error('Error details:', errorData);
+            console.error(label, 'Ошибка сети', errorData);
             throw new Error(message);
         }
 
         const data = await response.json();
         localStorage.setItem(cacheKey, JSON.stringify(data));
         localStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+        console.log(label, 'Сохранил в кеш');
 
         return data;
     };
@@ -275,18 +296,30 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     const renderData = async () => {
         try {
+            const t1 = performance.now();
             const data = await fetchDataWithCache();
+            console.log(label, 'Данные получены. Время, мс:', Math.round(performance.now() - t1));
+            const t2 = performance.now();
             renderTable(data);
+            console.log(label, 'Таблица отрендерена. Время, мс:', Math.round(performance.now() - t2));
         } catch (error) {
-            console.error(error);
+            console.error(label, error);
             alert(`Error: ${error.message}`);
         }
     };
 
-    await renderData();
-    
-    // Подключение lightzoom после обновления таблицы
+    // Делаем загрузку расписания ленивой — по открытию вкладки
+    window.loadSchedule = renderData;
+    console.log(label, 'Инициализировано. Готово. Общее время, мс:', Math.round(performance.now() - t0));
+    console.groupEnd();
+
+    // Локальная инициализация lightzoom только для расписания и в idle
     document.addEventListener('tableUpdated', function() {
-        $('.lightzoom').lightzoom(); // Настройка lightzoom, если используется jQuery
+        const idle = window.requestIdleCallback || function(cb){ return setTimeout(cb, 0); };
+        idle(function(){
+            if (window.$ && typeof window.$.fn.lightzoom === 'function') {
+                window.$('#schedule .lightzoom').lightzoom();
+            }
+        });
     });
 });

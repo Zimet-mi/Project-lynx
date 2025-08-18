@@ -516,20 +516,46 @@ document.addEventListener('DOMContentLoaded', function () {
 window.sheetDataCache = window.sheetDataCache || {};
 
 async function loadAllParticipantsPreview() {
+    const logLabel = '[participants.loadAllParticipantsPreview]';
+    console.groupCollapsed(logLabel);
+    const tStart = performance.now();
+
     const previewContainer = document.getElementById('allParticipantsPreview');
-    if (!previewContainer) return;
+    if (!previewContainer) {
+        console.warn(logLabel, 'Контейнер не найден');
+        console.groupEnd();
+        return;
+    }
     previewContainer.innerHTML = '<div class="loading">Загрузка участников...</div>';
     // Добавляем padding-right для предотвращения обрезания данных
     previewContainer.style.paddingRight = '20px';
+
+    let totalSheets = 0;
+    let fromMemory = 0;
+    let fromLocalStorage = 0;
+    let fromNetwork = 0;
 
     // Собираем всех участников из всех листов/дней
     let allParticipants = [];
     let allDataBySheet = {};
     for (const { sheet, range } of window.ALL_PARTICIPANTS_SHEETS) {
+        totalSheets++;
+        const tSheet = performance.now();
         let data;
         if (window.sheetDataCache[sheet]) {
             data = window.sheetDataCache[sheet];
+            fromMemory++;
+            console.log(logLabel, sheet, '→ из памяти');
         } else {
+            const lsKey = `sheetDataCache_${sheet}`;
+            const cached = localStorage.getItem(lsKey);
+            if (cached) {
+                data = JSON.parse(cached);
+                fromLocalStorage++;
+                console.log(logLabel, sheet, '→ из localStorage');
+            }
+        }
+        if (!data) {
             try {
                 const SHEET_ID = await getSheetId();
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${range}?key=${API_KEY}`;
@@ -537,8 +563,16 @@ async function loadAllParticipantsPreview() {
                 if (!response.ok) continue;
                 data = await response.json();
                 window.sheetDataCache[sheet] = data;
-            } catch (e) { continue; }
+                localStorage.setItem(`sheetDataCache_${sheet}`, JSON.stringify(data));
+                localStorage.setItem(`sheetDataCacheTime_${sheet}`, Date.now().toString());
+                fromNetwork++;
+                console.log(logLabel, sheet, '→ из сети');
+            } catch (e) {
+                console.warn(logLabel, sheet, 'Ошибка сети', e);
+                continue;
+            }
         }
+        console.log(logLabel, sheet, 'время листа, мс:', Math.round(performance.now() - tSheet));
         const participants = (data.values || []).slice(1).map((row, idx) => ({
             id: row[0],
             name: row[1],
@@ -554,19 +588,22 @@ async function loadAllParticipantsPreview() {
     }
     if (!allParticipants.length) {
         previewContainer.innerHTML = '<div class="no-data">Нет участников для отображения</div>';
+        console.log(logLabel, 'Нет участников');
+        console.groupEnd();
         return;
     }
+
     // Группируем участников по листу (дню)
     const bySheet = {};
     allParticipants.forEach(p => {
         if (!bySheet[p.sheet]) bySheet[p.sheet] = [];
         bySheet[p.sheet].push(p);
     });
+
     // Формируем таблицу
     let html = '<table class="all-participants-table"><thead><tr><th>Фото</th><th>Имя</th><th>Номер</th><th>День</th></tr></thead><tbody>';
     window.ALL_PARTICIPANTS_SHEETS.forEach(({sheet}, sheetIdx) => {
         const group = bySheet[sheet] || [];
-        // Используем "День 1", "День 2" и т.д. вместо названия листа
         const dayLabel = `День ${sheetIdx + 1}`;
         group.forEach(participant => {
             html += `<tr class="participant-row" data-sheet="${participant.sheet}" data-row="${participant.row}">
@@ -579,15 +616,21 @@ async function loadAllParticipantsPreview() {
     });
     html += '</tbody></table>';
     previewContainer.innerHTML = html;
+
     // Навешиваем обработчик на строки
     previewContainer.querySelectorAll('.participant-row').forEach(row => {
         row.addEventListener('click', function() {
             const sheet = this.getAttribute('data-sheet');
             const rowNum = parseInt(this.getAttribute('data-row'), 10);
             const participant = allParticipants.find(p => p.sheet === sheet && p.row === rowNum);
+            console.log(logLabel, 'Клик по участнику', { sheet, row: rowNum, found: !!participant });
             if (participant) openParticipantModal(participant, allDataBySheet);
         });
     });
+
+    console.log(logLabel, 'Итого листов:', totalSheets, 'из памяти:', fromMemory, 'из localStorage:', fromLocalStorage, 'из сети:', fromNetwork);
+    console.log(logLabel, 'Общее время, мс:', Math.round(performance.now() - tStart));
+    console.groupEnd();
 }
 
 // Модальное окно участника для просмотра/редактирования оценок и комментария
