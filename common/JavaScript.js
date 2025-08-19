@@ -31,20 +31,22 @@ async function preloadAllParticipantsSheets() {
     if (!window.sheetDataCache) window.sheetDataCache = {};
     const SHEET_ID = await window.getSheetId();
     console.log(label, 'SHEET_ID получен');
-    for (const { sheet, range } of window.ALL_PARTICIPANTS_SHEETS) {
-        if (window.sheetDataCache[sheet]) { console.log(label, sheet, 'пропускаем (уже в памяти)'); continue; }
+    await Promise.all(window.ALL_PARTICIPANTS_SHEETS.map(async ({ sheet, range }) => {
+        if (window.sheetDataCache[sheet]) { console.log(label, sheet, 'пропускаем (уже в памяти)'); return; }
         try {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${range}?key=${window.API_KEY}`;
+            // Запрашиваем только 3 колонки (A:C) на превью, чтобы сократить объём ответа
+            const compactRange = range.replace(/:.+$/, ':N400');
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheet}!${compactRange}?key=${window.API_KEY}`;
             const tReq = performance.now();
             const response = await fetch(url);
             console.log(label, sheet, 'HTTP', response.status, 'время, мс:', Math.round(performance.now() - tReq));
-            if (!response.ok) continue;
+            if (!response.ok) return;
             const data = await response.json();
             window.sheetDataCache[sheet] = data;
             localStorage.setItem(`sheetDataCache_${sheet}`, JSON.stringify(data));
             localStorage.setItem(`sheetDataCacheTime_${sheet}`, new Date().getTime().toString());
-        } catch (e) { console.warn(label, sheet, 'ошибка', e); continue; }
-    }
+        } catch (e) { console.warn(label, sheet, 'ошибка', e); return; }
+    }));
     console.log(label, 'Готово. Время, мс:', Math.round(performance.now() - t0));
     console.groupEnd();
 }

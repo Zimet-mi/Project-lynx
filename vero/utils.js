@@ -50,11 +50,23 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 const CACHE_PARICIPANTS_EXPIRY = 120000; // 2 минуты в миллисекундах	
 	
 //___________________ДАЛЬШЕ ИДУТ ФУНКЦИИ_________________________
-// Функция для получения ID таблицы через Google Apps Script
+// Функция для получения ID таблицы через Google Apps Script (с кэшированием в сессии)
+let __SHEET_ID_CACHE;
 async function getSheetId() {
+    if (__SHEET_ID_CACHE) return __SHEET_ID_CACHE;
+    try {
+        const fromSession = sessionStorage.getItem('SHEET_ID');
+        if (fromSession) {
+            __SHEET_ID_CACHE = fromSession;
+            return __SHEET_ID_CACHE;
+        }
+    } catch (_) {}
     const url = 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec';
     const response = await fetch(url);
-    return response.text();
+    const id = await response.text();
+    __SHEET_ID_CACHE = id;
+    try { sessionStorage.setItem('SHEET_ID', id); } catch (_) {}
+    return id;
 }
 
 // Функция для загрузки данных из Google Sheets с кешированием. Основная таблица со страницами жюри
