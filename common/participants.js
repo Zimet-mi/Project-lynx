@@ -527,8 +527,6 @@ async function loadAllParticipantsPreview() {
         return;
     }
     previewContainer.innerHTML = '<div class="loading">Загрузка участников...</div>';
-    // Добавляем padding-right для предотвращения обрезания данных
-    previewContainer.style.paddingRight = '20px';
 
     let totalSheets = 0;
     let fromMemory = 0;
