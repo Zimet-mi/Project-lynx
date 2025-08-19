@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8" />
+	<title>West</title>
+	<base href=".">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width">
+    <meta name="Keywords" content="">
+    <meta name="Description" content="">
+	<meta name="msapplication-TileColor" content="#da532c">
+	<meta name="theme-color" content="#ffffff">
+	<script src="utils.js"></script>
+	<script src="../common/JavaScript.js"></script>
+	<script src="../common/participants.js"></script>
+	<script src="../common/result.js"></script>
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+	<script src="../common/lightbox-plus-jquery.js"></script>
+	<script type="text/javascript" src="../lightzoom/lightzoom.js"></script>
+	<script src="https://telegram.org/js/telegram-web-app.js"></script>
+	<!-- Подключить, если не будет работать ТГ 
+	<script src="miniApp.js"></script>-->
+	<link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" type="text/css" href="../timetable.css">
+	<link rel="stylesheet" href="../lightzoom/lightzoom.css" type="text/css">
+	<link rel="stylesheet" href="../lightbox.css">
+	<!-- Favicons -->
+	<link type="../image/png" rel="icon" href="../icons/web-app.png">
+</head>
+<body>
+<div class="main">
+    <div class="head">
+        <header>
+            <div class="nav-wrapper">
+                <nav class="top-nav">
+                    <button class="tablinks" data-tab="One">
+                        <span class="nav-icon">1️⃣</span>
+                        <span class="nav-label">Первый</span>
+                    </button>
+                    <button class="tablinks" data-tab="Two">
+                        <span class="nav-icon">2️⃣</span>
+                        <span class="nav-label">Второй</span>
+                    </button>
+                    <button class="tablinks" data-tab="Three">
+                        <span class="nav-icon">3️⃣</span>
+                        <span class="nav-label">Третий</span>
+                    </button>
+                    <button class="tablinks" data-tab="all">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-label">Участники</span>
+                    </button>
+                    <div class="dropdown">
+                        <button class="dropdown-toggle" id="moreMenuBtn" type="button" aria-label="Меню">
+                            <span class="burger-icon" aria-hidden="true">
+                                <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect y="6" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                    <rect y="13" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                    <rect y="20" width="28" height="3" rx="1.5" fill="#1976d2"/>
+                                </svg>
+                            </span>
+                        </button>
+                        <div class="dropdown-menu" id="moreMenu">
+                            <button class="dropdown-item tablinks" data-tab="table">
+                                <span class="nav-icon">🗓️</span>
+                                <span class="nav-label">Расписание</span>
+                            </button>
+                            <button class="dropdown-item tablinks" data-tab="red">
+                                <span class="nav-icon">📊</span>
+                                <span class="nav-label">Итог</span>
+                            </button>
+                            <button class="dropdown-item send-btn" id="sendCacheButton">
+                                <span class="nav-icon">📤</span>
+                                <span class="nav-label">Отправить</span>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
+    </div>
+    <div id="One" class="tabcontent">
+        <div id="section1"></div>
+    </div>
+    <div id="Two" class="tabcontent">
+        <div id="section2"></div>
+    </div>
+    <div id="Three" class="tabcontent">
+        <div id="section3"></div>
+    </div>
+    <div id="all" class="tabcontent">
+        <div id="allParticipantsPreview"></div>
+    </div>
+    <div id="table" class="tabcontent">
+        <table id="schedule" class="table_blur">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div id="red" class="tabcontent">
+        <div id="accordion-container">
+            <div class="accordion" id="accordion1">Одиночное</div>
+            <div class="panel" id="panel1"></div>
+            <div class="accordion" id="accordion2">Малое групповое</div>
+            <div class="panel" id="panel2"></div>
+            <div class="accordion" id="accordion3">Групповое и тематическое</div>
+            <div class="panel" id="panel3"></div>
+            <div class="accordion" id="accordion4">Спецпризы</div>
+            <div class="panel" id="panel4"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

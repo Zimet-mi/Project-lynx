@@ -11,8 +11,8 @@ const PARTICIPANT_PARAMETERS = [
 ];
 
 // Универсальные параметры чекбоксов спецпризов для всех участников
-const CHECKBOX_LABELS = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Гран-при'];
-const CHECKBOX_COLUMNS = ['I', 'J', 'K', 'L', 'M'];
+const CHECKBOX_LABELS = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Русский источник', 'Гран-при'];
+const CHECKBOX_COLUMNS = ['I', 'J', 'K', 'L', 'M', 'N'];
 
 document.addEventListener('DOMContentLoaded', function () {
     	

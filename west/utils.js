@@ -2,36 +2,46 @@
 
 // Глобальные переменные
 const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
-const sheet_Name = 'archangel'; //Основная страница с выставлением оценок жюри
-const ResultSheet = 'archangelRes'; // страница с итогами конкретного жюри
+const sheet_Name = 'westDay1'; //Основная страница с выставлением оценок жюри
+//const sheet_Name = 'westDay2'; //Второй день
+const ResultSheet = 'westRes'; // страница с итогами конкретного жюри
 
 // Диапазоны для секций с участниками для аккардеона
-    const section1Range = [2, 23];
-    const section2Range = [24, 67];
-    const section3Range = [68, 77];
+//Первый день
+    const section1Range = [2, 47];
+    const section2Range = [48, 84];
+    const section3Range = [85, 116];
+	
+//Второй день
+//    const section1Range = [2, 38];
+//    const section2Range = [39, 72];
+//    const section3Range = [73, 90];
+	
+	
 
 //Диапазоны для таблицы с результатами в личных итогах каждого жюри
 const RANGE_PARTS = [
-    'A1:H80', // Диапазон для первой части
-    'A81:H120', // Диапазон для второй части
-    'A121:H141', // Диапазон для третьей части
-    'A142:H500'  // Диапазон для четвертой части
+    'A1:H136', // Диапазон для первой части
+    'A137:H210', // Диапазон для второй части
+    'A211:H235', // Диапазон для третьей части
+    'A236:H700'  // Диапазон для четвертой части
 ];
 
-// Массив для всех листов/дней с участниками (заполняется вручную)
+// Массив для всех листов/дней с участниками
 const ALL_PARTICIPANTS_SHEETS = [
-    { sheet: 'archangel', range: 'A1:N80' },
-	{ sheet: 'skywalker', range: 'A1:N80' },
+    { sheet: 'westDay1', range: 'A1:N120' },
+	{ sheet: 'westDay2', range: 'A1:N90' },
     // Пример: { sheet: 'archangelDay2', range: 'A1:H80' },
     // Добавляй сюда новые дни/листы и диапазоны
 ];
 
 //Диапазон для данных итоговой таблицы каждого жюри. Общий парсинг
-const rangeRes = 'A1:N500';
+const rangeRes = 'A1:N700';
 
 //Страница и диапазон расписания
     const timetableID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
     const timetableRANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
+//    const timetableRANGE = 'Day2!A1:B250'; // Второй день
 	
 //Время жизни общего кеша
 const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
