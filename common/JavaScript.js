@@ -67,16 +67,19 @@ async function preloadAllData() {
             );
             console.log(label, 'Основные участники загружены. Время, мс:', Math.round(performance.now() - tA));
         }
+        
         // Все участники (только preload, без рендера, с кешем в localStorage)
         const tB = performance.now();
         await preloadAllParticipantsSheets();
         console.log(label, 'Все участники (preload) загружены. Время, мс:', Math.round(performance.now() - tB));
+        
         // Итоги
         if (window.fetchData && window.ResultSheet && window.rangeRes) {
             const tC = performance.now();
             await window.fetchData(window.ResultSheet, window.rangeRes);
             console.log(label, 'Итоги загружены. Время, мс:', Math.round(performance.now() - tC));
         }
+        
         // Расписание
         if (typeof timetableID !== 'undefined' && typeof timetableRANGE !== 'undefined' && typeof API_KEY !== 'undefined') {
             const tD = performance.now();
@@ -84,6 +87,21 @@ async function preloadAllData() {
             const resp = await fetch(url);
             console.log(label, 'Расписание HTTP', resp.status, 'Время, мс:', Math.round(performance.now() - tD));
         }
+        
+        // ДАННЫЕ УЧАСТНИКОВ ДЛЯ ВКЛАДКИ "УЧАСТНИКИ" - ДОБАВЛЯЕМ ЗДЕСЬ
+        if (typeof window.fetchDataWithCache === 'function' && typeof window.sheet_Name !== 'undefined') {
+            const tE = performance.now();
+            // Загружаем данные для основной вкладки участников
+            await window.fetchDataWithCache(
+                window.sheet_Name,
+                'A1:N700', // Увеличиваем диапазон, чтобы охватить всех участников
+                `cachedParticipantsData_${window.sheet_Name}`,
+                `cachedParticipantsTime_${window.sheet_Name}`,
+                window.CACHE_PARICIPANTS_EXPIRY || 120000
+            );
+            console.log(label, 'Данные для вкладки Участники загружены. Время, мс:', Math.round(performance.now() - tE));
+        }
+        
     } catch (e) {
         console.error(label, 'Ошибка preload:', e);
     }
