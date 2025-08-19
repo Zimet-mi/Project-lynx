@@ -56,7 +56,7 @@ async function preloadAllData() {
     showPreloadIndicator();
     try {
         // Участники (основные)
-        if (window.fetchDataWithCache) {
+        if (typeof window.fetchDataWithCache === 'function' && typeof window.sheet_Name !== 'undefined') {
             const tA = performance.now();
             await window.fetchDataWithCache(
                 window.sheet_Name,
@@ -66,6 +66,8 @@ async function preloadAllData() {
                 window.CACHE_PARICIPANTS_EXPIRY || 120000
             );
             console.log(label, 'Основные участники загружены. Время, мс:', Math.round(performance.now() - tA));
+        } else {
+            console.warn(label, 'Пропущена загрузка основных участников: нет sheet_Name или fetchDataWithCache');
         }
         
         // Все участники (только preload, без рендера, с кешем в localStorage)
@@ -101,6 +103,17 @@ async function preloadAllData() {
             );
             console.log(label, 'Данные для вкладки Участники загружены. Время, мс:', Math.round(performance.now() - tE));
         }
+
+        // Предварительно рендерим вкладку "Все участники", чтобы избежать подзагрузки при первом открытии
+        if (typeof window.loadAllParticipantsPreview === 'function') {
+            try {
+                const tF = performance.now();
+                await window.loadAllParticipantsPreview();
+                console.log(label, 'Вкладка "Все участники" отрендерена. Время, мс:', Math.round(performance.now() - tF));
+            } catch (e) {
+                console.warn(label, 'Не удалось предварительно отрендерить вкладку Все участники', e);
+            }
+        }
         
     } catch (e) {
         console.error(label, 'Ошибка preload:', e);
@@ -114,10 +127,21 @@ async function preloadAllData() {
 document.addEventListener('DOMContentLoaded', async function () {
     console.time('[DOMContentLoaded]');
     // Сначала preload, потом разрешаем работу вкладок
-    window.sheet_Name = 'archangel';
-    window.ResultSheet = 'archangelRes';
-    window.rangeRes = 'A1:N500';
-    window.CACHE_PARICIPANTS_EXPIRY = 120000;
+    // Подхватываем значения из utils.js, даже если они объявлены как глобальные лексические (const/let),
+    // и в window нет соответствующих свойств.
+    if (typeof window.sheet_Name === 'undefined' && typeof sheet_Name !== 'undefined') {
+        window.sheet_Name = sheet_Name;
+    }
+    if (typeof window.ResultSheet === 'undefined' && typeof ResultSheet !== 'undefined') {
+        window.ResultSheet = ResultSheet;
+    }
+    if (typeof window.rangeRes === 'undefined' && typeof rangeRes !== 'undefined') {
+        window.rangeRes = rangeRes;
+    }
+    if (typeof window.CACHE_PARICIPANTS_EXPIRY === 'undefined' && typeof CACHE_PARICIPANTS_EXPIRY !== 'undefined') {
+        window.CACHE_PARICIPANTS_EXPIRY = CACHE_PARICIPANTS_EXPIRY;
+    }
+    // Без фоллбэков: если что-то не определено, соответствующие разделы preload будут пропущены
     await preloadAllData();
 
     const tabButtons = document.querySelectorAll('.tablinks');
