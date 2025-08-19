@@ -5,7 +5,7 @@ const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ дл�
 const SHEET_NAME = 'NewRes'; // Страница с результатами
 
 // Диапазон для данных итоговой таблицы
-const RANGE = 'A1:H500';
+const RANGE = 'A1:H250';
 
 // Время жизни кеша
 const CACHE_EXPIRY = 10000; // 10 секунд (для тестирования)
@@ -129,29 +129,32 @@ async function parseSheetData() {
                 )
             );
                 if (nominationText) {
-                    currentNomination = nominationText.trim();
-                    nominations.push(currentNomination);
-                    console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
-                // Получаем имена жюри из следующей строки
-                const juryRow = rows[i + 1] || [];
-                juryNames = [];
-                // C, D, E (2, 3, 4)
-                for (let col = 2; col <= 4; col++) {
-                    const cell = juryRow[col] ? juryRow[col].toString().trim() : '';
-                    if (cell && cell.toLowerCase() !== 'итог') {
-                        juryNames.push(cell);
-                    }
-                }
-                // Если в C, D, E только 2 жюри, ищем третьего в F (5)
-                if (juryNames.length === 2 && juryRow[5] && juryRow[5].toString().trim().toLowerCase() !== 'итог') {
-                    juryNames.push(juryRow[5].toString().trim());
-                }
-                console.log('Имена жюри для номинации:', juryNames);
-                // Пропускаем строку после номинации, так как она содержит имена жюри
-                headerRow = i + 2;
-                i = i + 1; // чтобы не обработать строку жюри как участника
-                    continue;
+					currentNomination = nominationText.trim();
+					nominations.push(currentNomination);
+					console.log(`Найдена номинация [${i}]: "${currentNomination}"`);
+    
+					// Получаем имена жюри из СЛЕДУЮЩЕЙ строки
+					const juryRow = rows[i + 1] || [];
+					juryNames = [];
+    
+					// Ищем имена жюри в колонках C, D, E (индексы 2, 3, 4)
+					for (let col = 2; col <= 4; col++) {
+						if (juryRow[col] && juryRow[col].toString().trim()) {
+							const juryName = juryRow[col].toString().trim();
+							// Пропускаем пустые и служебные ячейки
+						if (juryName && !juryName.toLowerCase().includes('итог')) {
+							juryNames.push(juryName);
             }
+        }
+    }
+    
+    console.log('Имена жюри для номинации:', juryNames);
+    
+    // Устанавливаем, что следующая строка (i+2) будет первым участником
+    // Пропускаем текущую строку номинации и следующую строку жюри
+    // Следующая итерация цикла будет для i+2 - первого участника
+    continue;
+}
             
             // Если еще не обнаружили номинацию, пропускаем
             if (!currentNomination) continue;

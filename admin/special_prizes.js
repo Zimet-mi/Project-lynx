@@ -3,7 +3,7 @@
 // Глобальные переменные
 const SPECIALS_API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
 const SPECIALS_SHEET_NAME = 'Specials'; // Страница со специальными призами
-const SPECIALS_RANGE = 'A1:I670';
+const SPECIALS_RANGE = 'A1:I1238';
 
 // Переменная для хранения данных в памяти
 let cachedParsedData = null;
