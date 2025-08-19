@@ -719,6 +719,7 @@ input[type="checkbox"] {
 #allParticipantsPreview {
     box-sizing: border-box;
     width: 100%;
+    padding-left: 0 !important;
 }
 @media (max-width: 700px) {
     #allParticipantsPreview {

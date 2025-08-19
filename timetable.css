@@ -123,6 +123,17 @@ table {
     }
 }
 
+/* Специально для вкладки "Все участники" — убираем внутренние отступы только на этой вкладке */
+#all.tabcontent {
+    padding: 0;
+}
+@media (max-width: 768px) {
+    #all.tabcontent { padding: 0; }
+}
+@media (max-width: 400px) {
+    #all.tabcontent { padding: 0; }
+}
+
 /*Аккордеон*/
 .accordion {
     background-color: #eee; /* Цвет фона */
