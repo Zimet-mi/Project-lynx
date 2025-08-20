@@ -43,19 +43,15 @@ const extractParticipants = (data) => {
     }
 
     return data.values.slice(1)
+        .filter(row => row && row[1] && row[1].toString().trim() !== '') // Фильтруем строки без имени в столбце B
         .map((row, index) => {
-            // Проверяем, что id и name существуют и не пустые
-            if (!row[0] || !row[1]) {
-                return null;
-            }
             return {
                 id: row[0], // ID участника
                 name: row[1], // Имя участника
                 img: `${row[0]}.jpg`, // Путь к изображению
                 row: index + 2 // Номер строки в таблице
             };
-        })
-        .filter(participant => participant !== null); // Удаляем пустые элементы
+        });
 };
 
 // Функция для фильтрации участников по диапазону строк

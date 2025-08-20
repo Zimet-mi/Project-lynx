@@ -134,7 +134,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             throw new Error('Неверный формат данных: отсутствуют значения');
         }
 
-        return data.values.slice(1).map((row, index) => {
+        return data.values.slice(1)
+            .filter(row => row && row[1] && row[1].toString().trim() !== '') // Фильтруем строки без имени в столбце B
+            .map((row, index) => {
             return {
                 id: row[0],
                 name: row[1],
