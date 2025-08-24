@@ -4,22 +4,22 @@ const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // Ключ API
 const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
 //Первый день
-const TABLE_RANGE = 'Day1!A1:B180'; // Диапазон для таблицы
-const ACCORDION_RANGE = 'accordionDay1!A1:B120'; // Диапазон для аккордеона
-const SECTION_RANGES = {
-   section1: [1, 47],
-    section2: [48, 84],
-    section3: [85, 118]
-};
+//const TABLE_RANGE = 'Day1!A1:B180'; // Диапазон для таблицы
+//const ACCORDION_RANGE = 'accordionDay1!A1:B120'; // Диапазон для аккордеона
+//const SECTION_RANGES = {
+//   section1: [1, 47],
+//    section2: [48, 84],
+//    section3: [85, 118]
+//};
 
 //Второй день
-//const TABLE_RANGE = 'Day2!A1:B180'; // Диапазон для таблицы
-//const ACCORDION_RANGE = 'accordionDay2!A1:B90'; // Диапазон для аккордеона
-//const SECTION_RANGES = {
-//    section1: [1, 38],
-//    section2: [39, 72],
-//    section3: [73, 89]
-//};
+const TABLE_RANGE = 'Day2!A1:B180'; // Диапазон для таблицы
+const ACCORDION_RANGE = 'accordionDay2!A1:B90'; // Диапазон для аккордеона
+const SECTION_RANGES = {
+    section1: [1, 38],
+    section2: [39, 72],
+    section3: [73, 89]
+};
 
 // Функция для создания ячейки таблицы
 const createTableCell = (cellContent, isLink = false) => {
