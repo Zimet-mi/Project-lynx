@@ -2,20 +2,20 @@
 
 // Глобальные переменные
 const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM'; // API ключ для работы с таблицами
-const sheet_Name = 'valerieDay1'; //Основная страница с выставлением оценок жюри
-//const sheet_Name = 'valerieDay2'; //Второй день
+//const sheet_Name = 'valerieDay1'; //Основная страница с выставлением оценок жюри
+const sheet_Name = 'valerieDay2'; //Второй день
 const ResultSheet = 'valerieRes'; // страница с итогами конкретного жюри
 
 // Диапазоны для секций с участниками для аккардеона
 //Первый день
-    const section1Range = [2, 47];
-    const section2Range = [48, 84];
-    const section3Range = [85, 116];
+//    const section1Range = [2, 47];
+//    const section2Range = [48, 84];
+//    const section3Range = [85, 116];
 	
 //Второй день
-//    const section1Range = [2, 38];
-//    const section2Range = [39, 72];
-//    const section3Range = [73, 90];
+    const section1Range = [2, 38];
+    const section2Range = [39, 72];
+    const section3Range = [73, 90];
 	
 	
 
@@ -40,8 +40,8 @@ const rangeRes = 'A1:N700';
 
 //Страница и диапазон расписания
     const timetableID = '1_p2Wb9MU6VCHkdM0ZZcj7Kjfg-LHK6h_qwdEKztXdds'; // ID гугл таблицы
-    const timetableRANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
-//    const timetableRANGE = 'Day2!A1:B250'; // Второй день
+//    const timetableRANGE = 'Day1!A1:B250'; // Имя страницы и диапазон ячеек
+    const timetableRANGE = 'Day2!A1:B250'; // Второй день
 	
 //Время жизни общего кеша
 const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
