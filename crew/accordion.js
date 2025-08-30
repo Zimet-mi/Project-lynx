@@ -16,11 +16,11 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 const TABLE_RANGE = 'Day1!A1:B180'; // Диапазон для таблицы
 const ACCORDION_RANGE = 'accordionDay1!A1:B125'; // Диапазон для аккордеона
 const SECTION_RANGES = {
-    section1: [1, 30],
-    section2: [31, 69],
-    section3: [70, 107],
+    section1: [1, 17],
+    section2: [18, 33],
+   // section3: [70, 107],
     // 4-ый блок - легко закомментировать
-    section4: [108, 125]
+    //section4: [108, 125]
 };
 
 // Функция для создания ячейки таблицы
@@ -197,21 +197,21 @@ const renderAccordions = (data) => {
 
     const section1Container = document.getElementById('section1');
     const section2Container = document.getElementById('section2');
-    const section3Container = document.getElementById('section3');
+    //const section3Container = document.getElementById('section3');
     // 4-ый блок - легко закомментировать
-    const section4Container = document.getElementById('section4');
+    //const section4Container = document.getElementById('section4');
 
     section1Container.innerHTML = '';
     section2Container.innerHTML = '';
-    section3Container.innerHTML = '';
+    //section3Container.innerHTML = '';
     // 4-ый блок - легко закомментировать
-    section4Container.innerHTML = '';
+    //section4Container.innerHTML = '';
 
     const section1Participants = filterParticipantsByRange(participants, SECTION_RANGES.section1);
     const section2Participants = filterParticipantsByRange(participants, SECTION_RANGES.section2);
-    const section3Participants = filterParticipantsByRange(participants, SECTION_RANGES.section3);
+    //const section3Participants = filterParticipantsByRange(participants, SECTION_RANGES.section3);
     // 4-ый блок - легко закомментировать
-    const section4Participants = filterParticipantsByRange(participants, SECTION_RANGES.section4);
+    //const section4Participants = filterParticipantsByRange(participants, SECTION_RANGES.section4);
 
     section1Participants.forEach(participant => {
         const { button, panel } = createParticipantPanel(participant);
@@ -225,18 +225,18 @@ const renderAccordions = (data) => {
         section2Container.appendChild(panel);
     });
 
-    section3Participants.forEach(participant => {
-        const { button, panel } = createParticipantPanel(participant);
-        section3Container.appendChild(button);
-        section3Container.appendChild(panel);
-    });
+    //section3Participants.forEach(participant => {
+    //    const { button, panel } = createParticipantPanel(participant);
+    //    section3Container.appendChild(button);
+    //    section3Container.appendChild(panel);
+    //});
 
     // 4-ый блок - легко закомментировать
-    section4Participants.forEach(participant => {
-        const { button, panel } = createParticipantPanel(participant);
-        section4Container.appendChild(button);
-        section4Container.appendChild(panel);
-    });
+    //section4Participants.forEach(participant => {
+    //    const { button, panel } = createParticipantPanel(participant);
+    //    section4Container.appendChild(button);
+    //    section4Container.appendChild(panel);
+    //});
 
     initializeAccordions();
 };
