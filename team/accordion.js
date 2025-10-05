@@ -9,7 +9,7 @@ const ACCORDION_RANGE = 'accordionDay1!A1:B160'; // Диапазон для ак
 const SECTION_RANGES = {
 	section1: [1, 24],
     section2: [25, 41],
-    section3: [42, 57]
+    section3: [42, 74]
 //	section4: [118, 156]
 };
 
