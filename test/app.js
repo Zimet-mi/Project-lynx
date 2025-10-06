@@ -863,6 +863,8 @@ const ScheduleTable = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     useEffect(() => {
         loadSchedule();
@@ -881,6 +883,43 @@ const ScheduleTable = () => {
             setLoading(false);
         }
     };
+
+    const handleImageClick = (imageId) => {
+        setSelectedImage(imageId);
+        setIsImageModalOpen(true);
+        telegramApi.hapticFeedback('impact', 'light');
+    };
+
+    const handleImageModalClose = (e) => {
+        if (e) e.stopPropagation();
+        setIsImageModalOpen(false);
+        setSelectedImage(null);
+    };
+
+    const handleImageModalContentClick = (e) => {
+        e.stopPropagation();
+    };
+
+    // Эффект для обработки ESC
+    useEffect(() => {
+        const handleEscKey = (event) => {
+            if (event.keyCode === 27 && isImageModalOpen) {
+                handleImageModalClose();
+            }
+        };
+
+        if (isImageModalOpen) {
+            document.addEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'auto';
+        };
+    }, [isImageModalOpen]);
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка расписания...' });
@@ -922,18 +961,47 @@ const ScheduleTable = () => {
 
                     return React.createElement('tr', { key: rowIndex, className: rowClass },
                         ...row.map((cell, colIndex) => {
-                            if (colIndex === 0) {
+                            if (colIndex === 0 && cell) {
                                 return React.createElement('td', { key: colIndex },
-                                    React.createElement('a', {
-                                        href: `../card/${cell}.jpg`,
-                                        target: '_blank',
-                                        rel: 'noopener noreferrer'
+                                    React.createElement('span', {
+                                        className: 'participant-id-link',
+                                        onClick: () => handleImageClick(cell),
+                                        style: {
+                                            cursor: 'pointer',
+                                            color: '#1976d2',
+                                            textDecoration: 'underline'
+                                        }
                                     }, cell)
                                 );
                             }
                             return React.createElement('td', { key: colIndex }, cell);
                         })
                     );
+                })
+            )
+        ),
+
+        // Модальное окно для увеличенного изображения
+        isImageModalOpen && selectedImage && React.createElement('div', {
+            className: 'image-modal show',
+            onClick: handleImageModalClose
+        },
+            React.createElement('div', {
+                className: 'image-modal-content',
+                onClick: handleImageModalContentClick
+            },
+                React.createElement('span', {
+                    className: 'image-modal-close',
+                    onClick: handleImageModalClose,
+                    title: 'Закрыть (Esc)'
+                }, '×'),
+                React.createElement('img', {
+                    src: `../card/${selectedImage}.jpg`,
+                    alt: `Участник ${selectedImage}`,
+                    className: 'image-modal-img',
+                    onError: (e) => {
+                        e.target.src = '../card/no-image.jpg';
+                    }
                 })
             )
         )
@@ -947,12 +1015,14 @@ const SchedulePage = () => {
     );
 };
 
-// Компонент аккордеона результатов
+/// Компонент аккордеона результатов
 const ResultsAccordion = () => {
     const [resultsData, setResultsData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeAccordion, setActiveAccordion] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     useEffect(() => {
         loadResultsData();
@@ -982,13 +1052,33 @@ const ResultsAccordion = () => {
         }
     };
 
-    const createTableCell = (cellContent, isLink = false) => {
-        if (isLink) {
+    const handleImageClick = (imageId) => {
+        setSelectedImage(imageId);
+        setIsImageModalOpen(true);
+        telegramApi.hapticFeedback('impact', 'light');
+    };
+
+    const handleImageModalClose = (e) => {
+        if (e) e.stopPropagation();
+        setIsImageModalOpen(false);
+        setSelectedImage(null);
+    };
+
+    const handleImageModalContentClick = (e) => {
+        e.stopPropagation();
+    };
+
+    const createTableCell = (cellContent, isLink = false, rowIndex = 0) => {
+        if (isLink && cellContent) {
             return React.createElement('td', null,
-                React.createElement('a', {
-                    href: `../card/${cellContent}.jpg`,
-                    target: '_blank',
-                    rel: 'noopener noreferrer'
+                React.createElement('span', {
+                    className: 'participant-id-link',
+                    onClick: () => handleImageClick(cellContent),
+                    style: {
+                        cursor: 'pointer',
+                        color: '#1976d2',
+                        textDecoration: 'underline'
+                    }
                 }, cellContent)
             );
         }
@@ -1012,7 +1102,7 @@ const ResultsAccordion = () => {
                 ...data.values.slice(1).map((row, rowIndex) => 
                     React.createElement('tr', { key: rowIndex },
                         ...row.map((cellContent, colIndex) => 
-                            createTableCell(cellContent, colIndex === 0)
+                            createTableCell(cellContent, colIndex === 0, rowIndex)
                         )
                     )
                 )
@@ -1023,6 +1113,27 @@ const ResultsAccordion = () => {
     const handleAccordionToggle = (index) => {
         setActiveAccordion(activeAccordion === index ? null : index);
     };
+
+    // Эффект для обработки ESC
+    useEffect(() => {
+        const handleEscKey = (event) => {
+            if (event.keyCode === 27 && isImageModalOpen) {
+                handleImageModalClose();
+            }
+        };
+
+        if (isImageModalOpen) {
+            document.addEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'auto';
+        };
+    }, [isImageModalOpen]);
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка результатов...' });
@@ -1045,6 +1156,31 @@ const ResultsAccordion = () => {
                 activeAccordion === index && React.createElement('div', { className: 'panel active' },
                     resultsData[index] && createTableFromData(resultsData[index])
                 )
+            )
+        ),
+
+        // Модальное окно для увеличенного изображения
+        isImageModalOpen && selectedImage && React.createElement('div', {
+            className: 'image-modal show',
+            onClick: handleImageModalClose
+        },
+            React.createElement('div', {
+                className: 'image-modal-content',
+                onClick: handleImageModalContentClick
+            },
+                React.createElement('span', {
+                    className: 'image-modal-close',
+                    onClick: handleImageModalClose,
+                    title: 'Закрыть (Esc)'
+                }, '×'),
+                React.createElement('img', {
+                    src: `../card/${selectedImage}.jpg`,
+                    alt: `Участник ${selectedImage}`,
+                    className: 'image-modal-img',
+                    onError: (e) => {
+                        e.target.src = '../card/no-image.jpg';
+                    }
+                })
             )
         )
     );
