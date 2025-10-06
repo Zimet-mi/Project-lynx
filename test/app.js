@@ -844,7 +844,7 @@ const AllParticipantsPage = () => {
 
                     // Чекбоксы спецпризов
 					React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
-						...CHECKBOX_LABELS.map((label, index) => 
+						CHECKBOX_LABELS.map((label, index) => 
 							React.createElement('div', { key: index, className: 'checkbox-row' },
 								React.createElement('input', {
 									type: 'checkbox',
@@ -853,7 +853,7 @@ const AllParticipantsPage = () => {
 									onChange: (e) => handleCheckboxChange(index, e.target.checked)
 								}),
 								React.createElement('label', { 
-									htmlFor: `modal-checkbox-${selectedParticipant.id}-${index}`, // ИСПРАВЛЕНО
+									htmlFor: `modal-checkbox-${selectedParticipant.id}-${index}`,
 									style: { fontSize: '14px' }
 								}, label)
 							)
@@ -906,7 +906,7 @@ const AllParticipantsPage = () => {
                 })
             )
         )
-    )
+    );
 };
 
 // Компонент таблицы расписания
