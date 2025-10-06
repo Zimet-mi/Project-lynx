@@ -764,19 +764,23 @@ const AllParticipantsPage = () => {
         
         // Модальное окно редактирования участника
         isModalOpen && selectedParticipant && React.createElement('div', {
-            className: 'participant-modal show',
-            onClick: handleModalClose
-        },
-            React.createElement('div', {
-                className: 'participant-modal-content',
-                onClick: (e) => e.stopPropagation(),
-                style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
-            },
-                React.createElement('span', {
-                    className: 'participant-modal-close',
-                    onClick: handleModalClose,
-                    title: 'Закрыть (Esc)'
-                }, '×'),
+			className: 'participant-modal show',
+			onClick: handleModalClose
+		},
+			React.createElement('div', {
+				className: 'participant-modal-content',
+				onClick: (e) => e.stopPropagation(),
+				style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
+		},
+        // Добавить проверку в начале
+				!selectedParticipant ? 
+					React.createElement('div', { className: 'error-message' }, 'Ошибка: участник не выбран') :
+					React.createElement(React.Fragment, null,
+						React.createElement('span', {
+							className: 'participant-modal-close',
+							onClick: handleModalClose,
+							title: 'Закрыть (Esc)'
+						}, '×'),
                 
                 // Заголовок с информацией об участнике
                 React.createElement('div', { className: 'participant-modal-header' },
@@ -839,22 +843,22 @@ const AllParticipantsPage = () => {
                     ),
 
                     // Чекбоксы спецпризов
-                    React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
-                        ...CHECKBOX_LABELS.map((label, index) => 
-                            React.createElement('div', { key: index, className: 'checkbox-row' },
-                                React.createElement('input', {
-                                    type: 'checkbox',
-                                    id: `modal-checkbox-${selectedParticipant.id}-${index}`,
-                                    checked: editingCheckboxes[index] || false,
-                                    onChange: (e) => handleCheckboxChange(index, e.target.checked)
-                                }),
-                                React.createElement('label', { 
-                                    htmlFor: `modal-checkbox-${participant.id}-${index}`,
-                                    style: { fontSize: '14px' }
-                                }, label)
-                            )
-                        )
-                    ),
+					React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
+						...CHECKBOX_LABELS.map((label, index) => 
+							React.createElement('div', { key: index, className: 'checkbox-row' },
+								React.createElement('input', {
+									type: 'checkbox',
+									id: `modal-checkbox-${selectedParticipant.id}-${index}`,
+									checked: editingCheckboxes[index] || false,
+									onChange: (e) => handleCheckboxChange(index, e.target.checked)
+								}),
+								React.createElement('label', { 
+									htmlFor: `modal-checkbox-${selectedParticipant.id}-${index}`, // ИСПРАВЛЕНО
+									style: { fontSize: '14px' }
+								}, label)
+							)
+						)
+					),
 
                     // Кнопка сохранения
                     React.createElement('div', { style: { textAlign: 'center', marginTop: '25px', padding: '0 30px' } },
