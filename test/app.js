@@ -1,5 +1,14 @@
 // Основное React приложение Valerie
 
+const saveImmediately = async (value, column, row, sheetName) => {
+    try {
+        await googleSheetsApi.saveData(value, column, row, sheetName);
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        telegramApi.showAlert('Ошибка сохранения данных');
+    }
+};
+
 const { useState, useEffect, useCallback } = React;
 
 // Компонент загрузки
@@ -121,13 +130,76 @@ const Header = ({ activeTab, onTabChange, onSendCache }) => {
     );
 };
 
+// Общий компонент для полей оценки
+const EvaluationFields = ({ 
+    scores, 
+    checkboxes, 
+    onScoreChange, 
+    onCheckboxChange, 
+    onCommentChange,
+    participantId = '',
+    compact = false
+}) => {
+    return React.createElement('div', { className: `evaluation-form ${compact ? 'compact' : ''}` },
+        // Оценки
+        React.createElement('div', { className: 'select-group' },
+            ...PARTICIPANT_PARAMETERS.map(param => 
+                React.createElement('div', { key: param.column, className: 'select-row' },
+                    React.createElement('div', null, param.label),
+                    React.createElement('select', {
+                        className: 'data-input input-field',
+                        value: scores[param.column] || '',
+                        onChange: (e) => onScoreChange(param.column, e.target.value)
+                    },
+                        React.createElement('option', { value: '' }, '-'),
+                        ...Array.from({ length: param.options }, (_, i) => 
+                            React.createElement('option', { key: i + 1, value: i + 1 }, i + 1)
+                        )
+                    )
+                )
+            )
+        ),
+
+        // Комментарий
+        React.createElement('div', { className: 'textarea-group' },
+            React.createElement('div', { className: 'textarea-row' },
+                React.createElement('div', null, 'Комментарий'),
+                React.createElement('textarea', {
+                    className: 'data-input input-field',
+                    value: scores.comment || '',
+                    onChange: (e) => onCommentChange(e.target.value),
+                    rows: 3,
+                    placeholder: 'Введите комментарий...'
+                })
+            )
+        ),
+
+        // Чекбоксы спецпризов
+        React.createElement('div', { className: 'checkbox-group' },
+            ...getActiveSpecialPrizes().map((prize, index) => 
+                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
+                    React.createElement('input', {
+                        type: 'checkbox',
+                        id: `checkbox-${participantId}-${prize.column}`,
+                        checked: checkboxes[index] || false,
+                        onChange: (e) => onCheckboxChange(index, e.target.checked)
+                    }),
+                    React.createElement('label', { 
+                        htmlFor: `checkbox-${participantId}-${prize.column}`
+                    }, prize.label)
+                )
+            )
+        )
+    );
+};
+
 // Компонент формы оценки
 const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     const [scores, setScores] = useState({
-        costum: '',
-        shozhest: '',
-        vistup: '',
-        aks: '',
+        C: '', // Костюм
+        D: '', // Схожесть  
+        E: '', // Выход
+        F: '', // Аксессуар
         comment: ''
     });
     const [checkboxes, setCheckboxes] = useState({});
@@ -146,10 +218,10 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                     const row = data.values[0];
                     
                     setScores({
-                        C: row[2] || '', // Костюм
-                        D: row[3] || '', // Схожесть
-                        E: row[4] || '', // Выход
-                        F: row[5] || '', // Аксессуар
+                        C: row[2] || '',
+                        D: row[3] || '',
+                        E: row[4] || '',
+                        F: row[5] || '',
                         comment: row[6] || ''
                     });
                     
@@ -169,18 +241,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         loadCurrentValues();
     }, [participant.row]);
 
-    // Функция немедленного сохранения
-    const saveImmediately = async (value, column, row, sheetName) => {
-        try {
-            await googleSheetsApi.saveData(value, column, row, sheetName);
-            // Легкая вибрация для подтверждения сохранения
-            telegramApi.hapticFeedback('impact', 'light');
-        } catch (error) {
-            console.error('Ошибка сохранения:', error);
-            telegramApi.showAlert('Ошибка сохранения данных');
-        }
-    };
-
+    // Обработчики с вибрацией
     const handleScoreChange = async (column, value) => {
         setScores(prev => ({ ...prev, [column]: value }));
         telegramApi.hapticFeedback('selection');
@@ -196,6 +257,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 
     const handleCheckboxChange = async (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
+        telegramApi.hapticFeedback('selection');
         const activePrizes = getActiveSpecialPrizes();
         const prize = activePrizes[index];
         if (prize) {
@@ -204,54 +266,14 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         }
     };
 
-    return React.createElement('div', { className: 'evaluation-form' },
-        // Оценки
-        React.createElement('div', { className: 'select-group' },
-            ...PARTICIPANT_PARAMETERS.map(param => 
-                React.createElement('div', { key: param.column, className: 'select-row' },
-                    React.createElement('div', null, param.label),
-                    React.createElement('select', {
-                        className: 'data-input input-field',
-                        value: scores[param.column] || '',
-                        onChange: (e) => handleScoreChange(param.column, e.target.value)
-                    },
-                        ...Array.from({ length: param.options }, (_, i) => 
-                            React.createElement('option', { key: i + 1, value: i + 1 }, i + 1)
-                        )
-                    )
-                )
-            )
-        ),
-        // Комментарий
-        React.createElement('div', { className: 'textarea-group' },
-            React.createElement('div', { className: 'textarea-row' },
-                React.createElement('div', null, 'Комментарий'),
-                React.createElement('textarea', {
-                    className: 'data-input input-field',
-                    value: scores.comment || '',
-                    onChange: (e) => handleCommentChange(e.target.value),
-                    rows: 3,
-                    placeholder: 'Введите комментарий...'
-                })
-            )
-        ),
-        // Чекбоксы спецпризов
-        React.createElement('div', { className: 'checkbox-group' },
-            ...getActiveSpecialPrizes().map((prize, index) => 
-                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
-                    React.createElement('input', {
-                        type: 'checkbox',
-                        id: `checkbox-${participant.id}-${prize.column}`,
-                        checked: checkboxes[index] || false,
-                        onChange: (e) => handleCheckboxChange(index, e.target.checked)
-                    }),
-                    React.createElement('label', { 
-                        htmlFor: `checkbox-${participant.id}-${prize.column}`
-                    }, prize.label)
-                )
-            )
-        )
-    );
+    return React.createElement(EvaluationFields, {
+        scores,
+        checkboxes,
+        onScoreChange: handleScoreChange,
+        onCheckboxChange: handleCheckboxChange,
+        onCommentChange: handleCommentChange,
+        participantId: participant.id
+    });
 };
 
 // Компонент карточки участника
@@ -266,7 +288,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
     const handleImageClick = (e) => {
         e.stopPropagation(); // Предотвращаем открытие/закрытие карточки
         setIsImageModalOpen(true);
-        telegramApi.hapticFeedback('impact', 'light');
+        telegramApi.hapticFeedback('impact', 'soft');
     };
 
     const handleImageModalClose = (e) => {
@@ -561,17 +583,6 @@ const AllParticipantsPage = () => {
         }
     };
 
-    // Функция немедленного сохранения для модального окна
-    const saveImmediately = async (value, column, row, sheetName) => {
-        try {
-            await googleSheetsApi.saveData(value, column, row, sheetName);
-            telegramApi.hapticFeedback('impact', 'light');
-        } catch (error) {
-            console.error('Ошибка сохранения:', error);
-            telegramApi.showAlert('Ошибка сохранения данных');
-        }
-    };
-
     const handleParticipantClick = (participant) => {
         setSelectedParticipant(participant);
         // Загружаем текущие значения оценок
@@ -584,7 +595,7 @@ const AllParticipantsPage = () => {
         if (e) e.stopPropagation();
         setSelectedImageParticipant(participant);
         setIsImageModalOpen(true);
-        telegramApi.hapticFeedback('impact', 'light');
+        telegramApi.hapticFeedback('impact', 'soft');
     };
 
     const handleModalClose = () => {
@@ -739,102 +750,59 @@ const AllParticipantsPage = () => {
         ),
         
         // Модальное окно редактирования участника - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ КНОПКИ
-        isModalOpen && selectedParticipant && React.createElement('div', {
-            className: 'participant-modal show',
-            onClick: handleModalClose
-        },
-            React.createElement('div', {
-                className: 'participant-modal-content',
-                onClick: (e) => e.stopPropagation(),
-                style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
-            },
-                React.createElement('span', {
-                    className: 'participant-modal-close',
-                    onClick: handleModalClose,
-                    title: 'Закрыть (Esc)'
-                }, '×'),
-                
-                // Заголовок с информацией об участнике
-                React.createElement('div', { className: 'participant-modal-header' },
-                    React.createElement('img', {
-                        src: `../card/${selectedParticipant.img}`,
-                        alt: selectedParticipant.name,
-                        className: 'participant-modal-img',
-                        onError: (e) => {
-                            e.target.src = '../card/no-image.jpg';
-                        },
-                        onClick: () => {
-                            setSelectedImageParticipant(selectedParticipant);
-                            setIsImageModalOpen(true);
-                        },
-                        style: { cursor: 'pointer' }
-                    }),
-                    React.createElement('div', null,
-                        React.createElement('div', { className: 'participant-modal-name' }, selectedParticipant.name),
-                        React.createElement('div', { className: 'participant-modal-id' }, `Номер: ${selectedParticipant.id}`),
-                        React.createElement('div', { className: 'participant-modal-sheet' }, `День: ${selectedParticipant.sheet}`)
-                    )
-                ),
+		isModalOpen && selectedParticipant && React.createElement('div', {
+			className: 'participant-modal show',
+			onClick: handleModalClose
+		},
+			React.createElement('div', {
+				className: 'participant-modal-content',
+				onClick: (e) => e.stopPropagation(),
+				style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
+			},
+				React.createElement('span', {
+					className: 'participant-modal-close',
+					onClick: handleModalClose,
+					title: 'Закрыть (Esc)'
+				}, '×'),
+				
+				// Заголовок с информацией об участнике
+				React.createElement('div', { className: 'participant-modal-header' },
+					React.createElement('img', {
+						src: `../card/${selectedParticipant.img}`,
+						alt: selectedParticipant.name,
+						className: 'participant-modal-img',
+						onError: (e) => {
+							e.target.src = '../card/no-image.jpg';
+						},
+						onClick: () => {
+							setSelectedImageParticipant(selectedParticipant);
+							setIsImageModalOpen(true);
+						},
+						style: { cursor: 'pointer' }
+					}),
+					React.createElement('div', null,
+						React.createElement('div', { className: 'participant-modal-name' }, selectedParticipant.name),
+						React.createElement('div', { className: 'participant-modal-id' }, `Номер: ${selectedParticipant.id}`),
+						React.createElement('div', { className: 'participant-modal-sheet' }, `День: ${selectedParticipant.sheet}`)
+					)
+				),
 
-                // Форма редактирования оценок с немедленным сохранением
-                React.createElement('div', { className: 'participant-modal-marks' },
-                    React.createElement('h3', { style: { margin: '0 0 20px 0', color: '#333' } }, 'Редактирование оценок'),
-                    
-                    // Оценки
-                    React.createElement('div', { className: 'select-group', style: { marginBottom: '20px' } },
-                        ...PARTICIPANT_PARAMETERS.map(param => 
-                React.createElement('div', { key: param.column, className: 'select-row' },
-                                React.createElement('div', null, param.label),
-                                React.createElement('select', {
-                                    className: 'data-input input-field',
-                        value: editingScores[param.column] || '',
-                        onChange: (e) => handleScoreChange(param.column, e.target.value)
-                                },
-                                    React.createElement('option', { value: '' }, '-'),
-                                    ...Array.from({ length: param.options }, (_, i) => 
-                                        React.createElement('option', { key: i + 1, value: i + 1 }, i + 1)
-                                    )
-                                )
-                            )
-                        )
-                    ),
-
-                    // Комментарий
-                    React.createElement('div', { className: 'textarea-group' },
-                        React.createElement('div', { className: 'textarea-row' },
-                            React.createElement('div', null, 'Комментарий'),
-                            React.createElement('textarea', {
-                                className: 'data-input input-field',
-                                value: editingScores.comment || '',
-                                onChange: (e) => handleCommentChange(e.target.value),
-                                rows: 3,
-                                placeholder: 'Введите комментарий...',
-                                style: { width: '100%' }
-                            })
-                        )
-                    ),
-
-                    // Чекбоксы спецпризов
-                    React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
-                        getActiveSpecialPrizes().map((prize, index) => 
-                            React.createElement('div', { key: prize.column, className: 'checkbox-row' },
-                                React.createElement('input', {
-                                    type: 'checkbox',
-                                    id: `modal-checkbox-${selectedParticipant.id}-${prize.column}`,
-                                    checked: editingCheckboxes[index] || false,
-                                    onChange: (e) => handleCheckboxChange(index, e.target.checked)
-                                }),
-                                React.createElement('label', { 
-                                    htmlFor: `modal-checkbox-${selectedParticipant.id}-${prize.column}`,
-                                    style: { fontSize: '14px' },
-                                    title: prize.label
-                                }, prize.label)
-                            )
-                        )
-                    )
-                )
-            )
-        ),
+				// Форма редактирования оценок
+				React.createElement('div', { className: 'participant-modal-marks' },
+					React.createElement('h3', { style: { margin: '0 0 20px 0', color: '#333' } }, 'Редактирование оценок'),
+					
+					React.createElement(EvaluationFields, {
+						scores: editingScores,
+						checkboxes: editingCheckboxes,
+						onScoreChange: handleScoreChange,
+						onCheckboxChange: handleCheckboxChange,
+						onCommentChange: handleCommentChange,
+						participantId: selectedParticipant.id,
+						compact: true
+					})
+				)
+			)
+		),
 
         // Модальное окно для увеличенного изображения
         isImageModalOpen && selectedImageParticipant && React.createElement('div', {
@@ -892,7 +860,7 @@ const ScheduleTable = () => {
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
         setIsImageModalOpen(true);
-        telegramApi.hapticFeedback('impact', 'light');
+        telegramApi.hapticFeedback('impact', 'soft');
     };
 
     const handleImageModalClose = (e) => {
@@ -1059,7 +1027,7 @@ const ResultsAccordion = () => {
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
         setIsImageModalOpen(true);
-        telegramApi.hapticFeedback('impact', 'light');
+        telegramApi.hapticFeedback('impact', 'soft');
     };
 
     const handleImageModalClose = (e) => {
@@ -1259,7 +1227,6 @@ const App = () => {
 
     const handleSendCache = async () => {
         try {
-            telegramApi.hapticFeedback('impact', 'medium');
             telegramApi.showAlert('Данные отправлены!');
         } catch (error) {
             console.error('Ошибка отправки данных:', error);
