@@ -174,6 +174,7 @@ img {
     display: flex;
     justify-content: center;
     align-items: center;
+	padding: 0 10px;
 }
 
 .top-nav {
@@ -182,12 +183,9 @@ img {
     align-items: center;
     justify-content: center;
     gap: 0.2em;
-    width: 100%;
-    padding: 0.2em 0.5em;
-    background: transparent;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
 }
 
 .top-nav::-webkit-scrollbar {
@@ -198,7 +196,7 @@ img {
     display: flex;
     align-items: center;
     gap: 0.4em;
-    background: none;
+    background: none !important;
     border: none;
     outline: none;
     font-size: 1.08em;
@@ -221,8 +219,8 @@ img {
 .top-nav .tablinks.active,
 .top-nav .tablinks:focus,
 .top-nav .tablinks:hover {
-    background: var(--color-bg-light);
-    color: var(--color-accent);
+    background: var(--color-bg-light) !important;
+    color: var(--color-accent) !important;
     box-shadow: 0 2px 8px rgba(25,118,210,0.07);
 }
 

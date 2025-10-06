@@ -329,7 +329,6 @@ const ParticipantsPage = ({ section = 'One' }) => {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeAccordion, setActiveAccordion] = useState(null);
 
     useEffect(() => {
         loadParticipants();
@@ -380,10 +379,6 @@ const ParticipantsPage = ({ section = 'One' }) => {
         console.log(`Комментарий изменен: ${participantId}, ${comment}`);
     };
 
-    const handleAccordionToggle = (index) => {
-        setActiveAccordion(activeAccordion === index ? null : index);
-    };
-
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка участников...' });
     }
@@ -407,16 +402,21 @@ const ParticipantsPage = ({ section = 'One' }) => {
     const range = getRangeForSection(section);
     const sectionParticipants = filterParticipantsByRange(participants, range);
 
+    // Убираем аккордеон и показываем карточки напрямую
     return React.createElement('div', { className: 'participants-page' },
         React.createElement('div', { id: `section${section === 'One' ? '1' : section === 'Two' ? '2' : '3'}` },
-            React.createElement(AccordionSection, {
-                title: `Секция ${section === 'One' ? '1' : section === 'Two' ? '2' : '3'}`,
-                participants: sectionParticipants,
-                onScoreChange: handleScoreChange,
-                onCommentChange: handleCommentChange,
-                isActive: activeAccordion === 0,
-                onToggle: () => handleAccordionToggle(0)
-            })
+            sectionParticipants.length > 0 ? 
+                sectionParticipants.map((participant) => 
+                    React.createElement(ParticipantCard, {
+                        key: `${participant.id}-${participant.row}`,
+                        participant,
+                        onScoreChange: handleScoreChange,
+                        onCommentChange: handleCommentChange
+                    })
+                ) :
+                React.createElement('div', { className: 'no-participants' },
+                    React.createElement('p', null, 'Нет участников в этой секции')
+                )
         )
     );
 };
@@ -786,7 +786,7 @@ const ResultsPage = () => {
 
 // Главный компонент приложения
 const App = () => {
-    const [activeTab, setActiveTab] = useState('One');
+    const [activeTab, setActiveTab] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [preloadComplete, setPreloadComplete] = useState(false);
     const [telegramReady, setTelegramReady] = useState(false);
@@ -860,6 +860,17 @@ const App = () => {
             return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
         }
 
+		if (!activeTab) {
+            return React.createElement('div', { 
+                className: 'no-data',
+                style: { 
+                    padding: '100px 20px', 
+                    textAlign: 'center', 
+                    color: '#6c757d' 
+                } 
+            }, 'Выберите раздел для начала работы');
+        }
+		
         switch (activeTab) {
             case 'One':
             case 'Two':
