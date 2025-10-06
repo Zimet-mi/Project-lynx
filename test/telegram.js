@@ -130,22 +130,23 @@ class TelegramApi {
 
     // Вибрация
     hapticFeedback(type = 'impact', style = 'medium') {
-        if (this.tg && this.tg.HapticFeedback) {
-            switch (type) {
-                case 'impact':
-                    this.tg.HapticFeedback.impactOccurred(style);
-                    break;
-                case 'notification':
-                    this.tg.HapticFeedback.notificationOccurred(style);
-                    break;
-                case 'selection':
-                    this.tg.HapticFeedback.selectionChanged();
-                    break;
-                default:
-                    this.tg.HapticFeedback.impactOccurred('medium');
-            }
-        }
-    }
+		if (this.tg && this.tg.HapticFeedback && this.tg.version && parseFloat(this.tg.version) > 6.0) {
+			switch (type) {
+				case 'impact':
+					this.tg.HapticFeedback.impactOccurred(style);
+					break;
+				case 'notification':
+					this.tg.HapticFeedback.notificationOccurred(style);
+					break;
+				case 'selection':
+					this.tg.HapticFeedback.selectionChanged();
+					break;
+				default:
+					this.tg.HapticFeedback.impactOccurred('medium');
+			}
+		}
+		// Для версий 6.0 и ниже просто игнорируем вызов вибрации
+	}
 
     // Получить тему
     getTheme() {
