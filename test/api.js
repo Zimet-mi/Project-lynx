@@ -165,22 +165,17 @@ class GoogleSheetsApi {
     // Предзагрузка всех данных
     async preloadAllData() {
         const promises = [];
+        const loadedSheets = new Set();
         
-        // Основные данные участников
-        promises.push(
-            this.fetchDataWithCache(
-                SHEET_CONFIG.mainSheet,
-                'A1:M200',
-                CACHE_CONFIG.participantsExpiry
-            ).catch(err => console.warn('Ошибка предзагрузки основных участников:', err))
-        );
-        
-        // Все участники из всех листов
+        // Все участники из всех листов (оптимизировано - избегаем дубликатов)
         ALL_PARTICIPANTS_SHEETS.forEach(({ sheet, range }) => {
-            promises.push(
-                this.fetchDataWithCache(sheet, range, CACHE_CONFIG.generalExpiry)
-                    .catch(err => console.warn(`Ошибка предзагрузки ${sheet}:`, err))
-            );
+            if (!loadedSheets.has(sheet)) {
+                loadedSheets.add(sheet);
+                promises.push(
+                    this.fetchDataWithCache(sheet, range, CACHE_CONFIG.generalExpiry)
+                        .catch(err => console.warn(`Ошибка предзагрузки ${sheet}:`, err))
+                );
+            }
         });
         
         // Расписание

@@ -146,10 +146,10 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                     const row = data.values[0];
                     
                     setScores({
-                        costum: row[2] || '',
-                        shozhest: row[3] || '',
-                        vistup: row[4] || '',
-                        aks: row[5] || '',
+                        C: row[2] || '', // Костюм
+                        D: row[3] || '', // Схожесть
+                        E: row[4] || '', // Выход
+                        F: row[5] || '', // Аксессуар
                         comment: row[6] || ''
                     });
                     
@@ -183,6 +183,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 
     const handleScoreChange = async (column, value) => {
         setScores(prev => ({ ...prev, [column]: value }));
+        telegramApi.hapticFeedback('selection');
         await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
         onScoreChange?.(participant.id, column, value);
     };
@@ -402,7 +403,7 @@ const ParticipantsPage = ({ section = 'One' }) => {
 
             const data = await googleSheetsApi.fetchDataWithCache(
                 SHEET_CONFIG.mainSheet,
-                'A1:N700',
+                'A1:N200', // Уменьшили диапазон для оптимизации
                 120000
             );
 
@@ -494,10 +495,10 @@ const AllParticipantsPage = () => {
     
     // Состояния для формы редактирования
     const [editingScores, setEditingScores] = useState({
-        costum: '',
-        shozhest: '',
-        vistup: '',
-        aks: '',
+        C: '', // Костюм
+        D: '', // Схожесть  
+        E: '', // Выход
+        F: '', // Аксессуар
         comment: ''
     });
     const [editingCheckboxes, setEditingCheckboxes] = useState({});
@@ -530,10 +531,10 @@ const AllParticipantsPage = () => {
                                 raw: row,
                                 // Добавляем текущие оценки из данных
                                 scores: {
-                                    costum: row[2] || '',
-                                    shozhest: row[3] || '',
-                                    vistup: row[4] || '',
-                                    aks: row[5] || '',
+                                    C: row[2] || '', // Костюм
+                                    D: row[3] || '', // Схожесть
+                                    E: row[4] || '', // Выход
+                                    F: row[5] || '', // Аксессуар
                                     comment: row[6] || ''
                                 },
                                 checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
@@ -602,15 +603,12 @@ const AllParticipantsPage = () => {
     };
 
     // Обработчики для формы редактирования с немедленным сохранением
-    const handleScoreChange = async (field, value) => {
+    const handleScoreChange = async (column, value) => {
         if (!selectedParticipant) return;
         
-        setEditingScores(prev => ({ ...prev, [field]: value }));
-        
-        const param = PARTICIPANT_PARAMETERS.find(p => p.field === field);
-        if (param) {
-            await saveImmediately(value, param.column, selectedParticipant.dataRow, selectedParticipant.sheet);
-        }
+        setEditingScores(prev => ({ ...prev, [column]: value }));
+        telegramApi.hapticFeedback('selection');
+        await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
     };
 
     const handleCommentChange = async (value) => {
@@ -728,10 +726,10 @@ const AllParticipantsPage = () => {
                                         textAlign: 'center'
                                     } 
                                 }, 
-                                    `К:${participant.scores.costum || '-'} ` +
-                                    `С:${participant.scores.shozhest || '-'} ` +
-                                    `В:${participant.scores.vistup || '-'} ` +
-                                    `А:${participant.scores.aks || '-'}`
+                                    `К:${participant.scores.C || '-'} ` +
+                                    `С:${participant.scores.D || '-'} ` +
+                                    `В:${participant.scores.E || '-'} ` +
+                                    `А:${participant.scores.F || '-'}`
                                 )
                             )
                         );
