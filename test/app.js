@@ -132,16 +132,6 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     });
     const [checkboxes, setCheckboxes] = useState({});
 
-    // Debounce функция
-    const debounce = useCallback((func, wait) => {
-        let timeout;
-        return function(...args) {
-            const context = this;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), wait);
-        };
-    }, []);
-
     // Загрузка текущих значений
     useEffect(() => {
         const loadCurrentValues = async () => {
@@ -178,35 +168,38 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         loadCurrentValues();
     }, [participant.row]);
 
-    // Debounced сохранение данных
-    const debouncedSave = useCallback(debounce(async (value, column, row, sheetName) => {
+    // Функция немедленного сохранения
+    const saveImmediately = async (value, column, row, sheetName) => {
         try {
             await googleSheetsApi.saveData(value, column, row, sheetName);
+            // Легкая вибрация для подтверждения сохранения
+            telegramApi.hapticFeedback('impact', 'light');
         } catch (error) {
             console.error('Ошибка сохранения:', error);
+            telegramApi.showAlert('Ошибка сохранения данных');
         }
-    }, 300), []);
+    };
 
-    const handleScoreChange = (field, value) => {
+    const handleScoreChange = async (field, value) => {
         const param = PARTICIPANT_PARAMETERS.find(p => p.field === field);
         if (param) {
             setScores(prev => ({ ...prev, [field]: value }));
-            debouncedSave(value, param.column, participant.row, SHEET_CONFIG.mainSheet);
+            await saveImmediately(value, param.column, participant.row, SHEET_CONFIG.mainSheet);
             onScoreChange?.(participant.id, field, value);
         }
     };
 
-    const handleCommentChange = (value) => {
+    const handleCommentChange = async (value) => {
         setScores(prev => ({ ...prev, comment: value }));
-        debouncedSave(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
+        await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
         onCommentChange?.(participant.id, value);
     };
 
-    const handleCheckboxChange = (index, checked) => {
+    const handleCheckboxChange = async (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
         const value = checked ? 'Номинант' : '';
         const column = CHECKBOX_COLUMNS[index];
-        debouncedSave(value, column, participant.row, SHEET_CONFIG.mainSheet);
+        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
     };
 
     return React.createElement('div', { className: 'evaluation-form' },
