@@ -154,8 +154,9 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                     });
                     
                     const checkboxValues = {};
-                    CHECKBOX_COLUMNS.forEach((column, index) => {
-                        const colIndex = column.charCodeAt(0) - 'A'.charCodeAt(0);
+                    const activePrizes = getActiveSpecialPrizes();
+                    activePrizes.forEach((prize, index) => {
+                        const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
                         checkboxValues[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
                     });
                     setCheckboxes(checkboxValues);
@@ -197,9 +198,12 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 
     const handleCheckboxChange = async (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
-        const value = checked ? 'Номинант' : '';
-        const column = CHECKBOX_COLUMNS[index];
-        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+        const activePrizes = getActiveSpecialPrizes();
+        const prize = activePrizes[index];
+        if (prize) {
+            const value = checked ? prize.value : '';
+            await saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+        }
     };
 
     return React.createElement('div', { className: 'evaluation-form' },
@@ -235,15 +239,18 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         ),
         // Чекбоксы спецпризов
         React.createElement('div', { className: 'checkbox-group' },
-            ...CHECKBOX_LABELS.map((label, index) => 
-                React.createElement('div', { key: index, className: 'checkbox-row' },
+            ...getActiveSpecialPrizes().map((prize, index) => 
+                React.createElement('div', { key: prize.field, className: 'checkbox-row' },
                     React.createElement('input', {
                         type: 'checkbox',
-                        id: `checkbox-${participant.id}-${index}`,
+                        id: `checkbox-${participant.id}-${prize.field}`,
                         checked: checkboxes[index] || false,
                         onChange: (e) => handleCheckboxChange(index, e.target.checked)
                     }),
-                    React.createElement('label', { htmlFor: `checkbox-${participant.id}-${index}` }, label)
+                    React.createElement('label', { 
+                        htmlFor: `checkbox-${participant.id}-${prize.field}`,
+                        title: prize.description || prize.label
+                    }, prize.label)
                 )
             )
         )
@@ -533,8 +540,8 @@ const AllParticipantsPage = () => {
                                     aks: row[5] || '',
                                     comment: row[6] || ''
                                 },
-                                checkboxes: CHECKBOX_COLUMNS.reduce((acc, column, index) => {
-                                    const colIndex = column.charCodeAt(0) - 'A'.charCodeAt(0);
+                                checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
+                                    const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
                                     acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
                                     return acc;
                                 }, {})
@@ -621,9 +628,12 @@ const AllParticipantsPage = () => {
         if (!selectedParticipant) return;
         
         setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
-        const value = checked ? 'Номинант' : '';
-        const column = CHECKBOX_COLUMNS[index];
-        await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+        const activePrizes = getActiveSpecialPrizes();
+        const prize = activePrizes[index];
+        if (prize) {
+            const value = checked ? prize.value : '';
+            await saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+        }
     };
 
     // Эффект для обработки ESC
@@ -812,18 +822,19 @@ const AllParticipantsPage = () => {
 
                     // Чекбоксы спецпризов
                     React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
-                        CHECKBOX_LABELS.map((label, index) => 
-                            React.createElement('div', { key: index, className: 'checkbox-row' },
+                        getActiveSpecialPrizes().map((prize, index) => 
+                            React.createElement('div', { key: prize.field, className: 'checkbox-row' },
                                 React.createElement('input', {
                                     type: 'checkbox',
-                                    id: `modal-checkbox-${selectedParticipant.id}-${index}`,
+                                    id: `modal-checkbox-${selectedParticipant.id}-${prize.field}`,
                                     checked: editingCheckboxes[index] || false,
                                     onChange: (e) => handleCheckboxChange(index, e.target.checked)
                                 }),
                                 React.createElement('label', { 
-                                    htmlFor: `modal-checkbox-${selectedParticipant.id}-${index}`,
-                                    style: { fontSize: '14px' }
-                                }, label)
+                                    htmlFor: `modal-checkbox-${selectedParticipant.id}-${prize.field}`,
+                                    style: { fontSize: '14px' },
+                                    title: prize.description || prize.label
+                                }, prize.label)
                             )
                         )
                     )
@@ -967,9 +978,8 @@ const ScheduleTable = () => {
                                         className: 'participant-id-link',
                                         onClick: () => handleImageClick(cell),
                                         style: {
-                                            cursor: 'pointer',
-                                            color: '#1976d2',
-                                            textDecoration: 'underline'
+                                            cursor: 'pointer'
+                                            // Убраны цвет и подчёркивание
                                         }
                                     }, cell)
                                 );
@@ -1015,7 +1025,7 @@ const SchedulePage = () => {
     );
 };
 
-/// Компонент аккордеона результатов
+// Компонент аккордеона результатов
 const ResultsAccordion = () => {
     const [resultsData, setResultsData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -1075,9 +1085,8 @@ const ResultsAccordion = () => {
                     className: 'participant-id-link',
                     onClick: () => handleImageClick(cellContent),
                     style: {
-                        cursor: 'pointer',
-                        color: '#1976d2',
-                        textDecoration: 'underline'
+                        cursor: 'pointer'
+                        // Убраны цвет и подчёркивание
                     }
                 }, cellContent)
             );

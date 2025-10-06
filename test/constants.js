@@ -55,19 +55,148 @@ const TIMETABLE_RANGE = 'Day2!A1:B250'; // Можно переключать н�
 // Диапазон для данных итоговой таблицы
 const RESULT_SHEET_RANGE = 'A1:N700';
 
+// ========================================
+// НАСТРОЙКА ПАРАМЕТРОВ ОЦЕНКИ
+// ========================================
+
 // Параметры оценок для участников
+// Для добавления нового параметра просто добавьте объект в массив
 const PARTICIPANT_PARAMETERS = [
-    { label: 'Костюм', column: 'C', options: 5, field: 'costum' },
-    { label: 'Схожесть', column: 'D', options: 5, field: 'shozhest' },
-    { label: 'Выход', column: 'E', options: 5, field: 'vistup' },
-    { label: 'Аксессуар', column: 'F', options: 3, field: 'aks' }
+    {
+        label: 'Костюм',           // Отображаемое название
+        column: 'C',               // Столбец в Google Sheets (A, B, C, D...)
+        options: 5,                // Количество баллов (1-5, 1-3, 1-10 и т.д.)
+        field: 'costum',           // Уникальное поле для React
+        description: 'Оценка костюма участника', // Описание (опционально)
+        required: true             // Обязательный параметр (опционально)
+    },
+    {
+        label: 'Схожесть',
+        column: 'D',
+        options: 5,
+        field: 'shozhest',
+        description: 'Схожесть с оригинальным персонажем',
+        required: true
+    },
+    {
+        label: 'Выход',
+        column: 'E',
+        options: 5,
+        field: 'vistup',
+        description: 'Качество выступления',
+        required: true
+    },
+    {
+        label: 'Аксессуар',
+        column: 'F',
+        options: 3,
+        field: 'aks',
+        description: 'Качество аксессуаров и реквизита',
+        required: false
+    }
+    // Для добавления нового параметра:
+    // {
+    //     label: 'Новый параметр',
+    //     column: 'G',
+    //     options: 5,
+    //     field: 'new_param',
+    //     description: 'Описание нового параметра',
+    //     required: true
+    // }
 ];
 
-// Лейблы чекбоксов спецпризов
-const CHECKBOX_LABELS = ['Пошив', 'Крафт', 'Дефиле', 'Парик', 'Русский источник', 'Гран-при'];
+// ========================================
+// НАСТРОЙКА СПЕЦПРИЗОВ (ЧЕКБОКСЫ)
+// ========================================
 
-// Столбцы для чекбоксов спецпризов
-const CHECKBOX_COLUMNS = ['I', 'J', 'K', 'L', 'M', 'N'];
+// Спецпризы и награды
+// Для добавления нового спецприза просто добавьте объект в массив
+const SPECIAL_PRIZES = [
+    {
+        label: 'Пошив',                    // Отображаемое название
+        column: 'I',                       // Столбец в Google Sheets
+        field: 'poshiv',                   // Уникальное поле для React
+        description: 'Лучший пошив костюма', // Описание (опционально)
+        active: true,                      // Активен ли спецприз
+        value: 'Номинант'                  // Значение, которое записывается при активации
+    },
+    {
+        label: 'Крафт',
+        column: 'J',
+        field: 'kraft',
+        description: 'Лучшая ручная работа',
+        active: true,
+        value: 'Номинант'
+    },
+    {
+        label: 'Дефиле',
+        column: 'K',
+        field: 'defile',
+        description: 'Лучшее дефиле',
+        active: true,
+        value: 'Номинант'
+    },
+    {
+        label: 'Парик',
+        column: 'L',
+        field: 'parik',
+        description: 'Лучший парик/прическа',
+        active: true,
+        value: 'Номинант'
+    },
+    {
+        label: 'Русский источник',
+        column: 'M',
+        field: 'russian_source',
+        description: 'Адаптация из русских источников',
+        active: true,
+        value: 'Номинант'
+    },
+    {
+        label: 'Гран-при',
+        column: 'N',
+        field: 'grand_prix',
+        description: 'Главный приз конкурса',
+        active: true,
+        value: 'Номинант'
+    }
+    // Для добавления нового спецприза:
+    // {
+    //     label: 'Новый спецприз',
+    //     column: 'O',
+    //     field: 'new_prize',
+    //     description: 'Описание нового спецприза',
+    //     active: true,
+    //     value: 'Номинант'
+    // }
+];
+
+// ========================================
+// НАСТРОЙКА ДОПОЛНИТЕЛЬНЫХ ПОЛЕЙ
+// ========================================
+
+// Дополнительные поля для участников
+const ADDITIONAL_FIELDS = {
+    // Поле комментария
+    comment: {
+        label: 'Комментарий',
+        column: 'G',
+        field: 'comment',
+        type: 'textarea',
+        placeholder: 'Введите комментарий...',
+        maxLength: 500,
+        required: false
+    }
+    // Для добавления нового поля:
+    // newField: {
+    //     label: 'Новое поле',
+    //     column: 'H',
+    //     field: 'new_field',
+    //     type: 'text', // text, textarea, number, select
+    //     placeholder: 'Введите значение...',
+    //     required: false
+    // }
+};
 
 // URL для Google Apps Script
 const GOOGLE_SCRIPT_URLS = {
@@ -92,3 +221,236 @@ const RESULT_SECTIONS = [
     'Групповое и тематическое',
     'Спецпризы'
 ];
+
+// ========================================
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И УТИЛИТЫ
+// ========================================
+
+// Получить только активные спецпризы
+function getActiveSpecialPrizes() {
+    return SPECIAL_PRIZES.filter(prize => prize.active);
+}
+
+// Получить только обязательные параметры оценки
+function getRequiredParameters() {
+    return PARTICIPANT_PARAMETERS.filter(param => param.required);
+}
+
+// Получить все параметры оценки (обязательные и необязательные)
+function getAllParameters() {
+    return PARTICIPANT_PARAMETERS;
+}
+
+// Получить параметр по полю
+function getParameterByField(field) {
+    return PARTICIPANT_PARAMETERS.find(param => param.field === field);
+}
+
+// Получить спецприз по полю
+function getSpecialPrizeByField(field) {
+    return SPECIAL_PRIZES.find(prize => prize.field === field);
+}
+
+// Получить столбцы для всех параметров оценки
+function getParameterColumns() {
+    return PARTICIPANT_PARAMETERS.map(param => param.column);
+}
+
+// Получить столбцы для всех активных спецпризов
+function getActiveSpecialPrizeColumns() {
+    return getActiveSpecialPrizes().map(prize => prize.column);
+}
+
+// Получить все используемые столбцы
+function getAllUsedColumns() {
+    const paramColumns = getParameterColumns();
+    const prizeColumns = getActiveSpecialPrizeColumns();
+    const additionalColumns = Object.values(ADDITIONAL_FIELDS).map(field => field.column);
+    
+    return [...paramColumns, ...prizeColumns, ...additionalColumns];
+}
+
+// Валидация настроек
+function validateSettings() {
+    const errors = [];
+    
+    // Проверяем уникальность полей
+    const allFields = [
+        ...PARTICIPANT_PARAMETERS.map(p => p.field),
+        ...SPECIAL_PRIZES.map(p => p.field),
+        ...Object.keys(ADDITIONAL_FIELDS)
+    ];
+    
+    const duplicateFields = allFields.filter((field, index) => allFields.indexOf(field) !== index);
+    if (duplicateFields.length > 0) {
+        errors.push(`Дублирующиеся поля: ${duplicateFields.join(', ')}`);
+    }
+    
+    // Проверяем уникальность столбцов
+    const allColumns = getAllUsedColumns();
+    const duplicateColumns = allColumns.filter((col, index) => allColumns.indexOf(col) !== index);
+    if (duplicateColumns.length > 0) {
+        errors.push(`Дублирующиеся столбцы: ${duplicateColumns.join(', ')}`);
+    }
+    
+    // Проверяем корректность диапазонов баллов
+    PARTICIPANT_PARAMETERS.forEach(param => {
+        if (param.options < 1 || param.options > 10) {
+            errors.push(`Некорректное количество баллов для параметра "${param.label}": ${param.options}`);
+        }
+    });
+    
+    return {
+        isValid: errors.length === 0,
+        errors: errors
+    };
+}
+
+// Получить статистику настроек
+function getSettingsStats() {
+    return {
+        totalParameters: PARTICIPANT_PARAMETERS.length,
+        requiredParameters: getRequiredParameters().length,
+        optionalParameters: PARTICIPANT_PARAMETERS.length - getRequiredParameters().length,
+        totalSpecialPrizes: SPECIAL_PRIZES.length,
+        activeSpecialPrizes: getActiveSpecialPrizes().length,
+        inactiveSpecialPrizes: SPECIAL_PRIZES.length - getActiveSpecialPrizes().length,
+        additionalFields: Object.keys(ADDITIONAL_FIELDS).length,
+        totalUsedColumns: getAllUsedColumns().length
+    };
+}
+
+// Экспорт настроек в JSON (для бэкапа или передачи)
+function exportSettings() {
+    return {
+        participantParameters: PARTICIPANT_PARAMETERS,
+        specialPrizes: SPECIAL_PRIZES,
+        additionalFields: ADDITIONAL_FIELDS,
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+    };
+}
+
+// ========================================
+// НАСТРОЙКИ ОТОБРАЖЕНИЯ
+// ========================================
+
+// Настройки интерфейса
+const UI_CONFIG = {
+    // Максимальная ширина контейнера
+    maxContainerWidth: '1200px',
+    
+    // Количество колонок для чекбоксов на разных экранах
+    checkboxColumns: {
+        desktop: 3,
+        tablet: 2,
+        mobile: 1
+    },
+    
+    // Количество колонок для параметров оценки на разных экранах
+    parameterColumns: {
+        desktop: 2,
+        tablet: 2,
+        mobile: 1
+    },
+    
+    // Анимации
+    animations: {
+        enabled: true,
+        duration: 300,
+        easing: 'ease-in-out'
+    },
+    
+    // Автосохранение
+    autosave: {
+        enabled: true,
+        delay: 1000 // миллисекунды
+    }
+};
+
+// ========================================
+// НАСТРОЙКИ ВАЛИДАЦИИ
+// ========================================
+
+const VALIDATION_CONFIG = {
+    // Минимальная длина комментария
+    minCommentLength: 0,
+    
+    // Максимальная длина комментария
+    maxCommentLength: 500,
+    
+    // Обязательные поля
+    requiredFields: {
+        participantName: true,
+        participantId: true
+    },
+    
+    // Регулярные выражения для валидации
+    patterns: {
+        participantId: /^[0-9]+$/,
+        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        phone: /^\+?[1-9]\d{1,14}$/
+    }
+};
+
+// ========================================
+// ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ
+// ========================================
+
+/*
+// 1. Добавление нового параметра оценки:
+// Добавьте в массив PARTICIPANT_PARAMETERS:
+{
+    label: 'Новый параметр',
+    column: 'G',           // Следующий свободный столбец
+    options: 5,            // От 1 до 5 баллов
+    field: 'new_param',    // Уникальное поле
+    description: 'Описание нового параметра',
+    required: false        // Необязательный параметр
+}
+
+// 2. Добавление нового спецприза:
+// Добавьте в массив SPECIAL_PRIZES:
+{
+    label: 'Новый спецприз',
+    column: 'O',           // Следующий свободный столбец
+    field: 'new_prize',    // Уникальное поле
+    description: 'Описание нового спецприза',
+    active: true,          // Активен
+    value: 'Номинант'      // Значение при активации
+}
+
+// 3. Отключение спецприза:
+// Измените active: false в нужном спецпризе
+
+// 4. Изменение количества баллов:
+// Измените options в нужном параметре (например, с 5 на 10)
+
+// 5. Изменение обязательности параметра:
+// Измените required: true/false в нужном параметре
+
+// 6. Использование вспомогательных функций:
+const activePrizes = getActiveSpecialPrizes();
+const requiredParams = getRequiredParameters();
+const validation = validateSettings();
+const stats = getSettingsStats();
+*/
+
+// ========================================
+// СОВМЕСТИМОСТЬ С СТАРЫМ КОДОМ
+// ========================================
+
+// Для обратной совместимости создаем старые константы
+const CHECKBOX_LABELS = getActiveSpecialPrizes().map(prize => prize.label);
+const CHECKBOX_COLUMNS = getActiveSpecialPrizes().map(prize => prize.column);
+
+// Логирование загрузки настроек
+console.log('🎯 Настройки Valerie загружены:', getSettingsStats());
+
+// Проверка валидности настроек при загрузке
+const settingsValidation = validateSettings();
+if (!settingsValidation.isValid) {
+    console.warn('⚠️ Обнаружены проблемы в настройках:', settingsValidation.errors);
+} else {
+    console.log('✅ Настройки валидны');
+}
