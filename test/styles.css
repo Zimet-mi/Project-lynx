@@ -906,6 +906,33 @@ img {
     letter-spacing: 0.03em;
 }
 
+.all-participants-table td:nth-child(5) {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #555;
+    white-space: nowrap;
+}
+
+/* Подсказки для столбцов оценок */
+.all-participants-table th:nth-child(5) {
+    position: relative;
+}
+
+.all-participants-table th:nth-child(5):hover::after {
+    content: 'К-костюм, С-схожесть, В-выступление, А-аксессуары';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
 .all-participants-table tr:last-child td {
     border-bottom: none;
 }
@@ -1060,24 +1087,26 @@ img {
 
 .image-modal-close {
     position: absolute;
-    top: -40px;
+    top: -50px;
     right: 0;
-    color: white;
-    font-size: 30px;
-    font-weight: bold;
+    color: #df3031;
+    font-size: 40px;
+    font-weight: 300;
     cursor: pointer;
-    background: rgba(0, 0, 0, 0.5);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    background: none;
+    width: auto;
+    height: auto;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid white;
+    transition: color 0.2s ease;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .image-modal-close:hover {
-    background: rgba(255, 255, 255, 0.2);
+    color: #ff6b6b;
+    background: none;
 }
 
 /* Анимации для модального окна */
@@ -1107,7 +1136,7 @@ img {
 .participant-thumbnail:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border-color: var(--color-accent);
+    border-color: #df3031;
 }
 
 /* Для мобильных устройств */
@@ -1123,10 +1152,136 @@ img {
     }
     
     .image-modal-close {
-        top: -35px;
-        right: -10px;
-        width: 35px;
-        height: 35px;
-        font-size: 25px;
+        top: -45px;
+        right: -5px;
+        font-size: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .image-modal-close {
+        top: -40px;
+        right: -5px;
+        font-size: 30px;
+    }
+}
+
+/* Стили для модального окна редактирования */
+.participant-modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.participant-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #df3031;
+    background: none;
+    z-index: 1;
+    transition: color 0.2s ease;
+}
+
+.participant-modal-close:hover {
+    color: #ff6b6b;
+}
+
+.participant-modal-header {
+    display: flex;
+    gap: 20px;
+    padding: 30px;
+    border-bottom: 1px solid #e9ecef;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    cursor: default;
+}
+
+.participant-modal-img {
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.participant-modal-img:hover {
+    transform: scale(1.05);
+}
+
+.participant-modal-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.participant-modal-id,
+.participant-modal-sheet {
+    font-size: 16px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.participant-modal-marks {
+    padding: 25px 30px;
+}
+
+/* Адаптивность для модального окна редактирования */
+@media (max-width: 768px) {
+    .participant-modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .participant-modal-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .participant-modal-img {
+        width: 100px;
+        height: 100px;
+        align-self: center;
+    }
+    
+    .participant-modal-marks {
+        padding: 20px 15px;
+    }
+    
+    .participant-modal-close {
+        top: 10px;
+        right: 15px;
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .participant-modal-header {
+        padding: 15px;
+    }
+    
+    .participant-modal-marks {
+        padding: 15px 10px;
+    }
+    
+    .select-group,
+    .checkbox-group {
+        gap: 8px;
+    }
+    
+    .select-row,
+    .checkbox-row {
+        flex: 1 1 100%;
+        max-width: 100%;
     }
 }
