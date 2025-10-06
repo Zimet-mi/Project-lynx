@@ -78,30 +78,13 @@ class TelegramApi {
     }
 
     // Показать предупреждение
-    showAlert: (message) => {
-		try {
-			if (window.Telegram && window.Telegram.WebApp) {
-				// Пробуем разные методы показа уведомлений
-				if (window.Telegram.WebApp.showPopup) {
-					window.Telegram.WebApp.showPopup({
-						title: 'Уведомление',
-						message: message,
-						buttons: [{ type: 'ok' }]
-					});
-				} else if (window.Telegram.WebApp.showConfirm) {
-					window.Telegram.WebApp.showConfirm(message, (ok) => {});
-				} else {
-					// Fallback - используем стандартный alert
-					alert(message);
-				}
-			} else {
-				alert(message);
-			}
-		} catch (error) {
-			console.warn('Telegram WebApp alert failed:', error);
-			alert(message); // Fallback
-		}
-	},
+    showAlert(message) {
+        if (this.tg) {
+            this.tg.showAlert(message);
+        } else {
+            alert(message);
+        }
+    }
 
     // Показать подтверждение
     showConfirm(message, callback) {
@@ -197,58 +180,5 @@ class TelegramApi {
     }
 }
 
-const telegramApi = {
-    init: () => {
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.warn('Telegram WebApp init failed:', error);
-            return false;
-        }
-    },
-    
-    hapticFeedback: (type, style = 'light') => {
-        try {
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-                if (type === 'impact') {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
-                } else if (type === 'selection') {
-                    window.Telegram.WebApp.HapticFeedback.selectionChanged();
-                }
-            }
-        } catch (error) {
-            console.warn('Haptic feedback failed:', error);
-        }
-    },
-    
-    showAlert: (message) => {
-        try {
-            if (window.Telegram && window.Telegram.WebApp) {
-                // Пробуем разные доступные методы
-                if (window.Telegram.WebApp.showPopup) {
-                    window.Telegram.WebApp.showPopup({
-                        title: 'Уведомление',
-                        message: message,
-                        buttons: [{ type: 'ok' }]
-                    });
-                } else if (window.Telegram.WebApp.showConfirm) {
-                    window.Telegram.WebApp.showConfirm(message, () => {});
-                } else if (window.Telegram.WebApp.alert) {
-                    window.Telegram.WebApp.alert(message);
-                } else {
-                    alert(message);
-                }
-            } else {
-                alert(message);
-            }
-        } catch (error) {
-            console.warn('Telegram WebApp alert failed:', error);
-            alert(message); // Fallback
-        }
-    }
-};
+// Создаем единственный экземпляр
+const telegramApi = new TelegramApi();

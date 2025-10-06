@@ -122,7 +122,6 @@ const Header = ({ activeTab, onTabChange, onSendCache }) => {
 };
 
 // Компонент формы оценки
-// Компонент формы оценки - ИСПРАВЛЕННАЯ ВЕРСИЯ
 const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     const [scores, setScores] = useState({
         costum: '',
@@ -132,7 +131,16 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         comment: ''
     });
     const [checkboxes, setCheckboxes] = useState({});
-    const [isSaving, setIsSaving] = useState(false);
+
+    // Debounce функция
+    const debounce = useCallback((func, wait) => {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }, []);
 
     // Загрузка текущих значений
     useEffect(() => {
@@ -170,73 +178,38 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         loadCurrentValues();
     }, [participant.row]);
 
-    // Функция немедленного сохранения
-    const saveImmediately = async (value, column, row, sheetName) => {
+    // Debounced сохранение данных
+    const debouncedSave = useCallback(debounce(async (value, column, row, sheetName) => {
         try {
-            setIsSaving(true);
             await googleSheetsApi.saveData(value, column, row, sheetName);
-            console.log(`Сохранено: ${column}${row} = ${value}`);
         } catch (error) {
             console.error('Ошибка сохранения:', error);
-            // Показываем уведомление об ошибке
-            try {
-                telegramApi.showAlert(`Ошибка сохранения: ${error.message}`);
-            } catch (alertError) {
-                console.error('Ошибка показа уведомления:', alertError);
-            }
-        } finally {
-            setIsSaving(false);
         }
-    };
+    }, 300), []);
 
-    const handleScoreChange = async (field, value) => {
+    const handleScoreChange = (field, value) => {
         const param = PARTICIPANT_PARAMETERS.find(p => p.field === field);
         if (param) {
             setScores(prev => ({ ...prev, [field]: value }));
-            
-            // Немедленное сохранение
-            await saveImmediately(value, param.column, participant.row, SHEET_CONFIG.mainSheet);
-            
+            debouncedSave(value, param.column, participant.row, SHEET_CONFIG.mainSheet);
             onScoreChange?.(participant.id, field, value);
-            
-            // Тактильная отдача
-            try {
-                telegramApi.hapticFeedback('selection');
-            } catch (hapticError) {
-                console.warn('Haptic feedback failed:', hapticError);
-            }
         }
     };
 
-    const handleCommentChange = async (value) => {
+    const handleCommentChange = (value) => {
         setScores(prev => ({ ...prev, comment: value }));
-        
-        // Немедленное сохранение
-        await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
-        
+        debouncedSave(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
         onCommentChange?.(participant.id, value);
     };
 
-    const handleCheckboxChange = async (index, checked) => {
+    const handleCheckboxChange = (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
         const value = checked ? 'Номинант' : '';
         const column = CHECKBOX_COLUMNS[index];
-        
-        // Немедленное сохранение
-        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+        debouncedSave(value, column, participant.row, SHEET_CONFIG.mainSheet);
     };
 
     return React.createElement('div', { className: 'evaluation-form' },
-        // Индикатор сохранения
-        isSaving && React.createElement('div', { 
-            style: { 
-                textAlign: 'center', 
-                color: '#1976d2', 
-                fontSize: '12px',
-                marginBottom: '10px'
-            } 
-        }, 'Сохранение...'),
-        
         // Оценки
         React.createElement('div', { className: 'select-group' },
             ...PARTICIPANT_PARAMETERS.map(param => 
@@ -245,10 +218,8 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                     React.createElement('select', {
                         className: 'data-input input-field',
                         value: scores[param.field] || '',
-                        onChange: (e) => handleScoreChange(param.field, e.target.value),
-                        disabled: isSaving
+                        onChange: (e) => handleScoreChange(param.field, e.target.value)
                     },
-                        React.createElement('option', { value: '' }, '-'),
                         ...Array.from({ length: param.options }, (_, i) => 
                             React.createElement('option', { key: i + 1, value: i + 1 }, i + 1)
                         )
@@ -265,8 +236,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                     value: scores.comment || '',
                     onChange: (e) => handleCommentChange(e.target.value),
                     rows: 3,
-                    placeholder: 'Введите комментарий...',
-                    disabled: isSaving
+                    placeholder: 'Введите комментарий...'
                 })
             )
         ),
@@ -278,8 +248,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
                         type: 'checkbox',
                         id: `checkbox-${participant.id}-${index}`,
                         checked: checkboxes[index] || false,
-                        onChange: (e) => handleCheckboxChange(index, e.target.checked),
-                        disabled: isSaving
+                        onChange: (e) => handleCheckboxChange(index, e.target.checked)
                     }),
                     React.createElement('label', { htmlFor: `checkbox-${participant.id}-${index}` }, label)
                 )
@@ -677,18 +646,12 @@ const AllParticipantsPage = () => {
             // Обновляем данные участников
             await loadAllParticipants();
             
-			} catch (error) {
-				console.error('Ошибка сохранения оценок:', error);
-				try {
-					telegramApi.showAlert('Ошибка сохранения оценок. Проверьте подключение.');
-				} catch (alertError) {
-					console.error('Alert failed:', alertError);
-					// Fallback - можно добавить визуальное уведомление в интерфейсе
-					alert('Ошибка сохранения оценок');
-				}
-			} finally {
-				setIsSaving(false);
-			}
+        } catch (error) {
+            console.error('Ошибка сохранения оценок:', error);
+            telegramApi.showAlert('Ошибка сохранения оценок');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // Эффект для обработки ESC
