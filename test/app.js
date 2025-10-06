@@ -498,7 +498,6 @@ const AllParticipantsPage = () => {
         comment: ''
     });
     const [editingCheckboxes, setEditingCheckboxes] = useState({});
-    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         loadAllParticipants();
@@ -558,6 +557,17 @@ const AllParticipantsPage = () => {
         }
     };
 
+    // Функция немедленного сохранения для модального окна
+    const saveImmediately = async (value, column, row, sheetName) => {
+        try {
+            await googleSheetsApi.saveData(value, column, row, sheetName);
+            telegramApi.hapticFeedback('impact', 'light');
+        } catch (error) {
+            console.error('Ошибка сохранения:', error);
+            telegramApi.showAlert('Ошибка сохранения данных');
+        }
+    };
+
     const handleParticipantClick = (participant) => {
         setSelectedParticipant(participant);
         // Загружаем текущие значения оценок
@@ -576,7 +586,6 @@ const AllParticipantsPage = () => {
     const handleModalClose = () => {
         setIsModalOpen(false);
         setSelectedParticipant(null);
-        setIsSaving(false);
     };
 
     const handleImageModalClose = (e) => {
@@ -589,62 +598,32 @@ const AllParticipantsPage = () => {
         e.stopPropagation();
     };
 
-    // Обработчики для формы редактирования
-    const handleScoreChange = (field, value) => {
-        setEditingScores(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleCommentChange = (value) => {
-        setEditingScores(prev => ({ ...prev, comment: value }));
-    };
-
-    const handleCheckboxChange = (index, checked) => {
-        setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
-    };
-
-    // Функция сохранения оценок
-    const handleSaveScores = async () => {
+    // Обработчики для формы редактирования с немедленным сохранением
+    const handleScoreChange = async (field, value) => {
         if (!selectedParticipant) return;
-
-        setIsSaving(true);
-        try {
-            const savePromises = [];
-
-            // Сохраняем оценки
-            PARTICIPANT_PARAMETERS.forEach(param => {
-                const value = editingScores[param.field] || '';
-                savePromises.push(
-                    googleSheetsApi.saveData(value, param.column, selectedParticipant.dataRow, selectedParticipant.sheet)
-                );
-            });
-
-            // Сохраняем комментарий
-            savePromises.push(
-                googleSheetsApi.saveData(editingScores.comment || '', 'G', selectedParticipant.dataRow, selectedParticipant.sheet)
-            );
-
-            // Сохраняем чекбоксы
-            CHECKBOX_COLUMNS.forEach((column, index) => {
-                const value = editingCheckboxes[index] ? 'Номинант' : '';
-                savePromises.push(
-                    googleSheetsApi.saveData(value, column, selectedParticipant.dataRow, selectedParticipant.sheet)
-                );
-            });
-
-            await Promise.all(savePromises);
-            
-            telegramApi.showAlert('Оценки успешно сохранены!');
-            telegramApi.hapticFeedback('impact', 'medium');
-            
-            // Обновляем данные участников
-            await loadAllParticipants();
-            
-        } catch (error) {
-            console.error('Ошибка сохранения оценок:', error);
-            telegramApi.showAlert('Ошибка сохранения оценок');
-        } finally {
-            setIsSaving(false);
+        
+        setEditingScores(prev => ({ ...prev, [field]: value }));
+        
+        const param = PARTICIPANT_PARAMETERS.find(p => p.field === field);
+        if (param) {
+            await saveImmediately(value, param.column, selectedParticipant.dataRow, selectedParticipant.sheet);
         }
+    };
+
+    const handleCommentChange = async (value) => {
+        if (!selectedParticipant) return;
+        
+        setEditingScores(prev => ({ ...prev, comment: value }));
+        await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+    };
+
+    const handleCheckboxChange = async (index, checked) => {
+        if (!selectedParticipant) return;
+        
+        setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
+        const value = checked ? 'Номинант' : '';
+        const column = CHECKBOX_COLUMNS[index];
+        await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
     };
 
     // Эффект для обработки ESC
@@ -755,7 +734,7 @@ const AllParticipantsPage = () => {
             )
         ),
         
-        // Модальное окно редактирования участника - ИСПРАВЛЕННАЯ ЧАСТЬ
+        // Модальное окно редактирования участника - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ КНОПКИ
         isModalOpen && selectedParticipant && React.createElement('div', {
             className: 'participant-modal show',
             onClick: handleModalClose
@@ -793,7 +772,7 @@ const AllParticipantsPage = () => {
                     )
                 ),
 
-                // Форма редактирования оценок
+                // Форма редактирования оценок с немедленным сохранением
                 React.createElement('div', { className: 'participant-modal-marks' },
                     React.createElement('h3', { style: { margin: '0 0 20px 0', color: '#333' } }, 'Редактирование оценок'),
                     
@@ -847,25 +826,6 @@ const AllParticipantsPage = () => {
                                 }, label)
                             )
                         )
-                    ),
-
-                    // Кнопка сохранения
-                    React.createElement('div', { style: { textAlign: 'center', marginTop: '25px', padding: '0 30px' } },
-                        React.createElement('button', {
-                            onClick: handleSaveScores,
-                            disabled: isSaving,
-                            style: {
-                                padding: '12px 30px',
-                                backgroundColor: isSaving ? '#ccc' : '#df3031',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '16px',
-                                cursor: isSaving ? 'not-allowed' : 'pointer',
-                                width: '100%',
-                                maxWidth: '200px'
-                            }
-                        }, isSaving ? 'Сохранение...' : 'Сохранить оценки')
                     )
                 )
             )
