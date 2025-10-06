@@ -181,13 +181,10 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         }
     };
 
-    const handleScoreChange = async (field, value) => {
-        const param = PARTICIPANT_PARAMETERS.find(p => p.field === field);
-        if (param) {
-            setScores(prev => ({ ...prev, [field]: value }));
-            await saveImmediately(value, param.column, participant.row, SHEET_CONFIG.mainSheet);
-            onScoreChange?.(participant.id, field, value);
-        }
+    const handleScoreChange = async (column, value) => {
+        setScores(prev => ({ ...prev, [column]: value }));
+        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+        onScoreChange?.(participant.id, column, value);
     };
 
     const handleCommentChange = async (value) => {
@@ -210,12 +207,12 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         // Оценки
         React.createElement('div', { className: 'select-group' },
             ...PARTICIPANT_PARAMETERS.map(param => 
-                React.createElement('div', { key: param.field, className: 'select-row' },
+                React.createElement('div', { key: param.column, className: 'select-row' },
                     React.createElement('div', null, param.label),
                     React.createElement('select', {
                         className: 'data-input input-field',
-                        value: scores[param.field] || '',
-                        onChange: (e) => handleScoreChange(param.field, e.target.value)
+                        value: scores[param.column] || '',
+                        onChange: (e) => handleScoreChange(param.column, e.target.value)
                     },
                         ...Array.from({ length: param.options }, (_, i) => 
                             React.createElement('option', { key: i + 1, value: i + 1 }, i + 1)
@@ -240,16 +237,15 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         // Чекбоксы спецпризов
         React.createElement('div', { className: 'checkbox-group' },
             ...getActiveSpecialPrizes().map((prize, index) => 
-                React.createElement('div', { key: prize.field, className: 'checkbox-row' },
+                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
                     React.createElement('input', {
                         type: 'checkbox',
-                        id: `checkbox-${participant.id}-${prize.field}`,
+                        id: `checkbox-${participant.id}-${prize.column}`,
                         checked: checkboxes[index] || false,
                         onChange: (e) => handleCheckboxChange(index, e.target.checked)
                     }),
                     React.createElement('label', { 
-                        htmlFor: `checkbox-${participant.id}-${prize.field}`,
-                        title: prize.description || prize.label
+                        htmlFor: `checkbox-${participant.id}-${prize.column}`
                     }, prize.label)
                 )
             )
@@ -789,12 +785,12 @@ const AllParticipantsPage = () => {
                     // Оценки
                     React.createElement('div', { className: 'select-group', style: { marginBottom: '20px' } },
                         ...PARTICIPANT_PARAMETERS.map(param => 
-                            React.createElement('div', { key: param.field, className: 'select-row' },
+                React.createElement('div', { key: param.column, className: 'select-row' },
                                 React.createElement('div', null, param.label),
                                 React.createElement('select', {
                                     className: 'data-input input-field',
-                                    value: editingScores[param.field] || '',
-                                    onChange: (e) => handleScoreChange(param.field, e.target.value)
+                        value: editingScores[param.column] || '',
+                        onChange: (e) => handleScoreChange(param.column, e.target.value)
                                 },
                                     React.createElement('option', { value: '' }, '-'),
                                     ...Array.from({ length: param.options }, (_, i) => 
@@ -823,17 +819,17 @@ const AllParticipantsPage = () => {
                     // Чекбоксы спецпризов
                     React.createElement('div', { className: 'checkbox-group', style: { marginTop: '20px' } },
                         getActiveSpecialPrizes().map((prize, index) => 
-                            React.createElement('div', { key: prize.field, className: 'checkbox-row' },
+                            React.createElement('div', { key: prize.column, className: 'checkbox-row' },
                                 React.createElement('input', {
                                     type: 'checkbox',
-                                    id: `modal-checkbox-${selectedParticipant.id}-${prize.field}`,
+                                    id: `modal-checkbox-${selectedParticipant.id}-${prize.column}`,
                                     checked: editingCheckboxes[index] || false,
                                     onChange: (e) => handleCheckboxChange(index, e.target.checked)
                                 }),
                                 React.createElement('label', { 
-                                    htmlFor: `modal-checkbox-${selectedParticipant.id}-${prize.field}`,
+                                    htmlFor: `modal-checkbox-${selectedParticipant.id}-${prize.column}`,
                                     style: { fontSize: '14px' },
-                                    title: prize.description || prize.label
+                                    title: prize.label
                                 }, prize.label)
                             )
                         )

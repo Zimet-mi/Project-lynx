@@ -62,47 +62,12 @@ const RESULT_SHEET_RANGE = 'A1:N700';
 // Параметры оценок для участников
 // Для добавления нового параметра просто добавьте объект в массив
 const PARTICIPANT_PARAMETERS = [
-    {
-        label: 'Костюм',           // Отображаемое название
-        column: 'C',               // Столбец в Google Sheets (A, B, C, D...)
-        options: 5,                // Количество баллов (1-5, 1-3, 1-10 и т.д.)
-        field: 'costum',           // Уникальное поле для React
-        description: 'Оценка костюма участника', // Описание (опционально)
-        required: true             // Обязательный параметр (опционально)
-    },
-    {
-        label: 'Схожесть',
-        column: 'D',
-        options: 5,
-        field: 'shozhest',
-        description: 'Схожесть с оригинальным персонажем',
-        required: true
-    },
-    {
-        label: 'Выход',
-        column: 'E',
-        options: 5,
-        field: 'vistup',
-        description: 'Качество выступления',
-        required: true
-    },
-    {
-        label: 'Аксессуар',
-        column: 'F',
-        options: 3,
-        field: 'aks',
-        description: 'Качество аксессуаров и реквизита',
-        required: false
-    }
+    { label: 'Костюм',    column: 'C', options: 5 },
+    { label: 'Схожесть',  column: 'D', options: 5 },
+//    { label: 'Выход',     column: 'E', options: 5 },
+    { label: 'Аксессуар', column: 'F', options: 30 }
     // Для добавления нового параметра:
-    // {
-    //     label: 'Новый параметр',
-    //     column: 'G',
-    //     options: 5,
-    //     field: 'new_param',
-    //     description: 'Описание нового параметра',
-    //     required: true
-    // }
+    // { label: 'Новый параметр', column: 'G', options: 5 }
 ];
 
 // ========================================
@@ -112,63 +77,14 @@ const PARTICIPANT_PARAMETERS = [
 // Спецпризы и награды
 // Для добавления нового спецприза просто добавьте объект в массив
 const SPECIAL_PRIZES = [
-    {
-        label: 'Пошив',                    // Отображаемое название
-        column: 'I',                       // Столбец в Google Sheets
-        field: 'poshiv',                   // Уникальное поле для React
-        description: 'Лучший пошив костюма', // Описание (опционально)
-        active: true,                      // Активен ли спецприз
-        value: 'Номинант'                  // Значение, которое записывается при активации
-    },
-    {
-        label: 'Крафт',
-        column: 'J',
-        field: 'kraft',
-        description: 'Лучшая ручная работа',
-        active: true,
-        value: 'Номинант'
-    },
-    {
-        label: 'Дефиле',
-        column: 'K',
-        field: 'defile',
-        description: 'Лучшее дефиле',
-        active: true,
-        value: 'Номинант'
-    },
-    {
-        label: 'Парик',
-        column: 'L',
-        field: 'parik',
-        description: 'Лучший парик/прическа',
-        active: true,
-        value: 'Номинант'
-    },
-    {
-        label: 'Русский источник',
-        column: 'M',
-        field: 'russian_source',
-        description: 'Адаптация из русских источников',
-        active: true,
-        value: 'Номинант'
-    },
-    {
-        label: 'Гран-при',
-        column: 'N',
-        field: 'grand_prix',
-        description: 'Главный приз конкурса',
-        active: true,
-        value: 'Номинант'
-    }
+    { label: 'Пошив',             column: 'I', active: true, value: 'Номинант' },
+    { label: 'Крафт',             column: 'J', active: true, value: 'Номинант' },
+    { label: 'Дефиле',            column: 'K', active: true, value: 'Номинант' },
+    { label: 'ЯРусский',             column: 'M', active: true, value: 'Номинант' },
+//    { label: 'Русский источник',  column: 'M', active: true, value: 'Номинант' },
+    { label: 'Гран-при',          column: 'N', active: true, value: 'Номинант' }
     // Для добавления нового спецприза:
-    // {
-    //     label: 'Новый спецприз',
-    //     column: 'O',
-    //     field: 'new_prize',
-    //     description: 'Описание нового спецприза',
-    //     active: true,
-    //     value: 'Номинант'
-    // }
+    // { label: 'Новый спецприз', column: 'O', active: true, value: 'Номинант' }
 ];
 
 // ========================================
@@ -181,21 +97,12 @@ const ADDITIONAL_FIELDS = {
     comment: {
         label: 'Комментарий',
         column: 'G',
-        field: 'comment',
         type: 'textarea',
         placeholder: 'Введите комментарий...',
-        maxLength: 500,
-        required: false
+        maxLength: 500
     }
     // Для добавления нового поля:
-    // newField: {
-    //     label: 'Новое поле',
-    //     column: 'H',
-    //     field: 'new_field',
-    //     type: 'text', // text, textarea, number, select
-    //     placeholder: 'Введите значение...',
-    //     required: false
-    // }
+    // newField: { label: 'Новое поле', column: 'H', type: 'text', placeholder: 'Введите значение...' }
 };
 
 // URL для Google Apps Script
@@ -231,25 +138,8 @@ function getActiveSpecialPrizes() {
     return SPECIAL_PRIZES.filter(prize => prize.active);
 }
 
-// Получить только обязательные параметры оценки
-function getRequiredParameters() {
-    return PARTICIPANT_PARAMETERS.filter(param => param.required);
-}
-
-// Получить все параметры оценки (обязательные и необязательные)
-function getAllParameters() {
-    return PARTICIPANT_PARAMETERS;
-}
-
-// Получить параметр по полю
-function getParameterByField(field) {
-    return PARTICIPANT_PARAMETERS.find(param => param.field === field);
-}
-
-// Получить спецприз по полю
-function getSpecialPrizeByField(field) {
-    return SPECIAL_PRIZES.find(prize => prize.field === field);
-}
+// Получить все параметры оценки
+function getAllParameters() { return PARTICIPANT_PARAMETERS; }
 
 // Получить столбцы для всех параметров оценки
 function getParameterColumns() {
@@ -275,16 +165,7 @@ function validateSettings() {
     const errors = [];
     
     // Проверяем уникальность полей
-    const allFields = [
-        ...PARTICIPANT_PARAMETERS.map(p => p.field),
-        ...SPECIAL_PRIZES.map(p => p.field),
-        ...Object.keys(ADDITIONAL_FIELDS)
-    ];
-    
-    const duplicateFields = allFields.filter((field, index) => allFields.indexOf(field) !== index);
-    if (duplicateFields.length > 0) {
-        errors.push(`Дублирующиеся поля: ${duplicateFields.join(', ')}`);
-    }
+    // Проверка полей больше не требуется (идентификация по column)
     
     // Проверяем уникальность столбцов
     const allColumns = getAllUsedColumns();
@@ -310,8 +191,6 @@ function validateSettings() {
 function getSettingsStats() {
     return {
         totalParameters: PARTICIPANT_PARAMETERS.length,
-        requiredParameters: getRequiredParameters().length,
-        optionalParameters: PARTICIPANT_PARAMETERS.length - getRequiredParameters().length,
         totalSpecialPrizes: SPECIAL_PRIZES.length,
         activeSpecialPrizes: getActiveSpecialPrizes().length,
         inactiveSpecialPrizes: SPECIAL_PRIZES.length - getActiveSpecialPrizes().length,
