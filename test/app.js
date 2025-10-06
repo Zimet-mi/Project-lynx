@@ -260,10 +260,49 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 // Компонент карточки участника
 const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
     const handleToggle = () => {
         setIsExpanded(!isExpanded);
     };
+
+    const handleImageClick = (e) => {
+        e.stopPropagation(); // Предотвращаем открытие/закрытие карточки
+        setIsImageModalOpen(true);
+        telegramApi.hapticFeedback('impact', 'light');
+    };
+
+    const handleImageModalClose = (e) => {
+        if (e) {
+            e.stopPropagation();
+        }
+        setIsImageModalOpen(false);
+    };
+
+    const handleImageModalContentClick = (e) => {
+        e.stopPropagation(); // Предотвращаем закрытие при клике на изображение
+    };
+
+    // Закрытие модального окна по ESC
+    useEffect(() => {
+        const handleEscKey = (event) => {
+            if (event.keyCode === 27 && isImageModalOpen) {
+                setIsImageModalOpen(false);
+            }
+        };
+
+        if (isImageModalOpen) {
+            document.addEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'hidden'; // Блокируем скролл
+        } else {
+            document.body.style.overflow = 'auto'; // Возвращаем скролл
+        }
+
+        return () => {
+            document.removeEventListener('keydown', handleEscKey);
+            document.body.style.overflow = 'auto';
+        };
+    }, [isImageModalOpen]);
 
     return React.createElement('div', { className: 'participant-card' },
         React.createElement('div', {
@@ -276,7 +315,8 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
                 className: 'participant-thumbnail',
                 onError: (e) => {
                     e.target.src = '../card/no-image.jpg';
-                }
+                },
+                onClick: handleImageClick
             }),
             React.createElement('div', { className: 'participant-info' },
                 React.createElement('div', { className: 'participant-name' }, participant.name),
@@ -289,6 +329,31 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
                 onScoreChange,
                 onCommentChange
             })
+        ),
+        
+        // Модальное окно для увеличенного изображения
+        isImageModalOpen && React.createElement('div', {
+            className: 'image-modal show',
+            onClick: handleImageModalClose
+        },
+            React.createElement('div', {
+                className: 'image-modal-content',
+                onClick: handleImageModalContentClick
+            },
+                React.createElement('span', {
+                    className: 'image-modal-close',
+                    onClick: handleImageModalClose,
+                    title: 'Закрыть (Esc)'
+                }, '×'),
+                React.createElement('img', {
+                    src: `../card/${participant.img}`,
+                    alt: participant.name,
+                    className: 'image-modal-img',
+                    onError: (e) => {
+                        e.target.src = '../card/no-image.jpg';
+                    }
+                })
+            )
         )
     );
 };
