@@ -117,6 +117,8 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 1 1 calc(50% - 10px); /* Изменено с 100% на 50% */
+    max-width: calc(50% - 10px); /* Изменено с 100% на 50% */
     margin: 0.5em 0;
     font-size: 0.9em;
     text-align: center;
@@ -718,6 +720,23 @@ img {
 }
 
 /* Адаптивность */
+@media (min-width: 1024px) {
+    .checkbox-group {
+        justify-content: flex-start;
+    }
+    
+    .checkbox-row {
+        flex: 1 1 calc(33.333% - 10px); /* Три в ряд на ПК */
+        max-width: calc(33.333% - 10px);
+    }
+    
+    /* Для компактной формы в модальном окне */
+    .evaluation-form.compact .checkbox-row {
+        flex: 1 1 calc(50% - 10px); /* Два в ряд в компактном режиме */
+        max-width: calc(50% - 10px);
+    }
+}
+
 @media (max-width: 768px) {
     .nav-wrapper {
         border-bottom-left-radius: 10px;
@@ -871,8 +890,8 @@ img {
     
     .select-row,
     .checkbox-row {
-        flex: 1 1 100%;
-        max-width: 100%;
+        flex: 1 1 calc(50% - 8px); /* Два в ряд даже на маленьких экранах */
+        max-width: calc(50% - 8px);
     }
 }
 
@@ -1110,7 +1129,7 @@ img {
 }
 
 .evaluation-form.compact .checkbox-row {
-    flex: 1 1 calc(50% - 10px);
+    flex: 1 1 calc(50% - 10px); 
     max-width: calc(50% - 10px);
     margin: 0.3em 0;
     font-size: 0.85em;
