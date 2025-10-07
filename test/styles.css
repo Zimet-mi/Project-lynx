@@ -925,6 +925,12 @@ img {
     
     .nav-icon {
         font-size: 1.1em;
+    }
+	
+	.offline-indicator {
+        top: 60px;
+        padding: 8px;
+        font-size: 13px;
     }	
 }
 
@@ -985,6 +991,43 @@ img {
         min-height: 38px !important;
         font-size: 12px !important;
         gap: 4px;
+    }
+	
+	.offline-indicator {
+        top: 50px;
+        padding: 6px;
+        font-size: 12px;
+    }
+}
+
+/* Стили для оффлайн-индикатора */
+.offline-indicator {
+    background: #ffeb3b;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #ffc107;
+    position: sticky;
+    top: 80px; /* Под навигацией */
+    z-index: 999;
+    animation: slideDown 0.3s ease-out;
+}
+
+.offline-indicator::before {
+    content: "⚠️ ";
+    margin-right: 5px;
+}
+
+/* Анимация появления */
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
 
@@ -1233,3 +1276,34 @@ img {
     max-width: none;
 }
 
+.pending-data-indicator {
+    background: #fff3cd;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #856404;
+    border-bottom: 1px solid #ffeaa7;
+    position: sticky;
+    top: 80px;
+    z-index: 998;
+}
+
+.pending-data-indicator button {
+    margin-left: 10px;
+    padding: 4px 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.pending-data-indicator button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.pending-data-indicator button:hover:not(:disabled) {
+    background: #218838;
+}
