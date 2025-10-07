@@ -2,9 +2,11 @@
 
 const saveImmediately = async (value, column, row, sheetName) => {
     try {
-        await googleSheetsApi.saveData(value, column, row, sheetName);
+        // Используем ленивое сохранение вместо прямого вызова API
+        await lazySaveManager.saveData(value, column, row, sheetName);
+        console.log(`💾 Данные подготовлены к сохранению: ${sheetName} ${column}${row} = ${value}`);
     } catch (error) {
-        console.error('Ошибка сохранения:', error);
+        console.error('Ошибка подготовки к сохранению:', error);
         telegramApi.showAlert('Ошибка сохранения данных');
     }
 };
@@ -115,6 +117,48 @@ const Navigation = ({ activeTab, onTabChange, onSendCache }) => {
     );
 };
 
+// Компонент индикатора проблем с сетью
+const NetworkStatus = () => {
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Показываем только если офлайн
+    if (isOnline) {
+        return null;
+    }
+
+    return React.createElement('div', { 
+        className: 'network-status offline',
+        style: {
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            background: '#f44336',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '20px',
+            fontSize: '12px',
+            zIndex: 1000,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            animation: 'pulse 2s infinite'
+        }
+    },
+        React.createElement('span', null, '📡 Нет сети')
+    );
+};
+
 // Компонент заголовка
 const Header = ({ activeTab, onTabChange, onSendCache }) => {
     return React.createElement('div', { className: 'head' },
@@ -126,7 +170,8 @@ const Header = ({ activeTab, onTabChange, onSendCache }) => {
                     onSendCache
                 })
             )
-        )
+        ),
+        React.createElement(NetworkStatus)
     );
 };
 
