@@ -2,7 +2,7 @@
 
 const saveImmediately = async (value, column, row, sheetName) => {
     try {
-        await googleSheetsApi.saveDataWithOfflineSupport(value, column, row, sheetName);
+        await googleSheetsApi.saveData(value, column, row, sheetName);
     } catch (error) {
         console.error('Ошибка сохранения:', error);
         telegramApi.showAlert('Ошибка сохранения данных');
@@ -19,9 +19,8 @@ const LoadingIndicator = ({ message = 'Загрузка данных...' }) => {
     );
 };
 
-
 // Компонент навигации
-const Navigation = ({ activeTab, onTabChange, onSendCache, pendingCount = 0, isSending = false }) => {
+const Navigation = ({ activeTab, onTabChange, onSendCache }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
 
     const tabs = [
@@ -67,18 +66,6 @@ const Navigation = ({ activeTab, onTabChange, onSendCache, pendingCount = 0, isS
                 React.createElement('span', { className: 'nav-label' }, tab.label)
             )
         ),
-		// Показываем счетчик неотправленных данных
-        pendingCount > 0 && React.createElement('div', {
-            style: {
-                background: '#ff6b6b',
-                color: 'white',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '12px',
-                fontWeight: 'bold',
-                marginLeft: '8px'
-            }
-        }, pendingCount),
         React.createElement('div', { className: `dropdown ${dropdownOpen ? 'open' : ''}` },
             React.createElement('button', {
                 className: 'dropdown-toggle',
@@ -129,16 +116,14 @@ const Navigation = ({ activeTab, onTabChange, onSendCache, pendingCount = 0, isS
 };
 
 // Компонент заголовка
-const Header = ({ activeTab, onTabChange, onSendCache, pendingCount = 0, isSending = false }) => {
+const Header = ({ activeTab, onTabChange, onSendCache }) => {
     return React.createElement('div', { className: 'head' },
         React.createElement('header', null,
             React.createElement('div', { className: 'nav-wrapper' },
                 React.createElement(Navigation, {
                     activeTab,
                     onTabChange,
-                    onSendCache,
-                    pendingCount,
-                    isSending
+                    onSendCache
                 })
             )
         )
@@ -262,8 +247,6 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         telegramApi.hapticFeedback('selection');
         await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
         onScoreChange?.(participant.id, column, value);
-		await saveImmediately(value, column, participant.row, participant.sheet);
-		props.onDataSaved?.(); // Уведомляем о сохранении
     };
 
     const handleCommentChange = async (value) => {
@@ -637,8 +620,6 @@ const AllParticipantsPage = () => {
         setEditingScores(prev => ({ ...prev, [column]: value }));
         telegramApi.hapticFeedback('selection');
         await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
-		await saveImmediately(value, column, participant.row, participant.sheet);
-		props.onDataSaved?.(); // Уведомляем о сохранении
     };
 
     const handleCommentChange = async (value) => {
@@ -1188,22 +1169,14 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [preloadComplete, setPreloadComplete] = useState(false);
     const [telegramReady, setTelegramReady] = useState(false);
-	const [isOnline, setIsOnline] = useState(navigator.onLine);	
-	
-	// Используем хук оффлайн-очереди
-    const { 
-        pendingCount, 
-        isSending, 
-        updatePendingCount, 
-        sendAllPendingData 
-    } = useOfflineQueue();
-	
+
     // Инициализация Telegram
     useEffect(() => {
         const initTelegram = () => {
             if (telegramApi.init()) {
                 setTelegramReady(true);
             } else {
+                // Fallback для разработки
                 setTelegramReady(true);
                 console.log('Telegram WebApp API недоступен, используется fallback режим');
             }
@@ -1225,32 +1198,6 @@ const App = () => {
             }, 3000);
         }
     }, []);
-
-	// Обработчик статуса сети и оффлайн-очереди
-    useEffect(() => {
-        const handleOnline = () => {
-            setIsOnline(true);
-            // При появлении интернета пытаемся отправить накопленные данные
-            setTimeout(() => {
-                sendAllPendingData();
-            }, 2000); // Небольшая задержка для стабильности сети
-        };
-
-        const handleOffline = () => {
-            setIsOnline(false);
-        };
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        // Обновляем счетчик при загрузке
-        updatePendingCount();
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, [sendAllPendingData, updatePendingCount]);
 
     // Предзагрузка данных
     useEffect(() => {
@@ -1279,24 +1226,19 @@ const App = () => {
 
     const handleSendCache = async () => {
         try {
-            await sendAllPendingData();
+            telegramApi.showAlert('Данные отправлены!');
         } catch (error) {
             console.error('Ошибка отправки данных:', error);
             telegramApi.showAlert('Ошибка отправки данных');
         }
     };
-	
-	// Обновляем счетчик после каждого сохранения
-    const handleDataSaved = useCallback(() => {
-        setTimeout(updatePendingCount, 100);
-    }, [updatePendingCount]);
 
     const renderContent = () => {
         if (isLoading || !preloadComplete) {
             return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
         }
 
-        if (!activeTab) {
+		if (!activeTab) {
             return React.createElement('div', { 
                 className: 'no-data',
                 style: { 
@@ -1306,29 +1248,20 @@ const App = () => {
                 } 
             }, 'Выберите раздел для начала работы');
         }
-        
+		
         switch (activeTab) {
             case 'One':
             case 'Two':
             case 'Three':
-                return React.createElement(ParticipantsPage, { 
-                    section: activeTab, 
-                    key: activeTab,
-                    onDataSaved: handleDataSaved 
-                });
+                return React.createElement(ParticipantsPage, { section: activeTab, key: activeTab });
             case 'all':
-                return React.createElement(AllParticipantsPage, {
-                    onDataSaved: handleDataSaved
-                });
+                return React.createElement(AllParticipantsPage);
             case 'table':
                 return React.createElement(SchedulePage);
             case 'red':
                 return React.createElement(ResultsPage);
             default:
-                return React.createElement(ParticipantsPage, { 
-                    section: 'One',
-                    onDataSaved: handleDataSaved 
-                });
+                return React.createElement(ParticipantsPage, { section: 'One' });
         }
     };
 
@@ -1336,80 +1269,14 @@ const App = () => {
         React.createElement(Header, {
             activeTab,
             onTabChange: handleTabChange,
-            onSendCache: handleSendCache,
-            pendingCount: pendingCount,
-            isSending: isSending
+            onSendCache: handleSendCache
         }),
-        
-        !isOnline && React.createElement('div', { 
-            className: 'offline-indicator' 
-        }, 
-            `Оффлайн режим. Данные могут быть устаревшими.${pendingCount > 0 ? ` В очереди: ${pendingCount} записей` : ''}`
-        ),
-
-        isOnline && pendingCount > 0 && React.createElement('div', { 
-            className: 'pending-data-indicator' 
-        }, 
-            `Неотправленных данных: ${pendingCount} `,
-            React.createElement('button', {
-                onClick: sendAllPendingData,
-                disabled: isSending,
-                style: {
-                    marginLeft: '10px',
-                    padding: '2px 8px',
-                    background: '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '3px',
-                    cursor: isSending ? 'not-allowed' : 'pointer'
-                }
-            }, isSending ? 'Отправка...' : 'Отправить')
-        ),
-        
         React.createElement('div', { className: 'content' },
             React.createElement('div', { className: `tabcontent ${activeTab === activeTab ? 'active' : ''}` },
                 renderContent()
             )
         )
     );
-};
-
-// Хук для управления оффлайн-очередью
-const useOfflineQueue = () => {
-    const [pendingCount, setPendingCount] = useState(0);
-    const [isSending, setIsSending] = useState(false);
-
-    // Обновление счетчика неотправленных данных
-    const updatePendingCount = useCallback(() => {
-        const count = googleSheetsApi.getPendingDataCount();
-        setPendingCount(count);
-    }, []);
-
-    // Отправка всех данных
-    const sendAllPendingData = useCallback(async () => {
-        if (!navigator.onLine || isSending) return;
-        
-        setIsSending(true);
-        try {
-            const results = await googleSheetsApi.sendAllCachedData();
-            updatePendingCount();
-            
-            if (results && results.some(r => r.status === 'success')) {
-                telegramApi.showAlert('Данные успешно синхронизированы!');
-            }
-        } catch (error) {
-            console.error('Ошибка отправки кешированных данных:', error);
-        } finally {
-            setIsSending(false);
-        }
-    }, [isSending, updatePendingCount]);
-
-    return {
-        pendingCount,
-        isSending,
-        updatePendingCount,
-        sendAllPendingData
-    };
 };
 
 // Рендеринг приложения
