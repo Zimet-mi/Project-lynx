@@ -1374,57 +1374,6 @@ const App = () => {
     );
 };
 
-    const renderContent = () => {
-        if (isLoading || !preloadComplete) {
-            return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
-        }
-
-		if (!activeTab) {
-            return React.createElement('div', { 
-                className: 'no-data',
-                style: { 
-                    padding: '100px 20px', 
-                    textAlign: 'center', 
-                    color: '#6c757d' 
-                } 
-            }, 'Выберите раздел для начала работы');
-        }
-		
-        switch (activeTab) {
-            case 'One':
-            case 'Two':
-            case 'Three':
-                return React.createElement(ParticipantsPage, { section: activeTab, key: activeTab });
-            case 'all':
-                return React.createElement(AllParticipantsPage);
-            case 'table':
-                return React.createElement(SchedulePage);
-            case 'red':
-                return React.createElement(ResultsPage);
-            default:
-                return React.createElement(ParticipantsPage, { section: 'One' });
-        }
-    };
-
-    return React.createElement('div', { className: 'main' },
-        React.createElement(Header, {
-            activeTab,
-            onTabChange: handleTabChange,
-            onSendCache: handleSendCache
-        }),
-		
-		!isOnline && React.createElement('div', { 
-        className: 'offline-indicator' 
-		}, 'Оффлайн режим. Данные могут быть устаревшими.'),
-		
-        React.createElement('div', { className: 'content' },
-            React.createElement('div', { className: `tabcontent ${activeTab === activeTab ? 'active' : ''}` },
-                renderContent()
-            )
-        )
-    );
-};
-
 // Хук для управления оффлайн-очередью
 const useOfflineQueue = () => {
     const [pendingCount, setPendingCount] = useState(0);
