@@ -54,81 +54,109 @@ class GoogleSheetsApi {
     }
 
     // Загрузка данных из Google Sheets с кешированием и оффлайн-режимом
-	async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
-		const cacheKey = `data_${sheetName}_${range}`;
-		const timeKey = `time_${sheetName}_${range}`;
-		
-		console.group(`[GoogleSheetsApi] ${sheetName}!${range}`);
-		const startTime = performance.now();
-		
-		try {
-			// Проверяем кеш
-			const cachedData = localStorage.getItem(cacheKey);
-			const cachedTime = localStorage.getItem(timeKey);
-			
-			if (cachedData && cachedTime) {
-				const currentTime = Date.now();
-				const timeDiff = currentTime - parseInt(cachedTime);
-				
-				if (timeDiff < cacheExpiry) {
-					console.log('Возвращаю данные из кеша');
-					console.groupEnd();
-					return JSON.parse(cachedData);
-				}
-				
-				// Если данные устарели, но интернета нет - все равно возвращаем
-				if (!navigator.onLine) {
-					console.warn('Оффлайн режим: использую устаревшие данные');
-					console.groupEnd();
-					return JSON.parse(cachedData);
-				}
-			}
+    async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
+        const cacheKey = `data_${sheetName}_${range}`;
+        const timeKey = `time_${sheetName}_${range}`;
+        
+        console.group(`[GoogleSheetsApi] ${sheetName}!${range}`);
+        const startTime = performance.now();
+        
+        try {
+            // Проверяем кеш
+            const cachedData = localStorage.getItem(cacheKey);
+            const cachedTime = localStorage.getItem(timeKey);
+            
+            if (cachedData && cachedTime) {
+                const currentTime = Date.now();
+                const timeDiff = currentTime - parseInt(cachedTime);
+                
+                if (timeDiff < cacheExpiry) {
+                    console.log('Возвращаю данные из кеша');
+                    console.groupEnd();
+                    return JSON.parse(cachedData);
+                }
+                
+                // Если данные устарели, но интернета нет - все равно возвращаем
+                if (!navigator.onLine) {
+                    console.warn('Оффлайн режим: использую устаревшие данные');
+                    console.groupEnd();
+                    return JSON.parse(cachedData);
+                }
+            }
 
-			// Пытаемся обновить данные (только если есть интернет)
-			if (!navigator.onLine && cachedData) {
-				throw new Error('OFFLINE_MODE');
-			}
+            // Пытаемся обновить данные (только если есть интернет)
+            if (!navigator.onLine && cachedData) {
+                throw new Error('OFFLINE_MODE');
+            }
 
-			// Загружаем из API
-			const sheetId = await this.getSheetId();
-			const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${API_KEY}`;
-			
-			console.log('Запрашиваю из сети:', url);
-			const response = await axios.get(url);
-			
-			const data = response.data;
-			
-			// Сохраняем в кеш
-			localStorage.setItem(cacheKey, JSON.stringify(data));
-			localStorage.setItem(timeKey, Date.now().toString());
-			
-			console.log('Сохранил в кеш');
-			console.log('Время выполнения, мс:', Math.round(performance.now() - startTime));
-			console.groupEnd();
-			
-			return data;
-		} catch (error) {
-			console.error('Ошибка загрузки данных:', error);
-			
-			// Если оффлайн и есть кеш - возвращаем кеш
-			if ((!navigator.onLine || error.message === 'OFFLINE_MODE') && cachedData) {
-				console.warn('Оффлайн режим: использую устаревшие данные из кеша');
-				console.groupEnd();
-				return JSON.parse(cachedData);
-			}
-			
-			// Если кеша нет вообще - бросаем ошибку
-			if (!cachedData) {
-				console.groupEnd();
-				throw new Error('Нет данных в кеше и отсутствует интернет');
-			}
-			
-			console.groupEnd();
-			throw error;
-		}
-	}
-	
-	async saveDataWithOfflineSupport(value, column, row, sheetName) {
+            // Загружаем из API
+            const sheetId = await this.getSheetId();
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${API_KEY}`;
+            
+            console.log('Запрашиваю из сети:', url);
+            const response = await axios.get(url);
+            
+            const data = response.data;
+            
+            // Сохраняем в кеш
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(timeKey, Date.now().toString());
+            
+            console.log('Сохранил в кеш');
+            console.log('Время выполнения, мс:', Math.round(performance.now() - startTime));
+            console.groupEnd();
+            
+            return data;
+        } catch (error) {
+            console.error('Ошибка загрузки данных:', error);
+            
+            // Если оффлайн и есть кеш - возвращаем кеш
+            if ((!navigator.onLine || error.message === 'OFFLINE_MODE') && cachedData) {
+                console.warn('Оффлайн режим: использую устаревшие данные из кеша');
+                console.groupEnd();
+                return JSON.parse(cachedData);
+            }
+            
+            // Если кеша нет вообще - бросаем ошибку
+            if (!cachedData) {
+                console.groupEnd();
+                throw new Error('Нет данных в кеше и отсутствует интернет');
+            }
+            
+            console.groupEnd();
+            throw error;
+        }
+    }
+
+    // Сохранение данных в Google Sheets (оригинальный метод)
+    async saveData(value, column, row, sheetName) {
+        try {
+            const params = new URLSearchParams({
+                column: column,
+                row: row,
+                value: value,
+                sheet: sheetName
+            });
+
+            const response = await axios.get(`${GOOGLE_SCRIPT_URLS.saveData}?${params.toString()}`);
+            
+            if (response.status === 200) {
+                console.log(`Данные сохранены: ${sheetName} ${column}${row} = ${value}`);
+                return true;
+            } else {
+                console.error('Ошибка сохранения данных:', response.status);
+                return false;
+            }
+        } catch (error) {
+            console.error('Ошибка сохранения данных:', error);
+            return false;
+        }
+    }
+
+    // === НОВЫЕ МЕТОДЫ ДЛЯ ОФФЛАЙН-РЕЖИМА ===
+
+    // Сохранение данных с поддержкой оффлайн-очереди
+    async saveDataWithOfflineSupport(value, column, row, sheetName) {
         const cacheKey = `unsavedData_${sheetName}_${row}_${column}`;
         const data = {
             value: value,
@@ -224,30 +252,7 @@ class GoogleSheetsApi {
         return count;
     }
 
-    // Сохранение данных в Google Sheets
-    async saveData(value, column, row, sheetName) {
-        try {
-            const params = new URLSearchParams({
-                column: column,
-                row: row,
-                value: value,
-                sheet: sheetName
-            });
-
-            const response = await axios.get(`${GOOGLE_SCRIPT_URLS.saveData}?${params.toString()}`);
-            
-            if (response.status === 200) {
-                console.log(`Данные сохранены: ${sheetName} ${column}${row} = ${value}`);
-                return true;
-            } else {
-                console.error('Ошибка сохранения данных:', response.status);
-                return false;
-            }
-        } catch (error) {
-            console.error('Ошибка сохранения данных:', error);
-            return false;
-        }
-    }
+    // === КОНЕЦ НОВЫХ МЕТОДОВ ===
 
     // Загрузка данных расписания
     async fetchSchedule() {
