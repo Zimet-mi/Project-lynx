@@ -305,15 +305,15 @@ img {
     border: 1px solid #e9ecef;
     border-radius: 8px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    min-width: 180px; /* Уменьшили минимальную ширину */
-    width: 180px; /* Фиксированная ширина */
+    min-width: 180px;
+    width: 180px;
     z-index: 1001;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
     transition: all 0.3s ease;
-    padding: 0; /* Убрали внутренние отступы */
-    overflow: hidden; /* Чтобы скругленные углы работали правильно */
+    padding: 0;
+    overflow: hidden;
 }
 
 
@@ -323,42 +323,99 @@ img {
     transform: translateY(0);
 }
 
-.dropdown-item {
+.dropdown-menu .dropdown-item {
     display: flex;
     align-items: center;
-    justify-content: center; /* Центрируем содержимое */
-    gap: 8px; /* Уменьшили расстояние между иконкой и текстом */
+    justify-content: flex-start; /* Выравниваем по левому краю */
+    gap: 8px;
     padding: 12px 16px;
     background: transparent;
     border: none;
-    width: 100%; /* Занимает всю ширину контейнера */
-    text-align: center;
+    width: 100%;
+    text-align: left;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: none; /* Убираем все переходы */
     color: #495057;
     font-size: 14px;
-    min-height: 44px; /* Уменьшили минимальную высоту */
-    flex-direction: row; /* Иконка и текст в строку */
-    box-sizing: border-box; /* Чтобы padding не увеличивал ширину */
+    min-height: 44px;
+    flex-direction: row;
+    box-sizing: border-box;
+    border-radius: 0;
+    margin: 0;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: nowrap; /* Запрещаем перенос текста */
 }
 
-.dropdown-item:not(.send-btn):hover {
-    background: transparent; /* Убрали изменение фона */
-}
-
-.dropdown-item.send-btn {
+.dropdown-menu .dropdown-item.send-btn {
     background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
     color: white;
-    margin-top: 0; /* Убрали отступ сверху */
-    border-radius: 0; /* Убрали скругления, так как они будут у контейнера */
+    margin-top: 0;
+    border-radius: 0;
     font-weight: 600;
-    width: 100%; /* Такая же ширина как у остальных */
+    width: 100%;
+    justify-content: flex-start; /* Такое же выравнивание как у остальных */
 }
 
 /* Убрали ховер для кнопки отправки */
-.dropdown-item.send-btn:hover {
-    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%); /* Оставляем тот же цвет */
-    box-shadow: none; /* Убираем тень при наведении */
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background: transparent !important;
+    color: #495057 !important;
+    box-shadow: none !important;
+}
+
+.dropdown-menu .dropdown-item.send-btn:hover,
+.dropdown-menu .dropdown-item.send-btn:focus {
+    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.dropdown-menu .tablinks {
+    background: transparent !important;
+    color: #495057 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 12px 16px !important;
+    min-height: 44px !important;
+    min-width: auto !important;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-direction: row !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+    font-weight: normal !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.dropdown-menu .tablinks:hover,
+.dropdown-menu .tablinks:focus {
+    background: transparent !important;
+    color: #495057 !important;
+    box-shadow: none !important;
+}
+
+/* Специальные стили для активного tablinks в dropdown */
+.dropdown-menu .tablinks.active {
+    background: transparent !important;
+    color: #495057 !important;
+}
+
+/* Переопределяем send-btn в dropdown */
+.dropdown-menu .send-btn.tablinks {
+    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
+    color: white !important;
+    font-weight: 600 !important;
+}
+
+.dropdown-menu .send-btn.tablinks:hover,
+.dropdown-menu .send-btn.tablinks:focus {
+    background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%) !important;
+    color: white !important;
 }
 
 /* Табы контента */
@@ -858,15 +915,16 @@ img {
         width: 160px;
     }
     
-    .dropdown-item {
-        padding: 10px 12px;
-        min-height: 40px;
-        font-size: 13px;
+    .dropdown-menu .dropdown-item,
+    .dropdown-menu .tablinks {
+        padding: 10px 12px !important;
+        min-height: 40px !important;
+        font-size: 13px !important;
         gap: 6px;
     }
     
     .nav-icon {
-        font-size: 1.1em; /* Немного уменьшили иконки */
+        font-size: 1.1em;
     }	
 }
 
@@ -921,10 +979,11 @@ img {
         width: 150px;
     }
     
-    .dropdown-item {
-        padding: 8px 10px;
-        min-height: 38px;
-        font-size: 12px;
+    .dropdown-menu .dropdown-item,
+    .dropdown-menu .tablinks {
+        padding: 8px 10px !important;
+        min-height: 38px !important;
+        font-size: 12px !important;
         gap: 4px;
     }
 }
