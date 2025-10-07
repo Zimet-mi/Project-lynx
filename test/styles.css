@@ -1276,3 +1276,34 @@ img {
     max-width: none;
 }
 
+.pending-data-indicator {
+    background: #fff3cd;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #856404;
+    border-bottom: 1px solid #ffeaa7;
+    position: sticky;
+    top: 80px;
+    z-index: 998;
+}
+
+.pending-data-indicator button {
+    margin-left: 10px;
+    padding: 4px 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.pending-data-indicator button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.pending-data-indicator button:hover:not(:disabled) {
+    background: #218838;
+}
