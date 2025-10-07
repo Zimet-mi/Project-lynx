@@ -1286,7 +1286,7 @@ const App = () => {
         }
     };
 	
-	/ Обновляем счетчик после каждого сохранения
+	// Обновляем счетчик после каждого сохранения
     const handleDataSaved = useCallback(() => {
         setTimeout(updatePendingCount, 100);
     }, [updatePendingCount]);
