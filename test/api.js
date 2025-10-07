@@ -53,7 +53,7 @@ class GoogleSheetsApi {
         }
     }
 
-    // Загрузка данных из Google Sheets с кешированием и оффлайн-режимом
+    // Загрузка данных из Google Sheets с кешированием
     async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
         const cacheKey = `data_${sheetName}_${range}`;
         const timeKey = `time_${sheetName}_${range}`;
@@ -75,18 +75,6 @@ class GoogleSheetsApi {
                     console.groupEnd();
                     return JSON.parse(cachedData);
                 }
-                
-                // Если данные устарели, но интернета нет - все равно возвращаем
-                if (!navigator.onLine) {
-                    console.warn('Оффлайн режим: использую устаревшие данные');
-                    console.groupEnd();
-                    return JSON.parse(cachedData);
-                }
-            }
-
-            // Пытаемся обновить данные (только если есть интернет)
-            if (!navigator.onLine && cachedData) {
-                throw new Error('OFFLINE_MODE');
             }
 
             // Загружаем из API
@@ -109,26 +97,12 @@ class GoogleSheetsApi {
             return data;
         } catch (error) {
             console.error('Ошибка загрузки данных:', error);
-            
-            // Если оффлайн и есть кеш - возвращаем кеш
-            if ((!navigator.onLine || error.message === 'OFFLINE_MODE') && cachedData) {
-                console.warn('Оффлайн режим: использую устаревшие данные из кеша');
-                console.groupEnd();
-                return JSON.parse(cachedData);
-            }
-            
-            // Если кеша нет вообще - бросаем ошибку
-            if (!cachedData) {
-                console.groupEnd();
-                throw new Error('Нет данных в кеше и отсутствует интернет');
-            }
-            
             console.groupEnd();
             throw error;
         }
     }
 
-    // Сохранение данных в Google Sheets (оригинальный метод)
+    // Сохранение данных в Google Sheets
     async saveData(value, column, row, sheetName) {
         try {
             const params = new URLSearchParams({
@@ -152,107 +126,6 @@ class GoogleSheetsApi {
             return false;
         }
     }
-
-    // === НОВЫЕ МЕТОДЫ ДЛЯ ОФФЛАЙН-РЕЖИМА ===
-
-    // Сохранение данных с поддержкой оффлайн-очереди
-    async saveDataWithOfflineSupport(value, column, row, sheetName) {
-        const cacheKey = `unsavedData_${sheetName}_${row}_${column}`;
-        const data = {
-            value: value,
-            column: column,
-            row: row,
-            sheet: sheetName,
-            timestamp: Date.now()
-        };
-        
-        // Сохраняем в локальное хранилище
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-        
-        if (navigator.onLine) {
-            // Если онлайн - пытаемся отправить сразу
-            try {
-                await this.saveData(value, column, row, sheetName);
-                // При успешной отправке удаляем из кеша
-                localStorage.removeItem(cacheKey);
-                return true;
-            } catch (error) {
-                console.error('Ошибка отправки данных, остаются в кеше:', error);
-                return false;
-            }
-        } else {
-            // Оффлайн режим - данные остаются в localStorage
-            console.log('Данные сохранены в оффлайн-очереди');
-            return true;
-        }
-    }
-
-    // Отправка всех кешированных данных
-    async sendAllCachedData() {
-        if (!navigator.onLine) {
-            console.log('Нет интернета для отправки кешированных данных');
-            return;
-        }
-
-        const keys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('unsavedData_')) {
-                keys.push(key);
-            }
-        }
-
-        if (keys.length === 0) {
-            console.log('Нет данных для отправки');
-            return;
-        }
-
-        console.log(`Отправка ${keys.length} кешированных записей...`);
-
-        const results = [];
-        for (const key of keys) {
-            try {
-                const dataStr = localStorage.getItem(key);
-                if (dataStr) {
-                    const data = JSON.parse(dataStr);
-                    await this.saveData(data.value, data.column, data.row, data.sheet);
-                    localStorage.removeItem(key);
-                    results.push({ key, status: 'success' });
-                    console.log(`Успешно отправлено: ${key}`);
-                }
-            } catch (error) {
-                console.error(`Ошибка отправки ${key}:`, error);
-                results.push({ key, status: 'error', error: error.message });
-            }
-        }
-
-        return results;
-    }
-
-    // Проверка наличия неотправленных данных
-    hasPendingData() {
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('unsavedData_')) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Получение количества неотправленных данных
-    getPendingDataCount() {
-        let count = 0;
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('unsavedData_')) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    // === КОНЕЦ НОВЫХ МЕТОДОВ ===
 
     // Загрузка данных расписания
     async fetchSchedule() {
