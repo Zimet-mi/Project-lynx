@@ -19,6 +19,61 @@ const LoadingIndicator = ({ message = 'Загрузка данных...' }) => {
     );
 };
 
+//Оффлайн режим
+async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
+    const cacheKey = `data_${sheetName}_${range}`;
+    const timeKey = `time_${sheetName}_${range}`;
+    
+    // Всегда сначала пробуем кеш
+    const cachedData = localStorage.getItem(cacheKey);
+    const cachedTime = localStorage.getItem(timeKey);
+    
+    if (cachedData && cachedTime) {
+        const currentTime = Date.now();
+        const timeDiff = currentTime - parseInt(cachedTime);
+        
+        // Если данные свежие - возвращаем
+        if (timeDiff < cacheExpiry) {
+            return JSON.parse(cachedData);
+        }
+        
+        // Если данные устарели, но интернета нет - все равно возвращаем
+        if (!navigator.onLine) {
+            console.warn('Оффлайн режим: использую устаревшие данные');
+            return JSON.parse(cachedData);
+        }
+    }
+    
+    // Пытаемся обновить данные (только если есть интернет)
+    try {
+        if (!navigator.onLine && cachedData) {
+            throw new Error('OFFLINE_MODE'); // Специальная ошибка для оффлайн
+        }
+        
+        const sheetId = await this.getSheetId();
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${API_KEY}`;
+        const response = await axios.get(url);
+        
+        const data = response.data;
+        localStorage.setItem(cacheKey, JSON.stringify(data));
+        localStorage.setItem(timeKey, Date.now().toString());
+        
+        return data;
+    } catch (error) {
+        // Если оффлайн и есть кеш - возвращаем кеш
+        if ((!navigator.onLine || error.message === 'OFFLINE_MODE') && cachedData) {
+            return JSON.parse(cachedData);
+        }
+        
+        // Если кеша нет вообще - бросаем ошибку
+        if (!cachedData) {
+            throw new Error('Нет данных в кеше и отсутствует интернет');
+        }
+        
+        throw error;
+    }
+}
+
 // Компонент навигации
 const Navigation = ({ activeTab, onTabChange, onSendCache }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -1169,7 +1224,8 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [preloadComplete, setPreloadComplete] = useState(false);
     const [telegramReady, setTelegramReady] = useState(false);
-
+	const [isOnline, setIsOnline] = useState(navigator.onLine);	
+	
     // Инициализация Telegram
     useEffect(() => {
         const initTelegram = () => {
@@ -1198,6 +1254,20 @@ const App = () => {
             }, 3000);
         }
     }, []);
+
+	// Оффлайн режим
+	useEffect(() => {
+		const handleOnline = () => setIsOnline(true);
+		const handleOffline = () => setIsOnline(false);
+		
+		window.addEventListener('online', handleOnline);
+		window.addEventListener('offline', handleOffline);
+		
+		return () => {
+			window.removeEventListener('online', handleOnline);
+			window.removeEventListener('offline', handleOffline);
+		};
+	}, []);
 
     // Предзагрузка данных
     useEffect(() => {
@@ -1271,6 +1341,11 @@ const App = () => {
             onTabChange: handleTabChange,
             onSendCache: handleSendCache
         }),
+		
+		!isOnline && React.createElement('div', { 
+        className: 'offline-indicator' 
+		}, 'Оффлайн режим. Данные могут быть устаревшими.'),
+		
         React.createElement('div', { className: 'content' },
             React.createElement('div', { className: `tabcontent ${activeTab === activeTab ? 'active' : ''}` },
                 renderContent()
