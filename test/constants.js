@@ -64,8 +64,8 @@ const RESULT_SHEET_RANGE = 'A1:N700';
 const PARTICIPANT_PARAMETERS = [
     { label: 'Костюм',    column: 'C', options: 5 },
     { label: 'Схожесть',  column: 'D', options: 5 },
-//    { label: 'Выход',     column: 'E', options: 5 },
-    { label: 'Аксессуар', column: 'F', options: 30 }
+    { label: 'Выход',     column: 'E', options: 5 },
+    { label: 'Аксессуар', column: 'F', options: 3 }
     // Для добавления нового параметра:
     // { label: 'Новый параметр', column: 'G', options: 5 }
 ];
@@ -80,8 +80,8 @@ const SPECIAL_PRIZES = [
     { label: 'Пошив',             column: 'I', active: true, value: 'Номинант' },
     { label: 'Крафт',             column: 'J', active: true, value: 'Номинант' },
     { label: 'Дефиле',            column: 'K', active: true, value: 'Номинант' },
-    { label: 'ЯРусский',             column: 'M', active: true, value: 'Номинант' },
-//    { label: 'Русский источник',  column: 'M', active: true, value: 'Номинант' },
+    { label: 'Парик',             column: 'L', active: true, value: 'Номинант' },
+    { label: 'Русский источник',  column: 'M', active: true, value: 'Номинант' },
     { label: 'Гран-при',          column: 'N', active: true, value: 'Номинант' }
     // Для добавления нового спецприза:
     // { label: 'Новый спецприз', column: 'O', active: true, value: 'Номинант' }
