@@ -175,21 +175,21 @@ const EvaluationFields = ({
         ),
 
         // Чекбоксы спецпризов
-        React.createElement('div', { className: 'checkbox-group' },
-            ...getActiveSpecialPrizes().map((prize, index) => 
-                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
-                    React.createElement('input', {
-                        type: 'checkbox',
-                        id: `checkbox-${participantId}-${prize.column}`,
-                        checked: checkboxes[index] || false,
-                        onChange: (e) => onCheckboxChange(index, e.target.checked)
-                    }),
-                    React.createElement('label', { 
-                        htmlFor: `checkbox-${participantId}-${prize.column}`
-                    }, prize.label)
-                )
-            )
-        )
+		React.createElement('div', { className: 'checkbox-group' },
+			...getActiveSpecialPrizes().map((prize, index) => 
+				React.createElement('div', { key: prize.column, className: 'checkbox-row' },
+					React.createElement('label', { 
+						htmlFor: `checkbox-${participantId}-${prize.column}`
+					}, prize.label),
+					React.createElement('input', {
+						type: 'checkbox',
+						id: `checkbox-${participantId}-${prize.column}`,
+						checked: checkboxes[index] || false,
+						onChange: (e) => onCheckboxChange(index, e.target.checked)
+					})
+				)
+			)
+		)
     );
 };
 
@@ -731,17 +731,16 @@ const AllParticipantsPage = () => {
                                 React.createElement('td', null, participant.id || ''),
                                 React.createElement('td', null, dayLabel),
                                 React.createElement('td', { 
-                                    style: { 
-                                        fontSize: '12px', 
-                                        color: '#666',
-                                        textAlign: 'center'
-                                    } 
-                                }, 
-                                    `К:${participant.scores.C || '-'} ` +
-                                    `С:${participant.scores.D || '-'} ` +
-                                    `В:${participant.scores.E || '-'} ` +
-                                    `А:${participant.scores.F || '-'}`
-                                )
+									className: 'participant-total-score'
+								}, 
+									(() => {
+										// Вычисляем сумму оценок
+										const scores = participant.scores;
+										const sum = [scores.C, scores.D, scores.E, scores.F]
+											.reduce((total, score) => total + (parseInt(score) || 0), 0);
+										return sum > 0 ? sum : '-';
+									})()
+								)
                             )
                         );
                     })

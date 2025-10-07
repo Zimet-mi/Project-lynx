@@ -97,12 +97,12 @@ img {
 .textarea-row {
     width: 90%;
     max-width: 400px;
+    text-align: center;
 }
 
 .textarea-row div:first-child {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 5px;
+    text-align: center;
+    margin-bottom: 10px;
 }
 
 .checkbox-group {
@@ -117,8 +117,6 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1 1 calc(33.333% - 10px);
-    max-width: calc(33.333% - 10px);
     margin: 0.5em 0;
     font-size: 0.9em;
     text-align: center;
@@ -127,7 +125,13 @@ img {
 .checkbox-row label {
     font-weight: 600;
     color: #333;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    order: -1; /* Перемещаем label выше input */
+}
+
+.checkbox-row input[type="checkbox"] {
+    margin-top: 5px;
+    transform: scale(1.2);
 }
 
 .input-field {
@@ -546,13 +550,14 @@ img {
 .participant-modal {
     display: none;
     position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(5px);
+    z-index: 1002;
+    left: 0; 
+    top: 0; 
+    width: 100vw; 
+    height: 100vh;
+    background: rgba(0,0,0,0.25);
+    justify-content: center;
+    align-items: center;
 }
 
 .participant-modal.show {
@@ -578,12 +583,14 @@ img {
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
-    color: #aaa;
+    color: #df3031;
+    background: none;
     z-index: 1;
+    transition: color 0.2s ease;
 }
 
 .participant-modal-close:hover {
-    color: #000;
+    color: #ff6b6b;
 }
 
 .participant-modal-header {
@@ -592,6 +599,7 @@ img {
     padding: 30px;
     border-bottom: 1px solid #e9ecef;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	cursor: default;
 }
 
 .participant-modal-img {
@@ -601,6 +609,7 @@ img {
     object-fit: cover;
     border: 3px solid #fff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease;
 }
 
 .participant-modal-name {
@@ -618,7 +627,7 @@ img {
 }
 
 .participant-modal-marks {
-    padding: 30px;
+    padding: 25px 30px;
 }
 
 .participant-modal-checkboxes {
@@ -640,6 +649,27 @@ img {
     border-radius: 6px;
     font-family: inherit;
     resize: vertical;
+}
+
+.all-participants-table th:nth-child(5) {
+    position: relative;
+}
+
+.all-participants-table th:nth-child(5):hover::after {
+    content: none;
+}
+
+.all-participants-table tr:last-child td {
+    border-bottom: none;
+}
+
+.participant-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.participant-row:hover {
+    background: #eaf6ff;
 }
 
 /* Загрузка */
@@ -719,25 +749,42 @@ img {
         min-height: 44px;
         font-size: 0.98em;
     }
-    
-    .participant-modal-header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .participant-modal-img {
-        width: 100px;
-        height: 100px;
-    }
-    
+            
     .input-container {
         padding: 15px;
         margin: 5px;
     }
     
+	.participant-modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .participant-modal-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .participant-modal-img {
+        width: 100px;
+        height: 100px;
+        align-self: center;
+    }
+    
+    .participant-modal-marks {
+        padding: 20px 15px;
+    }
+    
+    .participant-modal-close {
+        top: 10px;
+        right: 15px;
+        font-size: 24px;
+    }
+		
     .select-row {
-        flex: 1 1 100%;
-        max-width: 100%;
+        flex: 1 1 calc(50% - 10px);
+        max-width: calc(50% - 10px);
     }
     
     .checkbox-row {
@@ -763,6 +810,22 @@ img {
     .tableHead {
         font-size: 16px;
     }
+	
+	.image-modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .image-modal-img {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+    
+    .image-modal-close {
+        top: -45px;
+        right: -5px;
+        font-size: 35px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -786,7 +849,27 @@ img {
         min-height: 36px;
         font-size: 0.92em;
     }
+		
+	.image-modal-close {
+        top: -40px;
+        right: -5px;
+        font-size: 30px;
+    }
+	
+	.participant-modal-header {
+        padding: 15px;
+    }
     
+    .participant-modal-marks {
+        padding: 15px 10px;
+    }
+    
+    .select-group,
+    .checkbox-group {
+        gap: 8px;
+    }
+    
+    .select-row,
     .checkbox-row {
         flex: 1 1 100%;
         max-width: 100%;
@@ -908,143 +991,11 @@ img {
 
 .all-participants-table td:nth-child(5) {
     font-family: 'Courier New', monospace;
-    font-size: 12px;
-    color: #555;
-    white-space: nowrap;
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
 }
-
-/* Подсказки для столбцов оценок */
-.all-participants-table th:nth-child(5) {
-    position: relative;
-}
-
-.all-participants-table th:nth-child(5):hover::after {
-    content: 'К-костюм, С-схожесть, В-выступление, А-аксессуары';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 1000;
-}
-
-.all-participants-table tr:last-child td {
-    border-bottom: none;
-}
-
-.participant-row {
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.participant-row:hover {
-    background: #eaf6ff;
-}
-
-/* Модальное окно участника */
-.participant-modal {
-    display: none;
-    position: fixed;
-    z-index: 1002;
-    left: 0; 
-    top: 0; 
-    width: 100vw; 
-    height: 100vh;
-    background: rgba(0,0,0,0.25);
-    justify-content: center;
-    align-items: center;
-}
-
-.participant-modal.show {
-    display: flex;
-}
-
-.participant-modal-content {
-    background: white;
-    border-radius: 12px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.participant-modal-close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
-    z-index: 1;
-}
-
-.participant-modal-close:hover {
-    color: #000;
-}
-
-.participant-modal-header {
-    display: flex;
-    gap: 20px;
-    padding: 30px;
-    border-bottom: 1px solid #e9ecef;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.participant-modal-img {
-    width: 120px;
-    height: 120px;
-    border-radius: 12px;
-    object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.participant-modal-name {
-    font-size: 24px;
-    font-weight: 700;
-    color: #495057;
-    margin-bottom: 8px;
-}
-
-.participant-modal-id,
-.participant-modal-sheet {
-    font-size: 16px;
-    color: #6c757d;
-    margin-bottom: 4px;
-}
-
-.participant-modal-marks {
-    padding: 30px;
-}
-
-.participant-modal-checkboxes {
-    padding: 0 30px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.participant-modal-comment {
-    padding: 0 30px 30px;
-}
-
-.participant-modal-comment textarea {
-    width: 100%;
-    min-height: 80px;
-    padding: 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-family: inherit;
-    resize: vertical;
-}
-
 
 /* Стили для увеличения изображений */
 .image-modal {
@@ -1139,149 +1090,34 @@ img {
     border-color: #df3031;
 }
 
-/* Для мобильных устройств */
-@media (max-width: 768px) {
-    .image-modal-content {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
-    
-    .image-modal-img {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
-    
-    .image-modal-close {
-        top: -45px;
-        right: -5px;
-        font-size: 35px;
-    }
-}
-
-@media (max-width: 480px) {
-    .image-modal-close {
-        top: -40px;
-        right: -5px;
-        font-size: 30px;
-    }
-}
-
-/* Стили для модального окна редактирования */
-.participant-modal-content {
-    background: white;
-    border-radius: 12px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.participant-modal-close {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #df3031;
-    background: none;
-    z-index: 1;
-    transition: color 0.2s ease;
-}
-
-.participant-modal-close:hover {
-    color: #ff6b6b;
-}
-
-.participant-modal-header {
-    display: flex;
-    gap: 20px;
-    padding: 30px;
-    border-bottom: 1px solid #e9ecef;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    cursor: default;
-}
-
-.participant-modal-img {
-    width: 120px;
-    height: 120px;
-    border-radius: 12px;
-    object-fit: cover;
-    border: 3px solid #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
-}
-
 .participant-modal-img:hover {
     transform: scale(1.05);
 }
 
-.participant-modal-name {
-    font-size: 24px;
-    font-weight: 700;
-    color: #495057;
-    margin-bottom: 8px;
-}
-
-.participant-modal-id,
-.participant-modal-sheet {
-    font-size: 16px;
-    color: #6c757d;
-    margin-bottom: 4px;
-}
-
-.participant-modal-marks {
-    padding: 25px 30px;
+.participant-total-score {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
 }
 
 /* Адаптивность для модального окна редактирования */
-@media (max-width: 768px) {
-    .participant-modal-content {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
-    
-    .participant-modal-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .participant-modal-img {
-        width: 100px;
-        height: 100px;
-        align-self: center;
-    }
-    
-    .participant-modal-marks {
-        padding: 20px 15px;
-    }
-    
-    .participant-modal-close {
-        top: 10px;
-        right: 15px;
-        font-size: 24px;
-    }
+.evaluation-form.compact .select-row {
+    flex: 1 1 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+    margin: 0.3em 0;
 }
 
-@media (max-width: 480px) {
-    .participant-modal-header {
-        padding: 15px;
-    }
-    
-    .participant-modal-marks {
-        padding: 15px 10px;
-    }
-    
-    .select-group,
-    .checkbox-group {
-        gap: 8px;
-    }
-    
-    .select-row,
-    .checkbox-row {
-        flex: 1 1 100%;
-        max-width: 100%;
-    }
+.evaluation-form.compact .checkbox-row {
+    flex: 1 1 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+    margin: 0.3em 0;
+    font-size: 0.85em;
 }
+
+.evaluation-form.compact .textarea-row {
+    width: 100%;
+    max-width: none;
+}
+
