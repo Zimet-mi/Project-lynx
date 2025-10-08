@@ -1359,24 +1359,36 @@ const App = () => {
     }, []);
 
     // Предзагрузка данных
-    useEffect(() => {
-        const preloadData = async () => {
-            try {
-                setIsLoading(true);
-                await googleSheetsApi.preloadAllData();
-                setPreloadComplete(true);
-            } catch (error) {
-                console.error('Ошибка предзагрузки данных:', error);
-                telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
+	useEffect(() => {
+		const preloadData = async () => {
+			try {
+				setIsLoading(true);
+				
+				// Проверяем, что googleSheetsApi доступен
+				if (typeof googleSheetsApi === 'undefined') {
+					console.error('googleSheetsApi не определен');
+					throw new Error('API не инициализирован');
+				}
+				
+				await googleSheetsApi.preloadAllData();
+				setPreloadComplete(true);
+			} catch (error) {
+				console.error('Ошибка предзагрузки данных:', error);
+				// Используем showAlert вместо showPopup для совместимости
+				if (telegramApi && telegramApi.showAlert) {
+					telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+				} else {
+					alert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+				}
+			} finally {
+				setIsLoading(false);
+			}
+		};
 
-        if (telegramReady) {
-            preloadData();
-        }
-    }, [telegramReady]);
+		if (telegramReady) {
+			preloadData();
+		}
+	}, [telegramReady]);
 
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);

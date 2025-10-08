@@ -90,13 +90,18 @@ class TelegramApi {
 	}
 
     // Показать предупреждение
-    showAlert(message) {
-        if (this.tg) {
-            this.tg.showAlert(message);
-        } else {
-            alert(message);
-        }
-    }
+	showAlert(message) {
+		if (this.tg && this.tg.showAlert) {
+			try {
+				this.tg.showAlert(message);
+			} catch (error) {
+				// Fallback для старых версий
+				alert(message);
+			}
+		} else {
+			alert(message);
+		}
+	}
 
     // Показать подтверждение
     showConfirm(message, callback) {
