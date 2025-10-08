@@ -540,8 +540,8 @@ const ParticipantsPage = ({ section = 'One' }) => {
 
     const loadParticipants = async () => {
         try {
-            setLoading(true);
-            setError(null);
+			setLoading(true);
+			const data = await googleSheetsApi.fetchDataWithCache(...);
 
             const data = await googleSheetsApi.fetchDataWithCache(
                 SHEET_CONFIG.mainSheet,
@@ -560,13 +560,13 @@ const ParticipantsPage = ({ section = 'One' }) => {
                     }));
                 setParticipants(extractedParticipants);
             }
-        } catch (err) {
-            setError(err);
-            console.error('Ошибка загрузки участников:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+		} catch (err) {
+		console.warn('Ошибка загрузки участников, использую пустые данные:', err);
+		setParticipants([]); // Просто пустой массив вместо ошибки
+	  } finally {
+		setLoading(false);
+	  }
+	};
 
     const filterParticipantsByRange = (participants, range) => {
         return participants.filter(participant => {
@@ -650,58 +650,64 @@ const AllParticipantsPage = () => {
     }, []);
 
     const loadAllParticipants = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+		let allParticipantsData = [];
+		
+		try {
+			setLoading(true);
+			setError(null); // Сбрасываем ошибку при новой попытке загрузки
 
-            let allParticipantsData = [];
+			for (const { sheet, range } of ALL_PARTICIPANTS_SHEETS) {
+				try {
+					const data = await googleSheetsApi.fetchDataWithCache(sheet, range, 420000);
 
-            for (const { sheet, range } of ALL_PARTICIPANTS_SHEETS) {
-                try {
-                    const data = await googleSheetsApi.fetchDataWithCache(sheet, range, 420000);
+					if (data && data.values) {
+						const participants = data.values.slice(1)
+							.filter(row => row && row[1] && row[1].toString().trim() !== '')
+							.map((row, idx) => ({
+								id: row[0],
+								name: row[1],
+								img: `${row[0]}.jpg`,
+								row: idx + 2,
+								sheet,
+								dataRow: idx + 2,
+								raw: row,
+								scores: {
+									C: row[2] || '', // Костюм
+									D: row[3] || '', // Схожесть
+									E: row[4] || '', // Выход
+									F: row[5] || '', // Аксессуар
+									comment: row[6] || ''
+								},
+								checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
+									const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
+									acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
+									return acc;
+								}, {})
+							}));
 
-                    if (data && data.values) {
-                        const participants = data.values.slice(1)
-                            .filter(row => row && row[1] && row[1].toString().trim() !== '')
-                            .map((row, idx) => ({
-                                id: row[0],
-                                name: row[1],
-                                img: `${row[0]}.jpg`,
-                                row: idx + 2,
-                                sheet,
-                                dataRow: idx + 2,
-                                raw: row,
-                                // Добавляем текущие оценки из данных
-                                scores: {
-                                    C: row[2] || '', // Костюм
-                                    D: row[3] || '', // Схожесть
-                                    E: row[4] || '', // Выход
-                                    F: row[5] || '', // Аксессуар
-                                    comment: row[6] || ''
-                                },
-                                checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
-                                    const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
-                                    acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
-                                    return acc;
-                                }, {})
-                            }));
+						allParticipantsData = allParticipantsData.concat(participants);
+					}
+				} catch (err) {
+					console.warn(`Ошибка загрузки ${sheet}:`, err);
+					// Продолжаем загрузку других листов, не прерываем цикл
+				}
+			}
 
-                        allParticipantsData = allParticipantsData.concat(participants);
-                    }
-                } catch (err) {
-                    console.warn(`Ошибка загрузки ${sheet}:`, err);
-                }
-            }
-
-            setAllParticipants(allParticipantsData);
-            console.log(`Загружено ${allParticipantsData.length} участников`);
-        } catch (err) {
-            setError(err);
-            console.error('Ошибка загрузки всех участников:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+			setAllParticipants(allParticipantsData);
+			console.log(`Загружено ${allParticipantsData.length} участников`);
+			
+			// Если не удалось загрузить ни одного участника, показываем предупреждение в консоли
+			if (allParticipantsData.length === 0) {
+				console.warn('Не удалось загрузить данные участников. Проверьте подключение к интернету.');
+			}
+		} catch (err) {
+			console.warn('Общая ошибка загрузки всех участников:', err);
+			// Не устанавливаем ошибку в state, чтобы не ломать интерфейс
+			// Данные остаются прежними или пустыми
+		} finally {
+			setLoading(false);
+		}
+	};
 
     const handleParticipantClick = (participant) => {
         setSelectedParticipant(participant);
