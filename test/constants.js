@@ -54,6 +54,12 @@ const CACHE_CONFIG = {
     participantsExpiry: 120000
 };
 
+const CACHE_TIMES = {
+    general: CACHE_CONFIG.generalExpiry,
+    participants: CACHE_CONFIG.participantsExpiry,
+    allParticipants: CACHE_CONFIG.generalExpiry
+};
+
 // Настройки ленивого сохранения
 const LAZY_SAVE_CONFIG = {
     // Интервал проверки и отправки очереди на сервер (5 секунд)

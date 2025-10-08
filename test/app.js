@@ -120,10 +120,10 @@ const Navigation = ({ activeTab, onTabChange, onSendCache }) => {
 // Toast уведомление
 const Toast = ({ message, type = 'error', isVisible, onClose }) => {
     useEffect(() => {
-        if (isVisible) {
+        if (isVisible && onClose) {
             const timer = setTimeout(() => {
                 onClose();
-            }, 5000); // Автоматически скрываем через 5 секунд
+            }, 5000);
 
             return () => clearTimeout(timer);
         }
@@ -171,7 +171,7 @@ const Toast = ({ message, type = 'error', isVisible, onClose }) => {
             style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
         },
             React.createElement('span', null, message),
-            React.createElement('button', {
+            onClose && React.createElement('button', {
                 onClick: onClose,
                 style: {
                     background: 'none',

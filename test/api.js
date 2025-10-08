@@ -14,19 +14,6 @@ if (typeof CACHE_CONFIG === 'undefined') {
     };
 }
 
-getCachedData(sheetName, range) {
-    const cacheKey = `data_${sheetName}_${range}`;
-    try {
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-            return JSON.parse(cachedData);
-        }
-    } catch (error) {
-        console.warn('Ошибка получения данных из кеша:', error);
-    }
-    return null;
-}
-
 class GoogleSheetsApi {
     constructor() {
         this.sheetIdCache = null;
@@ -213,3 +200,6 @@ class GoogleSheetsApi {
 
 // Создаем единственный экземпляр
 const googleSheetsApi = new GoogleSheetsApi();
+
+// Делаем доступным глобально для других модулей
+window.googleSheetsApi = googleSheetsApi;

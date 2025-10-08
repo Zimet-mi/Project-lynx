@@ -72,10 +72,22 @@ class TelegramApi {
 
     // Показать всплывающее окно
     showPopup(params) {
-        if (this.tg) {
-            this.tg.showPopup(params);
-        }
-    }
+		if (this.tg && this.tg.showPopup) {
+			try {
+				this.tg.showPopup(params);
+			} catch (error) {
+				// Fallback для версий, которые не поддерживают showPopup
+				if (this.tg.showAlert) {
+					this.tg.showAlert(params.message || 'Сообщение');
+				} else {
+					alert(params.message || 'Сообщение');
+				}
+			}
+		} else {
+			// Fallback для окружений без Telegram WebApp
+			alert(params.message || 'Сообщение');
+		}
+	}
 
     // Показать предупреждение
     showAlert(message) {
