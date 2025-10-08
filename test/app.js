@@ -539,33 +539,31 @@ const ParticipantsPage = ({ section = 'One' }) => {
     }, [section]);
 
     const loadParticipants = async () => {
-        try {
+		try {
 			setLoading(true);
-			const data = await googleSheetsApi.fetchDataWithCache(...);
+			const data = await googleSheetsApi.fetchDataWithCache(
+				SHEET_CONFIG.mainSheet,
+				'A1:N200',
+				120000
+			);
 
-            const data = await googleSheetsApi.fetchDataWithCache(
-                SHEET_CONFIG.mainSheet,
-                'A1:N200', // Уменьшили диапазон для оптимизации
-                120000
-            );
-
-            if (data && data.values) {
-                const extractedParticipants = data.values.slice(1)
-                    .filter(row => row && row[1] && row[1].toString().trim() !== '')
-                    .map((row, index) => ({
-                        id: row[0],
-                        name: row[1],
-                        img: `${row[0]}.jpg`,
-                        row: index + 2
-                    }));
-                setParticipants(extractedParticipants);
-            }
+			if (data && data.values) {
+				const extractedParticipants = data.values.slice(1)
+					.filter(row => row && row[1] && row[1].toString().trim() !== '')
+					.map((row, index) => ({
+						id: row[0],
+						name: row[1],
+						img: `${row[0]}.jpg`,
+						row: index + 2
+					}));
+				setParticipants(extractedParticipants);
+			}
 		} catch (err) {
-		console.warn('Ошибка загрузки участников, использую пустые данные:', err);
-		setParticipants([]); // Просто пустой массив вместо ошибки
-	  } finally {
-		setLoading(false);
-	  }
+			console.warn('Ошибка загрузки участников, использую пустые данные:', err);
+			setParticipants([]);
+		} finally {
+			setLoading(false);
+		}
 	};
 
     const filterParticipantsByRange = (participants, range) => {
@@ -585,13 +583,6 @@ const ParticipantsPage = ({ section = 'One' }) => {
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка участников...' });
-    }
-
-    if (error) {
-        return React.createElement('div', { className: 'error-message' },
-            React.createElement('p', null, `Ошибка загрузки участников: ${error.message}`),
-            React.createElement('button', { onClick: loadParticipants }, 'Попробовать снова')
-        );
     }
 
     const getRangeForSection = (section) => {
@@ -654,7 +645,6 @@ const AllParticipantsPage = () => {
 		
 		try {
 			setLoading(true);
-			setError(null); // Сбрасываем ошибку при новой попытке загрузки
 
 			for (const { sheet, range } of ALL_PARTICIPANTS_SHEETS) {
 				try {
@@ -672,10 +662,10 @@ const AllParticipantsPage = () => {
 								dataRow: idx + 2,
 								raw: row,
 								scores: {
-									C: row[2] || '', // Костюм
-									D: row[3] || '', // Схожесть
-									E: row[4] || '', // Выход
-									F: row[5] || '', // Аксессуар
+									C: row[2] || '',
+									D: row[3] || '',
+									E: row[4] || '',
+									F: row[5] || '',
 									comment: row[6] || ''
 								},
 								checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
@@ -689,21 +679,17 @@ const AllParticipantsPage = () => {
 					}
 				} catch (err) {
 					console.warn(`Ошибка загрузки ${sheet}:`, err);
-					// Продолжаем загрузку других листов, не прерываем цикл
 				}
 			}
 
 			setAllParticipants(allParticipantsData);
 			console.log(`Загружено ${allParticipantsData.length} участников`);
 			
-			// Если не удалось загрузить ни одного участника, показываем предупреждение в консоли
 			if (allParticipantsData.length === 0) {
 				console.warn('Не удалось загрузить данные участников. Проверьте подключение к интернету.');
 			}
 		} catch (err) {
 			console.warn('Общая ошибка загрузки всех участников:', err);
-			// Не устанавливаем ошибку в state, чтобы не ломать интерфейс
-			// Данные остаются прежними или пустыми
 		} finally {
 			setLoading(false);
 		}
@@ -796,13 +782,6 @@ const AllParticipantsPage = () => {
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка всех участников...' });
-    }
-
-    if (error) {
-        return React.createElement('div', { className: 'error-message' },
-            React.createElement('p', null, `Ошибка загрузки участников: ${error.message}`),
-            React.createElement('button', { onClick: loadAllParticipants }, 'Попробовать снова')
-        );
     }
 
     if (allParticipants.length === 0) {
@@ -969,18 +948,16 @@ const ScheduleTable = () => {
     }, []);
 
     const loadSchedule = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const scheduleData = await googleSheetsApi.fetchSchedule();
-            setData(scheduleData);
-        } catch (err) {
-            setError(err);
-            console.error('Ошибка загрузки расписания:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+		try {
+			setLoading(true);
+			const scheduleData = await googleSheetsApi.fetchSchedule();
+			setData(scheduleData);
+		} catch (err) {
+			console.warn('Ошибка загрузки расписания:', err);
+		} finally {
+			setLoading(false);
+		}
+	};
 
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
@@ -1021,13 +998,6 @@ const ScheduleTable = () => {
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка расписания...' });
-    }
-
-    if (error) {
-        return React.createElement('div', { className: 'error-message' },
-            React.createElement('p', null, `Ошибка загрузки расписания: ${error.message}`),
-            React.createElement('button', { onClick: loadSchedule }, 'Попробовать снова')
-        );
     }
 
     if (!data || !data.values) {
@@ -1126,28 +1096,26 @@ const ResultsAccordion = () => {
     }, []);
 
     const loadResultsData = async () => {
-        try {
-            setLoading(true);
-            setError(null);
+		try {
+			setLoading(true);
 
-            const dataParts = await Promise.all(
-                RESULT_RANGES.map(range => 
-                    googleSheetsApi.fetchDataWithCache(SHEET_CONFIG.resultSheet, range, 420000)
-                        .catch(err => {
-                            console.error(`Ошибка при загрузке данных для диапазона ${range}:`, err);
-                            return null;
-                        })
-                )
-            );
+			const dataParts = await Promise.all(
+				RESULT_RANGES.map(range => 
+					googleSheetsApi.fetchDataWithCache(SHEET_CONFIG.resultSheet, range, 420000)
+						.catch(err => {
+							console.warn(`Ошибка при загрузке данных для диапазона ${range}:`, err);
+							return null;
+						})
+				)
+			);
 
-            setResultsData(dataParts);
-        } catch (error) {
-            setError(error);
-            console.error('Ошибка при загрузке данных результатов:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+			setResultsData(dataParts);
+		} catch (error) {
+			console.warn('Ошибка при загрузке данных результатов:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
@@ -1233,13 +1201,6 @@ const ResultsAccordion = () => {
 
     if (loading) {
         return React.createElement(LoadingIndicator, { message: 'Загрузка результатов...' });
-    }
-
-    if (error) {
-        return React.createElement('div', { className: 'error-message' },
-            React.createElement('p', null, `Ошибка загрузки результатов: ${error.message}`),
-            React.createElement('button', { onClick: loadResultsData }, 'Попробовать снова')
-        );
     }
 
     return React.createElement('div', { id: 'accordion-container' },
