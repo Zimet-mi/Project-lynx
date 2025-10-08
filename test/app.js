@@ -193,14 +193,16 @@ const Toast = ({ message, type = 'error', isVisible, onClose }) => {
 // Компонент для управления Toast уведомлениями
 const NetworkToast = () => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [showToast, setShowToast] = useState(false);
+    const [showToast, setShowToast] = useState(!navigator.onLine);
 
     useEffect(() => {
         const handleOnline = () => {
             setIsOnline(true);
-            if (!navigator.onLine) {
-                setShowToast(true);
-            }
+            setShowToast(true);
+            // Скрываем через 5 секунд после восстановления сети
+            setTimeout(() => {
+                setShowToast(false);
+            }, 5000);
         };
         
         const handleOffline = () => {
@@ -211,11 +213,6 @@ const NetworkToast = () => {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
-        // Показываем toast сразу если офлайн при загрузке
-        if (!navigator.onLine) {
-            setShowToast(true);
-        }
-
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
@@ -223,14 +220,16 @@ const NetworkToast = () => {
     }, []);
 
     const handleCloseToast = () => {
-        setShowToast(false);
+        if (isOnline) {
+            setShowToast(false);
+        }
     };
 
     return React.createElement(Toast, {
         message: isOnline ? '🌐 Соединение восстановлено' : '📡 Нет подключения к интернету',
         type: isOnline ? 'success' : 'error',
-        isVisible: showToast && !isOnline,
-        onClose: handleCloseToast
+        isVisible: showToast,
+        onClose: isOnline ? handleCloseToast : undefined
     });
 };
 
@@ -326,40 +325,54 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 
     // Загрузка текущих значений
     useEffect(() => {
-        const loadCurrentValues = async () => {
-            try {
-                const data = await googleSheetsApi.fetchDataWithCache(
-                    SHEET_CONFIG.mainSheet,
-                    `A${participant.row}:N${participant.row}`,
-                    120000
-                );
-                
-                if (data && data.values && data.values[0]) {
-                    const row = data.values[0];
-                    
-                    setScores({
-                        C: row[2] || '',
-                        D: row[3] || '',
-                        E: row[4] || '',
-                        F: row[5] || '',
-                        comment: row[6] || ''
-                    });
-                    
-                    const checkboxValues = {};
-                    const activePrizes = getActiveSpecialPrizes();
-                    activePrizes.forEach((prize, index) => {
-                        const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
-                        checkboxValues[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
-                    });
-                    setCheckboxes(checkboxValues);
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки значений:', error);
-            }
-        };
+		const loadCurrentValues = async () => {
+			try {
+				const data = await googleSheetsApi.fetchDataWithCache(
+					SHEET_CONFIG.mainSheet,
+					RangeHelper.getParticipantRowRange(participant.row),
+					CACHE_TIMES.participants
+				);
+				
+				if (data && data.values && data.values[0]) {
+					const row = data.values[0];
+					setScores({
+						C: row[2] || '',
+						D: row[3] || '',
+						E: row[4] || '',
+						F: row[5] || '',
+						comment: row[6] || ''
+					});
+					
+					const checkboxValues = {};
+					const activePrizes = getActiveSpecialPrizes();
+					activePrizes.forEach((prize, index) => {
+						const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
+						checkboxValues[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
+					});
+					setCheckboxes(checkboxValues);
+				}
+			} catch (error) {
+				console.error('Ошибка загрузки значений, пробую из кеша:', error);
+				// Пробуем загрузить из кеша
+				const cachedData = googleSheetsApi.getCachedData(
+					SHEET_CONFIG.mainSheet, 
+					`A${participant.row}:N${participant.row}`
+				);
+				if (cachedData && cachedData.values && cachedData.values[0]) {
+					const row = cachedData.values[0];
+					setScores({
+						C: row[2] || '',
+						D: row[3] || '',
+						E: row[4] || '',
+						F: row[5] || '',
+						comment: row[6] || ''
+					});
+				}
+			}
+		};
 
-        loadCurrentValues();
-    }, [participant.row]);
+		loadCurrentValues();
+	}, [participant.row]);
 
     // Обработчики с вибрацией
     const handleScoreChange = async (column, value) => {
@@ -543,8 +556,8 @@ const ParticipantsPage = ({ section = 'One' }) => {
 			setLoading(true);
 			const data = await googleSheetsApi.fetchDataWithCache(
 				SHEET_CONFIG.mainSheet,
-				'A1:N200',
-				120000
+				RangeHelper.getParticipantsRange(),
+				CACHE_TIMES.participants
 			);
 
 			if (data && data.values) {
@@ -559,8 +572,22 @@ const ParticipantsPage = ({ section = 'One' }) => {
 				setParticipants(extractedParticipants);
 			}
 		} catch (err) {
-			console.warn('Ошибка загрузки участников, использую пустые данные:', err);
-			setParticipants([]);
+			console.warn('Ошибка загрузки участников, пробую загрузить из кеша:', err);
+			// Пробуем получить данные из кеша напрямую
+			const cachedData = googleSheetsApi.getCachedData(SHEET_CONFIG.mainSheet, 'A1:N200');
+			if (cachedData && cachedData.values) {
+				const extractedParticipants = cachedData.values.slice(1)
+					.filter(row => row && row[1] && row[1].toString().trim() !== '')
+					.map((row, index) => ({
+						id: row[0],
+						name: row[1],
+						img: `${row[0]}.jpg`,
+						row: index + 2
+					}));
+				setParticipants(extractedParticipants);
+			} else {
+				setParticipants([]);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -646,9 +673,19 @@ const AllParticipantsPage = () => {
 		try {
 			setLoading(true);
 
-			for (const { sheet, range } of ALL_PARTICIPANTS_SHEETS) {
+			for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
 				try {
-					const data = await googleSheetsApi.fetchDataWithCache(sheet, range, 420000);
+					const range = RangeHelper.getSheetRange(sheet);
+					if (!range) {
+						console.warn(`Не найден диапазон для листа ${sheet}`);
+						continue;
+					}
+					
+					const data = await googleSheetsApi.fetchDataWithCache(
+						sheet, 
+						range, 
+						CACHE_TIMES.allParticipants
+					);
 
 					if (data && data.values) {
 						const participants = data.values.slice(1)
@@ -679,6 +716,41 @@ const AllParticipantsPage = () => {
 					}
 				} catch (err) {
 					console.warn(`Ошибка загрузки ${sheet}:`, err);
+					// Резервная загрузка из кеша
+					try {
+						const range = RangeHelper.getSheetRange(sheet);
+						if (!range) continue;
+						
+						const cachedData = googleSheetsApi.getCachedData(sheet, range);
+						if (cachedData && cachedData.values) {
+							const participants = cachedData.values.slice(1)
+								.filter(row => row && row[1] && row[1].toString().trim() !== '')
+								.map((row, idx) => ({
+									id: row[0],
+									name: row[1],
+									img: `${row[0]}.jpg`,
+									row: idx + 2,
+									sheet,
+									dataRow: idx + 2,
+									raw: row,
+									scores: {
+										C: row[2] || '',
+										D: row[3] || '',
+										E: row[4] || '',
+										F: row[5] || '',
+										comment: row[6] || ''
+									},
+									checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
+										const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
+										acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
+										return acc;
+									}, {})
+								}));
+							allParticipantsData = allParticipantsData.concat(participants);
+						}
+					} catch (cacheErr) {
+						console.warn(`Ошибка загрузки из кеша для ${sheet}:`, cacheErr);
+					}
 				}
 			}
 

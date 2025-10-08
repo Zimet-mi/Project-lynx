@@ -14,6 +14,19 @@ if (typeof CACHE_CONFIG === 'undefined') {
     };
 }
 
+getCachedData(sheetName, range) {
+    const cacheKey = `data_${sheetName}_${range}`;
+    try {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            return JSON.parse(cachedData);
+        }
+    } catch (error) {
+        console.warn('Ошибка получения данных из кеша:', error);
+    }
+    return null;
+}
+
 class GoogleSheetsApi {
     constructor() {
         this.sheetIdCache = null;
@@ -55,9 +68,17 @@ class GoogleSheetsApi {
 
     // Загрузка данных из Google Sheets с кешированием
     async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
+		
+		if (!navigator.onLine) {
+			const cachedData = this.getCachedData(sheetName, range);
+			if (cachedData) {
+				console.log('📴 Офлайн режим: использую кешированные данные');
+				return cachedData;
+			}
+		}
+		
         const cacheKey = `data_${sheetName}_${range}`;
         const timeKey = `time_${sheetName}_${range}`;
-        
         console.group(`[GoogleSheetsApi] ${sheetName}!${range}`);
         const startTime = performance.now();
         
@@ -164,30 +185,31 @@ class GoogleSheetsApi {
 
     // Предзагрузка всех данных
     async preloadAllData() {
-        const promises = [];
-        const loadedSheets = new Set();
-        
-        // Все участники из всех листов (оптимизировано - избегаем дубликатов)
-        ALL_PARTICIPANTS_SHEETS.forEach(({ sheet, range }) => {
-            if (!loadedSheets.has(sheet)) {
-                loadedSheets.add(sheet);
-                promises.push(
-                    this.fetchDataWithCache(sheet, range, CACHE_CONFIG.generalExpiry)
-                        .catch(err => console.warn(`Ошибка предзагрузки ${sheet}:`, err))
-                );
-            }
-        });
-        
-        // Расписание
-        promises.push(
-            this.fetchSchedule()
-                .catch(err => console.warn('Ошибка предзагрузки расписания:', err))
-        );
-        
-        await Promise.all(promises);
-        console.log('Предзагрузка данных завершена');
-    }
-}
+		const promises = [];
+		const loadedSheets = new Set();
+		
+		ALL_PARTICIPANTS_SHEETS.forEach(({ sheet }) => {
+			if (!loadedSheets.has(sheet)) {
+				loadedSheets.add(sheet);
+				const range = RangeHelper.getSheetRange(sheet);
+				if (range) {
+					promises.push(
+						this.fetchDataWithCache(sheet, range, CACHE_TIMES.allParticipants)
+							.catch(err => console.warn(`Ошибка предзагрузки ${sheet}:`, err))
+					);
+				}
+			}
+		});
+		
+		// Расписание
+		promises.push(
+			this.fetchSchedule()
+				.catch(err => console.warn('Ошибка предзагрузки расписания:', err))
+		);
+		
+		await Promise.all(promises);
+		console.log('Предзагрузка данных завершена');
+	}
 
 // Создаем единственный экземпляр
 const googleSheetsApi = new GoogleSheetsApi();

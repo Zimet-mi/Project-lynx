@@ -34,8 +34,16 @@ const RESULT_RANGES = [
 
 // Массив для всех листов/дней с участниками
 const ALL_PARTICIPANTS_SHEETS = [
-    { sheet: 'valerieDay1', range: 'A1:N120' },
-    { sheet: 'valerieDay2', range: 'A1:N90' },
+    { 
+        sheet: 'valerieDay1', 
+        range: 'A1:N120',
+        day: 'День 1'
+    },
+    { 
+        sheet: 'valerieDay2', 
+        range: 'A1:N90',
+        day: 'День 2' 
+    },
 ];
 
 // Настройки кеширования
@@ -279,6 +287,52 @@ const VALIDATION_CONFIG = {
         phone: /^\+?[1-9]\d{1,14}$/
     }
 };
+
+// Функции для работы с диапазонами
+const RangeHelper = {
+    // Получить диапазон для листа
+    getSheetRange: (sheetName) => {
+        const sheetConfig = ALL_PARTICIPANTS_SHEETS.find(config => config.sheet === sheetName);
+        return sheetConfig ? sheetConfig.range : null;
+    },
+
+    // Получить диапазон для текущего основного листа
+    getCurrentSheetRange: () => {
+        return RangeHelper.getSheetRange(SHEET_CONFIG.mainSheet);
+    },
+
+    // Получить диапазон для строки участника
+    getParticipantRowRange: (row) => {
+        const lastColumn = RangeHelper.getLastColumn();
+        return `A${row}:${lastColumn}${row}`;
+    },
+
+    // Получить последний используемый столбец на основе конфигурации
+    getLastColumn: () => {
+        const allColumns = [
+            'A', 'B', // ID и имя - обязательные
+            ...PARTICIPANT_PARAMETERS.map(p => p.column),
+            ...getActiveSpecialPrizes().map(p => p.column),
+            ...Object.values(ADDITIONAL_FIELDS).map(f => f.column)
+        ];
+        
+        // Находим максимальный столбец
+        return allColumns.reduce((max, col) => {
+            return col > max ? col : max;
+        }, 'A');
+    },
+
+    // Получить диапазон для блока участников
+    getParticipantsRange: () => {
+        const currentRange = RangeHelper.getCurrentSheetRange();
+        if (currentRange) return currentRange;
+        
+        // Fallback - используем все столбцы до последнего используемого
+        const lastColumn = RangeHelper.getLastColumn();
+        return `A1:${lastColumn}200`;
+    }
+};
+
 
 // ========================================
 // ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ
