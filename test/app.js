@@ -117,16 +117,104 @@ const Navigation = ({ activeTab, onTabChange, onSendCache }) => {
     );
 };
 
-// Компонент индикатора проблем с сетью
-const NetworkStatus = () => {
+// Toast уведомление
+const Toast = ({ message, type = 'error', isVisible, onClose }) => {
+    useEffect(() => {
+        if (isVisible) {
+            const timer = setTimeout(() => {
+                onClose();
+            }, 5000); // Автоматически скрываем через 5 секунд
+
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, onClose]);
+
+    if (!isVisible) return null;
+
+    const getToastStyle = () => {
+        const baseStyle = {
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '500',
+            zIndex: 10000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            transform: 'translateX(0)',
+            transition: 'all 0.3s ease-in-out',
+            maxWidth: '300px',
+            wordWrap: 'break-word'
+        };
+
+        switch (type) {
+            case 'error':
+                return { ...baseStyle, background: '#f44336' };
+            case 'success':
+                return { ...baseStyle, background: '#4caf50' };
+            case 'warning':
+                return { ...baseStyle, background: '#ff9800' };
+            case 'info':
+                return { ...baseStyle, background: '#2196f3' };
+            default:
+                return { ...baseStyle, background: '#666' };
+        }
+    };
+
+    return React.createElement('div', {
+        className: `toast toast-${type}`,
+        style: getToastStyle()
+    },
+        React.createElement('div', { 
+            style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }
+        },
+            React.createElement('span', null, message),
+            React.createElement('button', {
+                onClick: onClose,
+                style: {
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    fontSize: '18px',
+                    cursor: 'pointer',
+                    marginLeft: '12px',
+                    padding: '0',
+                    opacity: '0.8'
+                },
+                onMouseOver: (e) => e.target.style.opacity = '1',
+                onMouseOut: (e) => e.target.style.opacity = '0.8'
+            }, '×')
+        )
+    );
+};
+
+// Компонент для управления Toast уведомлениями
+const NetworkToast = () => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
+        const handleOnline = () => {
+            setIsOnline(true);
+            if (!navigator.onLine) {
+                setShowToast(true);
+            }
+        };
+        
+        const handleOffline = () => {
+            setIsOnline(false);
+            setShowToast(true);
+        };
 
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
+
+        // Показываем toast сразу если офлайн при загрузке
+        if (!navigator.onLine) {
+            setShowToast(true);
+        }
 
         return () => {
             window.removeEventListener('online', handleOnline);
@@ -134,29 +222,16 @@ const NetworkStatus = () => {
         };
     }, []);
 
-    // Показываем только если офлайн
-    if (isOnline) {
-        return null;
-    }
+    const handleCloseToast = () => {
+        setShowToast(false);
+    };
 
-    return React.createElement('div', { 
-        className: 'network-status offline',
-        style: {
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            background: '#f44336',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: '20px',
-            fontSize: '12px',
-            zIndex: 1000,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            animation: 'pulse 2s infinite'
-        }
-    },
-        React.createElement('span', null, '📡 Нет сети')
-    );
+    return React.createElement(Toast, {
+        message: isOnline ? '🌐 Соединение восстановлено' : '📡 Нет подключения к интернету',
+        type: isOnline ? 'success' : 'error',
+        isVisible: showToast && !isOnline,
+        onClose: handleCloseToast
+    });
 };
 
 // Компонент заголовка
@@ -171,7 +246,7 @@ const Header = ({ activeTab, onTabChange, onSendCache }) => {
                 })
             )
         ),
-        React.createElement(NetworkStatus)
+        React.createElement(NetworkToast)
     );
 };
 

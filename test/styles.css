@@ -43,15 +43,49 @@ a {
     color: black;
 }
 
-/* Стили для индикатора проблем с сетью */
-.network-status {
+/* Стили для Toast уведомлений */
+.toast {
     font-weight: 500;
     user-select: none;
+    animation: slideInRight 0.3s ease-out;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+.toast-error {
+    background: #f44336 !important;
+}
+
+.toast-success {
+    background: #4caf50 !important;
+}
+
+.toast-warning {
+    background: #ff9800 !important;
+}
+
+.toast-info {
+    background: #2196f3 !important;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 
 /*Расположение картинок по центру*/

@@ -5,10 +5,8 @@ class LazySaveManager {
     constructor() {
         this.queue = new Map(); // Очередь для отправки на сервер
         this.isProcessing = false; // Флаг обработки очереди
-        this.retryAttempts = new Map(); // Счетчики попыток для каждого элемента
-        this.maxRetries = 5; // Максимальное количество попыток
-        this.retryDelay = 2000; // Задержка между попытками (мс)
-        this.processingInterval = 5000; // Интервал проверки очереди (мс)
+        this.processingInterval = LAZY_SAVE_CONFIG.processingInterval; // Интервал проверки очереди (мс)
+        this.dataMaxAge = LAZY_SAVE_CONFIG.dataMaxAge; // Время жизни данных в localStorage
         this.lastProcessTime = 0; // Время последней обработки
         
         // Запускаем периодическую обработку очереди
@@ -67,7 +65,6 @@ class LazySaveManager {
     // Добавление в очередь для отправки на сервер
     addToQueue(key, data) {
         this.queue.set(key, data);
-        this.retryAttempts.set(key, 0);
         
         // Запускаем обработку очереди если не обрабатывается
         if (!this.isProcessing) {
@@ -107,18 +104,9 @@ class LazySaveManager {
         console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
 
         const promises = [];
-        const failedItems = [];
 
         // Обрабатываем все элементы очереди
         for (const [key, data] of this.queue) {
-            const attempt = this.retryAttempts.get(key) || 0;
-            
-            if (attempt >= this.maxRetries) {
-                console.warn(`⚠️ Превышено максимальное количество попыток для ${key}`);
-                failedItems.push(key);
-                continue;
-            }
-
             promises.push(
                 this.sendToServer(data, key)
                     .then(() => {
@@ -127,23 +115,14 @@ class LazySaveManager {
                         console.log(`✅ Успешно отправлено: ${key}`);
                     })
                     .catch(error => {
-                        console.warn(`❌ Ошибка отправки ${key} (попытка ${attempt + 1}):`, error);
-                        this.retryAttempts.set(key, attempt + 1);
-                        failedItems.push(key);
+                        console.warn(`❌ Ошибка отправки ${key}:`, error);
+                        // Не удаляем из очереди - будем пытаться снова
                     })
             );
         }
 
         // Ждем завершения всех попыток отправки
         await Promise.allSettled(promises);
-
-        // Удаляем элементы, которые превысили лимит попыток
-        failedItems.forEach(key => {
-            if (this.retryAttempts.get(key) >= this.maxRetries) {
-                this.removeFromQueue(key);
-                console.warn(`🗑️ Удален из очереди (превышен лимит попыток): ${key}`);
-            }
-        });
 
         this.isProcessing = false;
         this.lastProcessTime = Date.now();
@@ -170,7 +149,6 @@ class LazySaveManager {
     // Удаление из очереди и localStorage
     removeFromQueue(key) {
         this.queue.delete(key);
-        this.retryAttempts.delete(key);
         
         try {
             localStorage.removeItem(`lazy_save_${key}`);
@@ -227,11 +205,9 @@ class LazySaveManager {
                         const data = JSON.parse(localStorage.getItem(key));
                         const queueKey = key.replace('lazy_save_', '');
                         
-                        // Проверяем актуальность данных (не старше 24 часов)
-                        const maxAge = 24 * 60 * 60 * 1000; // 24 часа
-                        if (Date.now() - data.timestamp < maxAge) {
+                        // Проверяем актуальность данных (не старше установленного времени)
+                        if (Date.now() - data.timestamp < this.dataMaxAge) {
                             this.queue.set(queueKey, data);
-                            this.retryAttempts.set(queueKey, 0);
                         } else {
                             // Удаляем устаревшие данные
                             localStorage.removeItem(key);
@@ -262,8 +238,7 @@ class LazySaveManager {
             queueSize: this.queue.size,
             localStorageSize: queueMeta.totalItems,
             lastUpdate: new Date(queueMeta.lastUpdate).toLocaleString(),
-            isProcessing: this.isProcessing,
-            retryCounts: Object.fromEntries(this.retryAttempts)
+            isProcessing: this.isProcessing
         };
     }
 
@@ -272,7 +247,6 @@ class LazySaveManager {
         try {
             // Очищаем очередь
             this.queue.clear();
-            this.retryAttempts.clear();
             
             // Очищаем localStorage
             for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -294,8 +268,7 @@ class LazySaveManager {
         for (const [key, data] of this.queue) {
             pendingData.push({
                 id: key,
-                ...data,
-                attempts: this.retryAttempts.get(key) || 0
+                ...data
             });
         }
         return pendingData;
