@@ -323,56 +323,47 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     });
     const [checkboxes, setCheckboxes] = useState({});
 
-    // Загрузка текущих значений
+    // Загрузка текущих значений из предзагруженных данных
     useEffect(() => {
-		const loadCurrentValues = async () => {
-			try {
-				const data = await googleSheetsApi.fetchDataWithCache(
-					SHEET_CONFIG.mainSheet,
-					RangeHelper.getParticipantRowRange(participant.row),
-					CACHE_TIMES.participants
-				);
-				
-				if (data && data.values && data.values[0]) {
-					const row = data.values[0];
-					setScores({
-						C: row[2] || '',
-						D: row[3] || '',
-						E: row[4] || '',
-						F: row[5] || '',
-						comment: row[6] || ''
-					});
-					
-					const checkboxValues = {};
-					const activePrizes = getActiveSpecialPrizes();
-					activePrizes.forEach((prize, index) => {
-						const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
-						checkboxValues[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
-					});
-					setCheckboxes(checkboxValues);
-				}
-			} catch (error) {
-				console.error('Ошибка загрузки значений, пробую из кеша:', error);
-				// Пробуем загрузить из кеша
-				const cachedData = googleSheetsApi.getCachedData(
-					SHEET_CONFIG.mainSheet, 
-					`A${participant.row}:N${participant.row}`
-				);
-				if (cachedData && cachedData.values && cachedData.values[0]) {
-					const row = cachedData.values[0];
-					setScores({
-						C: row[2] || '',
-						D: row[3] || '',
-						E: row[4] || '',
-						F: row[5] || '',
-						comment: row[6] || ''
-					});
-				}
-			}
-		};
+        const loadCurrentValues = () => {
+            try {
+                // Получаем предзагруженные данные для всего листа
+                const cachedData = googleSheetsApi.getCachedData(
+                    SHEET_CONFIG.mainSheet,
+                    RangeHelper.getParticipantsRange()
+                );
+                
+                if (cachedData && cachedData.values) {
+                    // Находим строку участника в предзагруженных данных
+                    // participant.row - это номер строки в таблице (начинается с 2)
+                    const rowIndex = participant.row - 1; // Преобразуем в индекс массива (0-based)
+                    
+                    if (rowIndex >= 0 && rowIndex < cachedData.values.length) {
+                        const row = cachedData.values[rowIndex];
+                        setScores({
+                            C: row[2] || '',
+                            D: row[3] || '',
+                            E: row[4] || '',
+                            F: row[5] || '',
+                            comment: row[6] || ''
+                        });
+                        
+                        const checkboxValues = {};
+                        const activePrizes = getActiveSpecialPrizes();
+                        activePrizes.forEach((prize, index) => {
+                            const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
+                            checkboxValues[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
+                        });
+                        setCheckboxes(checkboxValues);
+                    }
+                }
+            } catch (error) {
+                console.warn('Ошибка загрузки значений из кеша:', error);
+            }
+        };
 
-		loadCurrentValues();
-	}, [participant.row]);
+        loadCurrentValues();
+    }, [participant.row]);
 
     // Обработчики с вибрацией
     const handleScoreChange = async (column, value) => {
@@ -544,54 +535,38 @@ const AccordionSection = ({
 // Компонент страницы участников
 const ParticipantsPage = ({ section = 'One' }) => {
     const [participants, setParticipants] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false); // Изменено на false
 
     useEffect(() => {
         loadParticipants();
     }, [section]);
 
-    const loadParticipants = async () => {
-		try {
-			setLoading(true);
-			const data = await googleSheetsApi.fetchDataWithCache(
-				SHEET_CONFIG.mainSheet,
-				RangeHelper.getParticipantsRange(),
-				CACHE_TIMES.participants
-			);
+    const loadParticipants = () => {
+        try {
+            // Используем только предзагруженные данные
+            const data = googleSheetsApi.getCachedData(
+                SHEET_CONFIG.mainSheet,
+                RangeHelper.getParticipantsRange()
+            );
 
-			if (data && data.values) {
-				const extractedParticipants = data.values.slice(1)
-					.filter(row => row && row[1] && row[1].toString().trim() !== '')
-					.map((row, index) => ({
-						id: row[0],
-						name: row[1],
-						img: `${row[0]}.jpg`,
-						row: index + 2
-					}));
-				setParticipants(extractedParticipants);
-			}
-		} catch (err) {
-			console.warn('Ошибка загрузки участников, пробую загрузить из кеша:', err);
-			// Пробуем получить данные из кеша напрямую
-			const cachedData = googleSheetsApi.getCachedData(SHEET_CONFIG.mainSheet, 'A1:N200');
-			if (cachedData && cachedData.values) {
-				const extractedParticipants = cachedData.values.slice(1)
-					.filter(row => row && row[1] && row[1].toString().trim() !== '')
-					.map((row, index) => ({
-						id: row[0],
-						name: row[1],
-						img: `${row[0]}.jpg`,
-						row: index + 2
-					}));
-				setParticipants(extractedParticipants);
-			} else {
-				setParticipants([]);
-			}
-		} finally {
-			setLoading(false);
-		}
-	};
+            if (data && data.values) {
+                const extractedParticipants = data.values.slice(1)
+                    .filter(row => row && row[1] && row[1].toString().trim() !== '')
+                    .map((row, index) => ({
+                        id: row[0],
+                        name: row[1],
+                        img: `${row[0]}.jpg`,
+                        row: index + 2
+                    }));
+                setParticipants(extractedParticipants);
+            } else {
+                setParticipants([]);
+            }
+        } catch (err) {
+            console.warn('Ошибка загрузки участников из кеша:', err);
+            setParticipants([]);
+        }
+    };
 
     const filterParticipantsByRange = (participants, range) => {
         return participants.filter(participant => {
@@ -608,10 +583,7 @@ const ParticipantsPage = ({ section = 'One' }) => {
         console.log(`Комментарий изменен: ${participantId}, ${comment}`);
     };
 
-    if (loading) {
-        return React.createElement(LoadingIndicator, { message: 'Загрузка участников...' });
-    }
-
+    // Убрали условие loading, так как данные уже предзагружены
     const getRangeForSection = (section) => {
         switch (section) {
             case 'One': return SECTION_RANGES.section1;
@@ -646,8 +618,7 @@ const ParticipantsPage = ({ section = 'One' }) => {
 // Компонент страницы всех участников с редактированием оценок
 const AllParticipantsPage = () => {
     const [allParticipants, setAllParticipants] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false); // Изменено на false, т.к. данные уже предзагружены
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -667,114 +638,65 @@ const AllParticipantsPage = () => {
         loadAllParticipants();
     }, []);
 
-    const loadAllParticipants = async () => {
-		let allParticipantsData = [];
-		
-		try {
-			setLoading(true);
+    const loadAllParticipants = () => {
+        let allParticipantsData = [];
+        
+        try {
+            // Используем только предзагруженные данные из кеша
+            for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+                const range = RangeHelper.getSheetRange(sheet);
+                if (!range) {
+                    console.warn(`Не найден диапазон для листа ${sheet}`);
+                    continue;
+                }
+                
+                const cachedData = googleSheetsApi.getCachedData(sheet, range);
+                if (cachedData && cachedData.values) {
+                    const participants = cachedData.values.slice(1)
+                        .filter(row => row && row[1] && row[1].toString().trim() !== '')
+                        .map((row, idx) => ({
+                            id: row[0],
+                            name: row[1],
+                            img: `${row[0]}.jpg`,
+                            row: idx + 2,
+                            sheet,
+                            dataRow: idx + 2,
+                            raw: row,
+                            scores: {
+                                C: row[2] || '',
+                                D: row[3] || '',
+                                E: row[4] || '',
+                                F: row[5] || '',
+                                comment: row[6] || ''
+                            },
+                            checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
+                                const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
+                                acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
+                                return acc;
+                            }, {})
+                        }));
 
-			for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-				try {
-					const range = RangeHelper.getSheetRange(sheet);
-					if (!range) {
-						console.warn(`Не найден диапазон для листа ${sheet}`);
-						continue;
-					}
-					
-					const data = await googleSheetsApi.fetchDataWithCache(
-						sheet, 
-						range, 
-						CACHE_TIMES.allParticipants
-					);
+                    allParticipantsData = allParticipantsData.concat(participants);
+                }
+            }
 
-					if (data && data.values) {
-						const participants = data.values.slice(1)
-							.filter(row => row && row[1] && row[1].toString().trim() !== '')
-							.map((row, idx) => ({
-								id: row[0],
-								name: row[1],
-								img: `${row[0]}.jpg`,
-								row: idx + 2,
-								sheet,
-								dataRow: idx + 2,
-								raw: row,
-								scores: {
-									C: row[2] || '',
-									D: row[3] || '',
-									E: row[4] || '',
-									F: row[5] || '',
-									comment: row[6] || ''
-								},
-								checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
-									const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
-									acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
-									return acc;
-								}, {})
-							}));
-
-						allParticipantsData = allParticipantsData.concat(participants);
-					}
-				} catch (err) {
-					console.warn(`Ошибка загрузки ${sheet}:`, err);
-					// Резервная загрузка из кеша
-					try {
-						const range = RangeHelper.getSheetRange(sheet);
-						if (!range) continue;
-						
-						const cachedData = googleSheetsApi.getCachedData(sheet, range);
-						if (cachedData && cachedData.values) {
-							const participants = cachedData.values.slice(1)
-								.filter(row => row && row[1] && row[1].toString().trim() !== '')
-								.map((row, idx) => ({
-									id: row[0],
-									name: row[1],
-									img: `${row[0]}.jpg`,
-									row: idx + 2,
-									sheet,
-									dataRow: idx + 2,
-									raw: row,
-									scores: {
-										C: row[2] || '',
-										D: row[3] || '',
-										E: row[4] || '',
-										F: row[5] || '',
-										comment: row[6] || ''
-									},
-									checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => {
-										const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0);
-										acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false;
-										return acc;
-									}, {})
-								}));
-							allParticipantsData = allParticipantsData.concat(participants);
-						}
-					} catch (cacheErr) {
-						console.warn(`Ошибка загрузки из кеша для ${sheet}:`, cacheErr);
-					}
-				}
-			}
-
-			setAllParticipants(allParticipantsData);
-			console.log(`Загружено ${allParticipantsData.length} участников`);
-			
-			if (allParticipantsData.length === 0) {
-				console.warn('Не удалось загрузить данные участников. Проверьте подключение к интернету.');
-			}
-		} catch (err) {
-			console.warn('Общая ошибка загрузки всех участников:', err);
-		} finally {
-			setLoading(false);
-		}
-	};
+            setAllParticipants(allParticipantsData);
+            console.log(`Загружено ${allParticipantsData.length} участников из кеша`);
+            
+        } catch (error) {
+            console.error('Ошибка загрузки участников из кеша:', error);
+        }
+    };
 
     const handleParticipantClick = (participant) => {
         setSelectedParticipant(participant);
-        // Загружаем текущие значения оценок
+        // Загружаем текущие значения оценок из данных участника
         setEditingScores(participant.scores);
         setEditingCheckboxes(participant.checkboxes);
         setIsModalOpen(true);
     };
 
+    // ... остальные обработчики без изменений
     const handleImageClick = (participant, e) => {
         if (e) e.stopPropagation();
         setSelectedImageParticipant(participant);
@@ -825,7 +747,7 @@ const AllParticipantsPage = () => {
         }
     };
 
-    // Эффект для обработки ESC
+    // Эффект для обработки ESC без изменений
     useEffect(() => {
         const handleEscKey = (event) => {
             if (event.keyCode === 27) {
@@ -852,10 +774,7 @@ const AllParticipantsPage = () => {
         };
     }, [isImageModalOpen, isModalOpen]);
 
-    if (loading) {
-        return React.createElement(LoadingIndicator, { message: 'Загрузка всех участников...' });
-    }
-
+    // Убрали loading состояние, т.к. данные уже предзагружены
     if (allParticipants.length === 0) {
         return React.createElement('div', { className: 'no-data' },
             React.createElement('p', null, 'Нет участников для отображения')
