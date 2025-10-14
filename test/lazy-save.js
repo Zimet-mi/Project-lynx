@@ -94,6 +94,17 @@ class LazySaveManager {
         }
     }
 
+	// Принудительная обработка очереди
+    async flushQueue() {
+        console.log('🔄 Принудительная обработка очереди...');
+        await this.processQueue();
+    }
+	
+	// Проверка наличия неотправленных данных
+    hasPendingSaves() {
+        return this.queue.size > 0;
+    }
+
     // Обработка очереди отправки на сервер
     async processQueue() {
         if (this.isProcessing || this.queue.size === 0) {

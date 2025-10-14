@@ -1,4 +1,4 @@
-// Основное React приложение Valerie
+// Основное React приложение
 
 const saveImmediately = async (value, column, row, sheetName) => {
     try {
@@ -11,7 +11,66 @@ const saveImmediately = async (value, column, row, sheetName) => {
     }
 };
 
-const { useState, useEffect, useCallback } = React;
+const handleImageError = (e) => {
+    e.target.src = '../card/no-image.jpg';
+    e.target.onerror = null; // предотвращаем бесконечный цикл
+};
+
+const { useState, useEffect, useCallback, useRef } = React;
+
+// Хук useDebounce для управления задержкой сохранения
+const useDebounce = () => {
+    const timeoutsRef = useRef({});
+    const pendingSavesRef = useRef({});
+
+    const debounce = useCallback((key, callback, delay, ...args) => {
+        // Очищаем предыдущий таймаут
+        if (timeoutsRef.current[key]) {
+            clearTimeout(timeoutsRef.current[key]);
+        }
+
+        // Сохраняем callback для возможного принудительного выполнения
+        pendingSavesRef.current[key] = { callback, args };
+
+        // Устанавливаем новый таймаут
+        timeoutsRef.current[key] = setTimeout(() => {
+            callback(...args);
+            delete pendingSavesRef.current[key];
+            delete timeoutsRef.current[key];
+        }, delay);
+    }, []);
+
+    // Принудительно выполнить все ожидающие сохранения
+    const flush = useCallback(() => {
+        Object.entries(timeoutsRef.current).forEach(([key, timeout]) => {
+            clearTimeout(timeout);
+            const pending = pendingSavesRef.current[key];
+            if (pending) {
+                pending.callback(...pending.args);
+            }
+            delete timeoutsRef.current[key];
+            delete pendingSavesRef.current[key];
+        });
+    }, []);
+
+    // Очистить все таймауты без выполнения
+    const cancelAll = useCallback(() => {
+        Object.values(timeoutsRef.current).forEach(clearTimeout);
+        timeoutsRef.current = {};
+        pendingSavesRef.current = {};
+    }, []);
+
+    // Очистить конкретный таймаут
+    const cancel = useCallback((key) => {
+        if (timeoutsRef.current[key]) {
+            clearTimeout(timeoutsRef.current[key]);
+            delete timeoutsRef.current[key];
+            delete pendingSavesRef.current[key];
+        }
+    }, []);
+
+    return { debounce, flush, cancelAll, cancel };
+};
 
 // Компонент загрузки
 const LoadingIndicator = ({ message = 'Загрузка данных...' }) => {
@@ -312,8 +371,8 @@ const EvaluationFields = ({
     );
 };
 
-// Компонент формы оценки
-const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
+// Компонент формы оценки с debounce
+const EvaluationForm = ({ participant, onScoreChange, onCommentChange, debounce }) => {
     const [scores, setScores] = useState({
         C: '', // Костюм
         D: '', // Схожесть  
@@ -327,16 +386,13 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     useEffect(() => {
         const loadCurrentValues = () => {
             try {
-                // Получаем предзагруженные данные для всего листа
                 const cachedData = googleSheetsApi.getCachedData(
                     SHEET_CONFIG.mainSheet,
                     RangeHelper.getParticipantsRange()
                 );
                 
                 if (cachedData && cachedData.values) {
-                    // Находим строку участника в предзагруженных данных
-                    // participant.row - это номер строки в таблице (начинается с 2)
-                    const rowIndex = participant.row - 1; // Преобразуем в индекс массива (0-based)
+                    const rowIndex = participant.row - 1;
                     
                     if (rowIndex >= 0 && rowIndex < cachedData.values.length) {
                         const row = cachedData.values[rowIndex];
@@ -365,28 +421,75 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
         loadCurrentValues();
     }, [participant.row]);
 
-    // Обработчики с вибрацией
-    const handleScoreChange = async (column, value) => {
+    if (!debounce) {
+        console.error('❌ EvaluationForm: debounce функция не передана!');
+        // Можно вернуть fallback или просто использовать сохранение без debounce
+    }
+
+        // Обработчики с debounce
+    const handleScoreChange = (column, value) => {
         setScores(prev => ({ ...prev, [column]: value }));
         telegramApi.hapticFeedback('selection');
-        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
-        onScoreChange?.(participant.id, column, value);
+        
+        if (debounce) {
+            debounce(
+                `score_${participant.id}_${column}`,
+                async (val, col) => {
+                    await saveImmediately(val, col, participant.row, SHEET_CONFIG.mainSheet);
+                    onScoreChange?.(participant.id, col, val);
+                },
+                500,
+                value, column
+            );
+        } else {
+            // Fallback: сохраняем сразу
+            saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+            onScoreChange?.(participant.id, column, value);
+        }
     };
 
-    const handleCommentChange = async (value) => {
+    const handleCommentChange = (value) => {
         setScores(prev => ({ ...prev, comment: value }));
-        await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
-        onCommentChange?.(participant.id, value);
+        
+        if (debounce) {
+            debounce(
+                `comment_${participant.id}`,
+                async (val) => {
+                    await saveImmediately(val, 'G', participant.row, SHEET_CONFIG.mainSheet);
+                    onCommentChange?.(participant.id, val);
+                },
+                1000,
+                value
+            );
+        } else {
+            // Fallback
+            saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
+            onCommentChange?.(participant.id, value);
+        }
     };
 
-    const handleCheckboxChange = async (index, checked) => {
+    const handleCheckboxChange = (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
         telegramApi.hapticFeedback('selection');
+        
         const activePrizes = getActiveSpecialPrizes();
         const prize = activePrizes[index];
         if (prize) {
             const value = checked ? prize.value : '';
-            await saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+            
+            if (debounce) {
+                debounce(
+                    `checkbox_${participant.id}_${index}`,
+                    async (val) => {
+                        await saveImmediately(val, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+                    },
+                    300,
+                    value
+                );
+            } else {
+                // Fallback
+                saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+            }
         }
     };
 
@@ -401,7 +504,7 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
 };
 
 // Компонент карточки участника
-const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
+const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
@@ -456,9 +559,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
                 src: `../card/${participant.img}`,
                 alt: participant.name,
                 className: 'participant-thumbnail',
-                onError: (e) => {
-                    e.target.src = '../card/no-image.jpg';
-                },
+                onError: handleImageError
                 onClick: handleImageClick
             }),
             React.createElement('div', { className: 'participant-info' },
@@ -470,7 +571,8 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
             React.createElement(EvaluationForm, {
                 participant,
                 onScoreChange,
-                onCommentChange
+                onCommentChange,
+				debounce: debounce
             })
         ),
         
@@ -492,9 +594,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange }) => {
                     src: `../card/${participant.img}`,
                     alt: participant.name,
                     className: 'image-modal-img',
-                    onError: (e) => {
-                        e.target.src = '../card/no-image.jpg';
-                    }
+                    onError: handleImageError
                 })
             )
         )
@@ -508,7 +608,8 @@ const AccordionSection = ({
     onScoreChange, 
     onCommentChange,
     isActive,
-    onToggle 
+    onToggle,
+	debounce
 }) => {
     return React.createElement('div', { className: 'accordion-section' },
         React.createElement('button', {
@@ -522,7 +623,8 @@ const AccordionSection = ({
                         key: `${participant.id}-${participant.row}`,
                         participant,
                         onScoreChange,
-                        onCommentChange
+                        onCommentChange,
+						debounce: debounce
                     })
                 ) :
                 React.createElement('div', { className: 'no-participants' },
@@ -533,7 +635,7 @@ const AccordionSection = ({
 };
 
 // Компонент страницы участников
-const ParticipantsPage = ({ section = 'One' }) => {
+const ParticipantsPage = ({ section = 'One', debounce  }) => {
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(false); // Изменено на false
 
@@ -605,7 +707,8 @@ const ParticipantsPage = ({ section = 'One' }) => {
                         key: `${participant.id}-${participant.row}`,
                         participant,
                         onScoreChange: handleScoreChange,
-                        onCommentChange: handleCommentChange
+                        onCommentChange: handleCommentChange,
+                        debounce: debounce
                     })
                 ) :
                 React.createElement('div', { className: 'no-participants' },
@@ -616,7 +719,7 @@ const ParticipantsPage = ({ section = 'One' }) => {
 };
 
 // Компонент страницы всех участников с редактированием оценок
-const AllParticipantsPage = () => {
+const AllParticipantsPage = ({ debounce }) => {
     const [allParticipants, setAllParticipants] = useState([]);
     const [loading, setLoading] = useState(false); // Изменено на false, т.к. данные уже предзагружены
     const [selectedParticipant, setSelectedParticipant] = useState(null);
@@ -633,7 +736,12 @@ const AllParticipantsPage = () => {
         comment: ''
     });
     const [editingCheckboxes, setEditingCheckboxes] = useState({});
-
+	
+	// Проверяем, что debounce функция передана
+    if (!debounce) {
+        console.warn('⚠️ AllParticipantsPage: debounce функция не передана, используется прямое сохранение');
+    }
+	
     useEffect(() => {
         loadAllParticipants();
     }, []);
@@ -719,23 +827,49 @@ const AllParticipantsPage = () => {
         e.stopPropagation();
     };
 
-    // Обработчики для формы редактирования с немедленным сохранением
-    const handleScoreChange = async (column, value) => {
+	// Обработчики для формы редактирования с debounce
+    const handleScoreChange = (column, value) => {
         if (!selectedParticipant) return;
         
         setEditingScores(prev => ({ ...prev, [column]: value }));
         telegramApi.hapticFeedback('selection');
-        await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+        
+        if (debounce) {
+            debounce(
+                `modal_score_${selectedParticipant.id}_${column}`,
+                async (val, col) => {
+                    await saveImmediately(val, col, selectedParticipant.dataRow, selectedParticipant.sheet);
+                },
+                500, // 500ms для селектов
+                value, column
+            );
+        } else {
+            // Fallback: сохраняем сразу
+            saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+        }
     };
 
-    const handleCommentChange = async (value) => {
+    const handleCommentChange = (value) => {
         if (!selectedParticipant) return;
         
         setEditingScores(prev => ({ ...prev, comment: value }));
-        await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+        
+        if (debounce) {
+            debounce(
+                `modal_comment_${selectedParticipant.id}`,
+                async (val) => {
+                    await saveImmediately(val, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+                },
+                1000, // 1 секунда для комментариев
+                value
+            );
+        } else {
+            // Fallback
+            saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+        }
     };
 
-    const handleCheckboxChange = async (index, checked) => {
+    const handleCheckboxChange = (index, checked) => {
         if (!selectedParticipant) return;
         
         setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
@@ -743,7 +877,20 @@ const AllParticipantsPage = () => {
         const prize = activePrizes[index];
         if (prize) {
             const value = checked ? prize.value : '';
-            await saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+            
+            if (debounce) {
+                debounce(
+                    `modal_checkbox_${selectedParticipant.id}_${index}`,
+                    async (val) => {
+                        await saveImmediately(val, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                    },
+                    300, // 300ms для чекбоксов
+                    value
+                );
+            } else {
+                // Fallback
+                saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+            }
         }
     };
 
@@ -817,9 +964,7 @@ const AllParticipantsPage = () => {
                                         src: `../card/${participant.img}`,
                                         alt: participant.name,
                                         className: 'participant-preview-img-small',
-                                        onError: (e) => {
-                                            e.target.src = '../card/no-image.jpg';
-                                        },
+                                        onError: handleImageError,
                                         onClick: (e) => handleImageClick(participant, e)
                                     })
                                 ),
@@ -866,9 +1011,7 @@ const AllParticipantsPage = () => {
 						src: `../card/${selectedParticipant.img}`,
 						alt: selectedParticipant.name,
 						className: 'participant-modal-img',
-						onError: (e) => {
-							e.target.src = '../card/no-image.jpg';
-						},
+						onError: handleImageError,
 						onClick: () => {
 							setSelectedImageParticipant(selectedParticipant);
 							setIsImageModalOpen(true);
@@ -917,9 +1060,7 @@ const AllParticipantsPage = () => {
                     src: `../card/${selectedImageParticipant.img}`,
                     alt: selectedImageParticipant.name,
                     className: 'image-modal-img',
-                    onError: (e) => {
-                        e.target.src = '../card/no-image.jpg';
-                    }
+                    onError: handleImageError
                 })
             )
         )
@@ -1057,9 +1198,7 @@ const ScheduleTable = () => {
                     src: `../card/${selectedImage}.jpg`,
                     alt: `Участник ${selectedImage}`,
                     className: 'image-modal-img',
-                    onError: (e) => {
-                        e.target.src = '../card/no-image.jpg';
-                    }
+                    onError: handleImageError
                 })
             )
         )
@@ -1225,9 +1364,7 @@ const ResultsAccordion = () => {
                     src: `../card/${selectedImage}.jpg`,
                     alt: `Участник ${selectedImage}`,
                     className: 'image-modal-img',
-                    onError: (e) => {
-                        e.target.src = '../card/no-image.jpg';
-                    }
+                    onError: handleImageError
                 })
             )
         )
@@ -1247,6 +1384,40 @@ const App = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [preloadComplete, setPreloadComplete] = useState(false);
     const [telegramReady, setTelegramReady] = useState(false);
+	
+	// Глобальный экземпляр useDebounce для всего приложения
+	const globalDebounce = useDebounce();
+	
+	// Защита при закрытии страницы
+    useEffect(() => {
+        const handleBeforeUnload = (e) => {
+            // Проверяем, есть ли неотправленные данные в LazySaveManager
+            if (lazySaveManager.hasPendingSaves()) {
+                e.preventDefault();
+                e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите уйти?';
+                return 'У вас есть несохраненные изменения. Вы уверены, что хотите уйти?';
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            // При скрытии страницы принудительно сохраняем все ожидающие изменения
+            if (document.hidden) {
+                console.log('📱 Страница скрыта, принудительно сохраняем данные...');
+                lazySaveManager.flushQueue();
+            }
+        };
+
+        // Обработчик когда пользователь пытается закрыть/перезагрузить страницу
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        
+        // Обработчик когда пользователь переключается на другую вкладку/приложение
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []);
 
     // Инициализация Telegram
     useEffect(() => {
@@ -1324,36 +1495,45 @@ const App = () => {
     };
 
     const renderContent = () => {
-        if (isLoading || !preloadComplete) {
-            return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
-        }
+		if (isLoading || !preloadComplete) {
+			return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
+		}
 
 		if (!activeTab) {
-            return React.createElement('div', { 
-                className: 'no-data',
-                style: { 
-                    padding: '100px 20px', 
-                    textAlign: 'center', 
-                    color: '#6c757d' 
-                } 
-            }, 'Выберите раздел для начала работы');
-        }
+			return React.createElement('div', { 
+				className: 'no-data',
+				style: { 
+					padding: '100px 20px', 
+					textAlign: 'center', 
+					color: '#6c757d' 
+				} 
+			}, 'Выберите раздел для начала работы');
+		}
 		
-        switch (activeTab) {
-            case 'One':
-            case 'Two':
-            case 'Three':
-                return React.createElement(ParticipantsPage, { section: activeTab, key: activeTab });
-            case 'all':
-                return React.createElement(AllParticipantsPage);
-            case 'table':
-                return React.createElement(SchedulePage);
-            case 'red':
-                return React.createElement(ResultsPage);
-            default:
-                return React.createElement(ParticipantsPage, { section: 'One' });
-        }
-    };
+		switch (activeTab) {
+			case 'One':
+			case 'Two':
+			case 'Three':
+				return React.createElement(ParticipantsPage, { 
+					section: activeTab, 
+					key: activeTab,
+					debounce: globalDebounce.debounce 
+				});
+			case 'all':
+				return React.createElement(AllParticipantsPage, {
+					debounce: globalDebounce.debounce
+				});
+			case 'table':
+				return React.createElement(SchedulePage);
+			case 'red':
+				return React.createElement(ResultsPage);
+			default:
+				return React.createElement(ParticipantsPage, { 
+					section: 'One',
+					debounce: globalDebounce.debounce 
+				});
+		}
+	};
 
     return React.createElement('div', { className: 'main' },
         React.createElement(Header, {
