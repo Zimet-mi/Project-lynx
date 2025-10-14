@@ -288,27 +288,27 @@ const EvaluationFields = ({
                     value: scores.comment || '',
                     onChange: (e) => onCommentChange(e.target.value),
                     rows: 3,
-                    placeholder: 'Введите комментарий...'
+                    placeholder: 'комментарий'
                 })
             )
         ),
 
         // Чекбоксы спецпризов
-		React.createElement('div', { className: 'checkbox-group' },
-			...getActiveSpecialPrizes().map((prize, index) => 
-				React.createElement('div', { key: prize.column, className: 'checkbox-row' },
-					React.createElement('label', { 
-						htmlFor: `checkbox-${participantId}-${prize.column}`
-					}, prize.label),
-					React.createElement('input', {
-						type: 'checkbox',
-						id: `checkbox-${participantId}-${prize.column}`,
-						checked: checkboxes[index] || false,
-						onChange: (e) => onCheckboxChange(index, e.target.checked)
-					})
-				)
-			)
-		)
+        React.createElement('div', { className: 'checkbox-group' },
+            ...getActiveSpecialPrizes().map((prize, index) => 
+                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
+                    React.createElement('label', { 
+                        htmlFor: `checkbox-${participantId}-${prize.column}`
+                    }, prize.label),
+                    React.createElement('input', {
+                        type: 'checkbox',
+                        id: `checkbox-${participantId}-${prize.column}`,
+                        checked: checkboxes[index] || false,
+                        onChange: (e) => onCheckboxChange(index, e.target.checked)
+                    })
+                )
+            )
+        )
     );
 };
 

@@ -762,6 +762,17 @@ img {
     resize: vertical;
 }
 
+/* Стили для плейсхолдера комментария */
+.comment-textarea::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+    font-style: italic;
+    opacity: 1; /* Для браузеров, которые уменьшают opacity у плейсхолдера */
+}
+
+.comment-textarea:focus::placeholder {
+    color: rgba(0, 0, 0, 0.3);
+}
+
 .all-participants-table th:nth-child(5) {
     position: relative;
 }
