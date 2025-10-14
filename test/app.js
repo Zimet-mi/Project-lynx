@@ -366,70 +366,29 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     }, [participant.row]);
 
     // Обработчики с вибрацией
-    const [timeouts, setTimeouts] = useState({});
+    const handleScoreChange = async (column, value) => {
+        setScores(prev => ({ ...prev, [column]: value }));
+        telegramApi.hapticFeedback('selection');
+        await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+        onScoreChange?.(participant.id, column, value);
+    };
 
-	const handleScoreChange = async (column, value) => {
-		setScores(prev => ({ ...prev, [column]: value }));
-		telegramApi.hapticFeedback('impact', 'soft');
-		
-		// Дебаунс для оценок
-		if (timeouts[column]) {
-			clearTimeout(timeouts[column]);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
-			onScoreChange?.(participant.id, column, value);
-		}, 300);
-		
-		setTimeouts(prev => ({ ...prev, [column]: newTimeout }));
-	};
+    const handleCommentChange = async (value) => {
+        setScores(prev => ({ ...prev, comment: value }));
+        await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
+        onCommentChange?.(participant.id, value);
+    };
 
-	const handleCommentChange = async (value) => {
-		setScores(prev => ({ ...prev, comment: value }));
-		
-		// Дебаунс для комментария
-		if (timeouts.comment) {
-			clearTimeout(timeouts.comment);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
-			onCommentChange?.(participant.id, value);
-		}, 500);
-		
-		setTimeouts(prev => ({ ...prev, comment: newTimeout }));
-	};
-
-	const handleCheckboxChange = async (index, checked) => {
-		setCheckboxes(prev => ({ ...prev, [index]: checked }));
-		telegramApi.hapticFeedback('impact', 'soft');
-		
-		const checkboxKey = `checkbox_${index}`;
-		if (timeouts[checkboxKey]) {
-			clearTimeout(timeouts[checkboxKey]);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			const activePrizes = getActiveSpecialPrizes();
-			const prize = activePrizes[index];
-			if (prize) {
-				const value = checked ? prize.value : '';
-				await saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
-			}
-		}, 300);
-		
-		setTimeouts(prev => ({ ...prev, [checkboxKey]: newTimeout }));
-	};
-	
-	// Очистка таймеров при размонтировании
-	useEffect(() => {
-		return () => {
-			Object.values(timeouts).forEach(timeout => {
-				if (timeout) clearTimeout(timeout);
-			});
-		};
-	}, [timeouts]);
+    const handleCheckboxChange = async (index, checked) => {
+        setCheckboxes(prev => ({ ...prev, [index]: checked }));
+        telegramApi.hapticFeedback('selection');
+        const activePrizes = getActiveSpecialPrizes();
+        const prize = activePrizes[index];
+        if (prize) {
+            const value = checked ? prize.value : '';
+            await saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+        }
+    };
 
     return React.createElement(EvaluationFields, {
         scores,
@@ -761,72 +720,32 @@ const AllParticipantsPage = () => {
     };
 
     // Обработчики для формы редактирования с немедленным сохранением
-    const [modalTimeouts, setModalTimeouts] = useState({});
+    const handleScoreChange = async (column, value) => {
+        if (!selectedParticipant) return;
+        
+        setEditingScores(prev => ({ ...prev, [column]: value }));
+        telegramApi.hapticFeedback('selection');
+        await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+    };
 
-	const handleScoreChange = async (column, value) => {
-		if (!selectedParticipant) return;
-		
-		setEditingScores(prev => ({ ...prev, [column]: value }));
-		telegramApi.hapticFeedback('impact', 'soft');
-		
-		if (modalTimeouts[column]) {
-			clearTimeout(modalTimeouts[column]);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
-		}, 300);
-		
-		setModalTimeouts(prev => ({ ...prev, [column]: newTimeout }));
-	};
+    const handleCommentChange = async (value) => {
+        if (!selectedParticipant) return;
+        
+        setEditingScores(prev => ({ ...prev, comment: value }));
+        await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+    };
 
-	const handleCommentChange = async (value) => {
-		if (!selectedParticipant) return;
-		
-		setEditingScores(prev => ({ ...prev, comment: value }));
-		
-		if (modalTimeouts.comment) {
-			clearTimeout(modalTimeouts.comment);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
-		}, 500);
-		
-		setModalTimeouts(prev => ({ ...prev, comment: newTimeout }));
-	};
-
-	const handleCheckboxChange = async (index, checked) => {
-		if (!selectedParticipant) return;
-		
-		setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
-		
-		const checkboxKey = `checkbox_${index}`;
-		if (modalTimeouts[checkboxKey]) {
-			clearTimeout(modalTimeouts[checkboxKey]);
-		}
-		
-		const newTimeout = setTimeout(async () => {
-			const activePrizes = getActiveSpecialPrizes();
-			const prize = activePrizes[index];
-			if (prize) {
-				const value = checked ? prize.value : '';
-				await saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
-			}
-		}, 300);
-		
-		setModalTimeouts(prev => ({ ...prev, [checkboxKey]: newTimeout }));
-	};
-
-	// Очистка таймеров при закрытии модального окна
-	useEffect(() => {
-		if (!isModalOpen) {
-			Object.values(modalTimeouts).forEach(timeout => {
-				if (timeout) clearTimeout(timeout);
-			});
-			setModalTimeouts({});
-		}
-	}, [isModalOpen, modalTimeouts]);
+    const handleCheckboxChange = async (index, checked) => {
+        if (!selectedParticipant) return;
+        
+        setEditingCheckboxes(prev => ({ ...prev, [index]: checked }));
+        const activePrizes = getActiveSpecialPrizes();
+        const prize = activePrizes[index];
+        if (prize) {
+            const value = checked ? prize.value : '';
+            await saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+        }
+    };
 
     // Эффект для обработки ESC без изменений
     useEffect(() => {
@@ -1449,35 +1368,6 @@ const App = () => {
         )
     );
 };
-
-async saveData(value, column, row, sheetName) {
-    try {
-        const params = new URLSearchParams({
-            column: column,
-            row: row,
-            value: value,
-            sheet: sheetName
-        });
-
-        const response = await axios.get(`${GOOGLE_SCRIPT_URLS.saveData}?${params.toString()}`, {
-            timeout: 10000 // 10 секунд таймаут
-        });
-        
-        if (response.status === 200) {
-            console.log(`✅ Данные сохранены: ${sheetName} ${column}${row} = ${value}`);
-            return true;
-        } else {
-            console.error('❌ Ошибка сохранения данных:', response.status);
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Ошибка сохранения данных:', error);
-        if (error.response && error.response.status === 404) {
-            console.error('⚠️ URL Google Apps Script не найден. Проверьте GOOGLE_SCRIPT_URLS');
-        }
-        return false;
-    }
-}
 
 // Рендеринг приложения
 const root = ReactDOM.createRoot(document.getElementById('root'));

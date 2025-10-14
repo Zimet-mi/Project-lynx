@@ -96,53 +96,39 @@ class LazySaveManager {
 
     // Обработка очереди отправки на сервер
     async processQueue() {
-		if (this.isProcessing || this.queue.size === 0) {
-			return;
-		}
+        if (this.isProcessing || this.queue.size === 0) {
+            return;
+        }
 
-		this.isProcessing = true;
-		console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
+        this.isProcessing = true;
+        console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
 
-		// Создаем копию текущей очереди для обработки
-		const currentQueue = new Map(this.queue);
-		
-		const promises = [];
+        const promises = [];
 
-		// Обрабатываем все элементы очереди
-		for (const [key, data] of currentQueue) {
-			promises.push(
-				this.sendToServer(data, key)
-					.then(() => {
-						// Успешно отправлено - удаляем из очереди и localStorage
-						// Только если данные не изменились во время отправки
-						const currentData = this.queue.get(key);
-						if (currentData && currentData.timestamp === data.timestamp) {
-							this.removeFromQueue(key);
-							console.log(`✅ Успешно отправлено: ${key}`);
-						} else {
-							console.log(`🔄 Данные изменились во время отправки ${key}, оставляю в очереди`);
-						}
-					})
-					.catch(error => {
-						console.warn(`❌ Ошибка отправки ${key}:`, error);
-						// Не удаляем из очереди - будем пытаться снова
-					})
-			);
-		}
+        // Обрабатываем все элементы очереди
+        for (const [key, data] of this.queue) {
+            promises.push(
+                this.sendToServer(data, key)
+                    .then(() => {
+                        // Успешно отправлено - удаляем из очереди и localStorage
+                        this.removeFromQueue(key);
+                        console.log(`✅ Успешно отправлено: ${key}`);
+                    })
+                    .catch(error => {
+                        console.warn(`❌ Ошибка отправки ${key}:`, error);
+                        // Не удаляем из очереди - будем пытаться снова
+                    })
+            );
+        }
 
-		// Ждем завершения всех попыток отправки
-		await Promise.allSettled(promises);
+        // Ждем завершения всех попыток отправки
+        await Promise.allSettled(promises);
 
-		this.isProcessing = false;
-		this.lastProcessTime = Date.now();
-		
-		console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
-		
-		// Если в очереди еще есть элементы, планируем следующую обработку
-		if (this.queue.size > 0) {
-			setTimeout(() => this.processQueue(), 1000);
-		}
-	}
+        this.isProcessing = false;
+        this.lastProcessTime = Date.now();
+        
+        console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
+    }
 
     // Отправка данных на сервер
     async sendToServer(data, key) {
