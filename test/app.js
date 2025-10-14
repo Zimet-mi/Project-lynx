@@ -283,26 +283,13 @@ const EvaluationFields = ({
         React.createElement('div', { className: 'textarea-group' },
             React.createElement('div', { className: 'textarea-row' },
                 React.createElement('div', null, 'Комментарий'),
-                React.createElement('div', { className: 'textarea-wrapper' },
-                    showCommentPlaceholder && 
-                        React.createElement('div', { 
-                            className: 'comment-placeholder',
-                            onClick: () => {
-                                // При клике на плейсхолдер фокусируем textarea
-                                const textarea = document.querySelector(`#comment-${participantId}`);
-                                if (textarea) textarea.focus();
-                            }
-                        }, 'комментарий'),
-                    React.createElement('textarea', {
-                        id: `comment-${participantId}`,
-                        className: 'data-input input-field comment-textarea',
-                        value: scores.comment || '',
-                        onChange: (e) => onCommentChange(e.target.value),
-                        onFocus: handleCommentFocus,
-                        onBlur: handleCommentBlur,
-                        rows: 3
-                    })
-                )
+                React.createElement('textarea', {
+                    className: 'data-input input-field',
+                    value: scores.comment || '',
+                    onChange: (e) => onCommentChange(e.target.value),
+                    rows: 3,
+                    placeholder: 'Введите комментарий...'
+                })
             )
         ),
 
@@ -381,20 +368,20 @@ const EvaluationForm = ({ participant, onScoreChange, onCommentChange }) => {
     // Обработчики с вибрацией
     const handleScoreChange = async (column, value) => {
         setScores(prev => ({ ...prev, [column]: value }));
-        telegramApi.hapticFeedback('impact', 'soft');
+        telegramApi.hapticFeedback('selection');
         await saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
         onScoreChange?.(participant.id, column, value);
     };
 
-	const handleCommentChange = async (value) => {
-		setScores(prev => ({ ...prev, comment: value }));
-		await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
-		onCommentChange?.(participant.id, value);
-	};
+    const handleCommentChange = async (value) => {
+        setScores(prev => ({ ...prev, comment: value }));
+        await saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
+        onCommentChange?.(participant.id, value);
+    };
 
     const handleCheckboxChange = async (index, checked) => {
         setCheckboxes(prev => ({ ...prev, [index]: checked }));
-        telegramApi.hapticFeedback('impact', 'soft');
+        telegramApi.hapticFeedback('selection');
         const activePrizes = getActiveSpecialPrizes();
         const prize = activePrizes[index];
         if (prize) {
@@ -742,11 +729,11 @@ const AllParticipantsPage = () => {
     };
 
     const handleCommentChange = async (value) => {
-		if (!selectedParticipant) return;
-		
-		setEditingScores(prev => ({ ...prev, comment: value }));
-		await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
-	};
+        if (!selectedParticipant) return;
+        
+        setEditingScores(prev => ({ ...prev, comment: value }));
+        await saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+    };
 
     const handleCheckboxChange = async (index, checked) => {
         if (!selectedParticipant) return;

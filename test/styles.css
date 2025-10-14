@@ -762,50 +762,6 @@ img {
     resize: vertical;
 }
 
-/* Стили для плейсхолдера комментария */
-.textarea-wrapper {
-    position: relative;
-    width: 100%;
-}
-
-.comment-placeholder {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    color: rgba(0, 0, 0, 0.4);
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 1;
-    user-select: none;
-    font-style: italic;
-}
-
-.comment-textarea {
-    position: relative;
-    z-index: 2;
-    background: transparent;
-    width: 100%;
-    min-height: 80px;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-    resize: vertical;
-    box-sizing: border-box;
-}
-
-.comment-textarea:focus {
-    outline: none;
-    border-color: #1976d2;
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
-}
-
-/* Убедитесь, что контейнер textarea имеет правильное позиционирование */
-.textarea-row {
-    position: relative;
-}
-
 .all-participants-table th:nth-child(5) {
     position: relative;
 }
