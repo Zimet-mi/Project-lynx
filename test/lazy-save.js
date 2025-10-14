@@ -1,6 +1,11 @@
 // Модуль ленивого сохранения с резервным копированием в localStorage
 // Всегда пишем в localStorage мгновенно, отправляем на сервер в фоне
 
+const LAZY_SAVE_CONFIG = {
+    processingInterval: 5000, // Интервал проверки очереди (5 секунд)
+    dataMaxAge: 24 * 60 * 60 * 1000 // Время жизни данных в localStorage (24 часа)
+};
+
 class LazySaveManager {
     constructor() {
         this.queue = new Map(); // Очередь для отправки на сервер
@@ -147,6 +152,12 @@ class LazySaveManager {
     // Отправка данных на сервер
     async sendToServer(data, key) {
         return new Promise((resolve, reject) => {
+            // Проверяем, существует ли googleSheetsApi
+            if (typeof googleSheetsApi === 'undefined' || !googleSheetsApi.saveData) {
+                reject(new Error('googleSheetsApi не доступен'));
+                return;
+            }
+
             // Используем существующий API для отправки
             googleSheetsApi.saveData(data.value, data.column, data.row, data.sheetName)
                 .then(success => {
@@ -289,13 +300,18 @@ class LazySaveManager {
     }
 }
 
-// Создаем единственный экземпляр менеджера
 const lazySaveManager = new LazySaveManager();
 
 // Восстанавливаем очередь при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
+function initLazySave() {
     lazySaveManager.restoreQueueFromLocalStorage();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLazySave);
+} else {
+    initLazySave();
+}
 
 // Также восстанавливаем если DOM уже загружен
 if (document.readyState === 'loading') {
