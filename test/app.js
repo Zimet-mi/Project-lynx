@@ -259,6 +259,18 @@ const EvaluationFields = ({
     participantId = '',
     compact = false
 }) => {
+    const [isCommentFocused, setIsCommentFocused] = useState(false);
+
+    const handleCommentFocus = () => {
+        setIsCommentFocused(true);
+    };
+
+    const handleCommentBlur = () => {
+        setIsCommentFocused(false);
+    };
+
+    const showCommentPlaceholder = !scores.comment && !isCommentFocused;
+
     return React.createElement('div', { className: `evaluation-form ${compact ? 'compact' : ''}` },
         // Оценки
         React.createElement('div', { className: 'select-group' },
@@ -307,21 +319,21 @@ const EvaluationFields = ({
         ),
 
         // Чекбоксы спецпризов
-		React.createElement('div', { className: 'checkbox-group' },
-			...getActiveSpecialPrizes().map((prize, index) => 
-				React.createElement('div', { key: prize.column, className: 'checkbox-row' },
-					React.createElement('label', { 
-						htmlFor: `checkbox-${participantId}-${prize.column}`
-					}, prize.label),
-					React.createElement('input', {
-						type: 'checkbox',
-						id: `checkbox-${participantId}-${prize.column}`,
-						checked: checkboxes[index] || false,
-						onChange: (e) => onCheckboxChange(index, e.target.checked)
-					})
-				)
-			)
-		)
+        React.createElement('div', { className: 'checkbox-group' },
+            ...getActiveSpecialPrizes().map((prize, index) => 
+                React.createElement('div', { key: prize.column, className: 'checkbox-row' },
+                    React.createElement('label', { 
+                        htmlFor: `checkbox-${participantId}-${prize.column}`
+                    }, prize.label),
+                    React.createElement('input', {
+                        type: 'checkbox',
+                        id: `checkbox-${participantId}-${prize.column}`,
+                        checked: checkboxes[index] || false,
+                        onChange: (e) => onCheckboxChange(index, e.target.checked)
+                    })
+                )
+            )
+        )
     );
 };
 
@@ -741,7 +753,7 @@ const AllParticipantsPage = () => {
         await saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
     };
 
-    const handleCommentChange = async (value) => {
+	const handleCommentChange = async (value) => {
 		if (!selectedParticipant) return;
 		
 		setEditingScores(prev => ({ ...prev, comment: value }));
