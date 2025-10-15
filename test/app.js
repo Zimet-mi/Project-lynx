@@ -559,7 +559,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
                 src: `../card/${participant.img}`,
                 alt: participant.name,
                 className: 'participant-thumbnail',
-                onError: handleImageError
+                onError: handleImageError,
                 onClick: handleImageClick
             }),
             React.createElement('div', { className: 'participant-info' },
