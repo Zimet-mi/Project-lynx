@@ -107,39 +107,49 @@ class LazySaveManager {
 
     // Обработка очереди отправки на сервер
     async processQueue() {
-        if (this.isProcessing || this.queue.size === 0) {
-            return;
-        }
+		if (this.isProcessing || this.queue.size === 0) {
+			return;
+		}
 
-        this.isProcessing = true;
-        console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
+		this.isProcessing = true;
+		console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
 
-        const promises = [];
+		try {
+			// Обрабатываем очередь ПОСЛЕДОВАТЕЛЬНО, а не параллельно
+			const keys = Array.from(this.queue.keys());
+			
+			for (const key of keys) {
+				const data = this.queue.get(key);
+				if (!data) continue;
 
-        // Обрабатываем все элементы очереди
-        for (const [key, data] of this.queue) {
-            promises.push(
-                this.sendToServer(data, key)
-                    .then(() => {
-                        // Успешно отправлено - удаляем из очереди и localStorage
-                        this.removeFromQueue(key);
-                        console.log(`✅ Успешно отправлено: ${key}`);
-                    })
-                    .catch(error => {
-                        console.warn(`❌ Ошибка отправки ${key}:`, error);
-                        // Не удаляем из очереди - будем пытаться снова
-                    })
-            );
-        }
-
-        // Ждем завершения всех попыток отправки
-        await Promise.allSettled(promises);
-
-        this.isProcessing = false;
-        this.lastProcessTime = Date.now();
-        
-        console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
-    }
+				try {
+					await this.sendToServer(data, key);
+					
+					// Проверяем, что данные не были обновлены во время отправки
+					const currentData = this.queue.get(key);
+					if (currentData && currentData.timestamp === data.timestamp) {
+						// Только если timestamp совпадает - удаляем из очереди
+						this.removeFromQueue(key);
+						console.log(`✅ Успешно отправлено: ${key}`);
+					} else {
+						console.log(`🔄 Данные были обновлены во время отправки: ${key}`);
+						// Не удаляем - новые данные будут обработаны в следующем цикле
+					}
+				} catch (error) {
+					console.warn(`❌ Ошибка отправки ${key}:`, error);
+					// При ошибке прерываем обработку для этого ключа, но продолжаем для остальных
+					continue;
+				}
+			}
+		} catch (error) {
+			console.error('❌ Критическая ошибка обработки очереди:', error);
+		} finally {
+			this.isProcessing = false;
+			this.lastProcessTime = Date.now();
+			
+			console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
+		}
+	}
 
     // Отправка данных на сервер
     async sendToServer(data, key) {
