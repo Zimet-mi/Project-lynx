@@ -72,6 +72,41 @@ const useDebounce = () => {
     return { debounce, flush, cancelAll, cancel };
 };
 
+// Компонент LazyImage для отложенной загрузки изображений
+const LazyImage = ({ src, alt, className, onClick, onError }) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [imageSrc, setImageSrc] = useState('../card/no-image.jpg'); // Плейсхолдер по умолчанию
+    const [hasError, setHasError] = useState(false);
+
+    useEffect(() => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+            setImageSrc(src);
+            setIsLoaded(true);
+        };
+        img.onerror = () => {
+            setHasError(true);
+            setIsLoaded(true);
+            if (onError) {
+                onError({ target: img });
+            }
+        };
+    }, [src, onError]);
+
+    return React.createElement('img', {
+        src: hasError ? '../card/no-image.jpg' : imageSrc,
+        alt: alt,
+        className: `${className} ${isLoaded ? 'loaded' : 'loading'}`,
+        onClick: onClick,
+        onError: hasError ? null : onError, // Предотвращаем бесконечный цикл ошибок
+        style: { 
+            opacity: isLoaded ? 1 : 0.7,
+            transition: 'opacity 0.3s ease-in-out'
+        }
+    });
+};
+
 // Компонент загрузки
 const LoadingIndicator = ({ message = 'Загрузка данных...' }) => {
     return React.createElement('div', { className: 'preload-indicator' },
@@ -555,13 +590,13 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
             className: 'participant-header',
             onClick: handleToggle
         },
-            React.createElement('img', {
-                src: `../card/${participant.img}`,
-                alt: participant.name,
-                className: 'participant-thumbnail',
-                onError: handleImageError,
-                onClick: handleImageClick
-            }),
+            React.createElement(LazyImage, {
+				src: `../card/${participant.img}`,
+				alt: participant.name,
+				className: 'participant-thumbnail',
+				onError: handleImageError,
+				onClick: handleImageClick
+			})
             React.createElement('div', { className: 'participant-info' },
                 React.createElement('div', { className: 'participant-name' }, participant.name),
                 React.createElement('div', { className: 'participant-id' }, `Номер: ${participant.id}`)
@@ -590,12 +625,13 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement('img', {
-                    src: `../card/${participant.img}`,
-                    alt: participant.name,
-                    className: 'image-modal-img',
-                    onError: handleImageError
-                })
+				React.createElement(LazyImage, {
+					src: `../card/${participant.img}`,
+					alt: participant.name,
+					className: 'participant-thumbnail',
+					onError: handleImageError,
+					onClick: handleImageClick
+				})
             )
         )
     );
@@ -960,11 +996,11 @@ const AllParticipantsPage = ({ debounce }) => {
                                 style: { cursor: 'pointer' }
                             },
                                 React.createElement('td', null,
-                                    React.createElement('img', {
-                                        src: `../card/${participant.img}`,
-                                        alt: participant.name,
-                                        className: 'participant-preview-img-small',
-                                        onError: handleImageError,
+                                    React.createElement(LazyImage, {
+										src: `../card/${participant.img}`,
+										alt: participant.name,
+										className: 'participant-thumbnail',
+										onError: handleImageError,
                                         onClick: (e) => handleImageClick(participant, e)
                                     })
                                 ),
@@ -1007,10 +1043,10 @@ const AllParticipantsPage = ({ debounce }) => {
 				
 				// Заголовок с информацией об участнике
 				React.createElement('div', { className: 'participant-modal-header' },
-					React.createElement('img', {
-						src: `../card/${selectedParticipant.img}`,
-						alt: selectedParticipant.name,
-						className: 'participant-modal-img',
+					React.createElement(LazyImage, {
+						src: `../card/${participant.img}`,
+						alt: participant.name,
+						className: 'participant-thumbnail',
 						onError: handleImageError,
 						onClick: () => {
 							setSelectedImageParticipant(selectedParticipant);
@@ -1056,12 +1092,13 @@ const AllParticipantsPage = ({ debounce }) => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement('img', {
-                    src: `../card/${selectedImageParticipant.img}`,
-                    alt: selectedImageParticipant.name,
-                    className: 'image-modal-img',
-                    onError: handleImageError
-                })
+                React.createElement(LazyImage, {
+					src: `../card/${participant.img}`,
+					alt: participant.name,
+					className: 'participant-thumbnail',
+					onError: handleImageError,
+					onClick: handleImageClick
+				})
             )
         )
     );
@@ -1194,12 +1231,13 @@ const ScheduleTable = () => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement('img', {
-                    src: `../card/${selectedImage}.jpg`,
-                    alt: `Участник ${selectedImage}`,
-                    className: 'image-modal-img',
-                    onError: handleImageError
-                })
+                React.createElement(LazyImage, {
+					src: `../card/${participant.img}`,
+					alt: participant.name,
+					className: 'participant-thumbnail',
+					onError: handleImageError,
+					onClick: handleImageClick
+				})
             )
         )
     );
@@ -1360,12 +1398,13 @@ const ResultsAccordion = () => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement('img', {
-                    src: `../card/${selectedImage}.jpg`,
-                    alt: `Участник ${selectedImage}`,
-                    className: 'image-modal-img',
-                    onError: handleImageError
-                })
+                React.createElement(LazyImage, {
+					src: `../card/${participant.img}`,
+					alt: participant.name,
+					className: 'participant-thumbnail',
+					onError: handleImageError,
+					onClick: handleImageClick
+				})
             )
         )
     );
@@ -1450,6 +1489,83 @@ const App = () => {
 
     // Предзагрузка данных
 	useEffect(() => {
+		const checkCachedData = () => {
+			try {
+				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+					const range = RangeHelper.getSheetRange(sheet);
+					if (range) {
+						const cacheKey = `data_${sheet}_${range}`;
+						const cachedData = localStorage.getItem(cacheKey);
+						if (cachedData) {
+							return true;
+						}
+					}
+				}
+				return false;
+			} catch (error) {
+				return false;
+			}
+		};
+		
+		// Предзагрузка критических изображений
+		const preloadCriticalImages = async () => {
+			const criticalImages = [
+				'../card/no-image.jpg'
+			];
+			
+			// Добавляем первые 5 изображений из каждой секции если данные уже загружены
+			try {
+				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+					const range = RangeHelper.getSheetRange(sheet);
+					if (range) {
+						const cachedData = googleSheetsApi.getCachedData(sheet, range);
+						if (cachedData && cachedData.values) {
+							const firstParticipants = cachedData.values.slice(1, 6) // первые 5 участников
+								.filter(row => row && row[0])
+								.map(row => `../card/${row[0]}.jpg`);
+							
+							criticalImages.push(...firstParticipants);
+						}
+					}
+				}
+			} catch (error) {
+				console.warn('Ошибка при определении критических изображений:', error);
+			}
+			
+			console.log('🖼️ Предзагрузка критических изображений:', criticalImages);
+			
+			return Promise.all(
+				criticalImages.map(src => {
+					return new Promise((resolve) => {
+						const img = new Image();
+						img.src = src;
+						img.onload = resolve;
+						img.onerror = resolve; // Не блокируем загрузку при ошибках
+					});
+				})
+			);
+		};
+
+		// Функция проверки кешированных данных
+		const checkCachedData = () => {
+			try {
+				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+					const range = RangeHelper.getSheetRange(sheet);
+					if (range) {
+						const cacheKey = `data_${sheet}_${range}`;
+						const cachedData = localStorage.getItem(cacheKey);
+						if (cachedData) {
+							return true;
+						}
+					}
+				}
+				return false;
+			} catch (error) {
+				return false;
+			}
+		};
+		
+		// Предзагрузка данных
 		const preloadData = async () => {
 			try {
 				setIsLoading(true);
@@ -1482,24 +1598,6 @@ const App = () => {
 				}
 			} finally {
 				setIsLoading(false);
-			}
-		};
-		
-		const checkCachedData = () => {
-			try {
-				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-					const range = RangeHelper.getSheetRange(sheet);
-					if (range) {
-						const cacheKey = `data_${sheet}_${range}`;
-						const cachedData = localStorage.getItem(cacheKey);
-						if (cachedData) {
-							return true;
-						}
-					}
-				}
-				return false;
-			} catch (error) {
-				return false;
 			}
 		};
 

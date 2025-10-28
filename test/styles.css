@@ -1289,3 +1289,47 @@ img {
     max-width: none;
 }
 
+/* Стили для LazyImage */
+.participant-thumbnail.loading,
+.participant-preview-img-small.loading,
+.participant-modal-img.loading,
+.image-modal-img.loading {
+    filter: blur(5px);
+    background: #f0f0f0;
+    transform: scale(0.98);
+}
+
+.participant-thumbnail.loaded,
+.participant-preview-img-small.loaded,
+.participant-modal-img.loaded,
+.image-modal-img.loaded {
+    filter: blur(0);
+    transform: scale(1);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Индикатор загрузки - пульсация */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+}
+
+.participant-thumbnail.loading,
+.participant-preview-img-small.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Улучшенная анимация для модальных изображений */
+.participant-modal-img.loading,
+.image-modal-img.loading {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Плавное появление для всех изображений */
+.participant-thumbnail,
+.participant-preview-img-small,
+.participant-modal-img,
+.image-modal-img {
+    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
