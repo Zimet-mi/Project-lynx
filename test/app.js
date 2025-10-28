@@ -1,5 +1,17 @@
 // Основное React приложение
 
+console.log('=== DIAGNOSTICS ===');
+console.log('React:', typeof React);
+console.log('ReactDOM:', typeof ReactDOM);
+console.log('axios:', typeof axios);
+console.log('imageLoader:', typeof window.imageLoader);
+console.log('LazyImage:', typeof window.LazyImage);
+console.log('googleSheetsApi:', typeof googleSheetsApi);
+console.log('lazySaveManager:', typeof lazySaveManager);
+console.log('telegramApi:', typeof telegramApi);
+console.log('==================');
+
+
 // Импортируем компоненты из библиотеки LazyImage
 const { LazyImage, withImagePreload, LazyImageProvider } = window.LazyImage;
 const OptimizedLazyImage = withImagePreload(LazyImage);
