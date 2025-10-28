@@ -1545,25 +1545,6 @@ const App = () => {
 				})
 			);
 		};
-
-		// Функция проверки кешированных данных
-		const checkCachedData = () => {
-			try {
-				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-					const range = RangeHelper.getSheetRange(sheet);
-					if (range) {
-						const cacheKey = `data_${sheet}_${range}`;
-						const cachedData = localStorage.getItem(cacheKey);
-						if (cachedData) {
-							return true;
-						}
-					}
-				}
-				return false;
-			} catch (error) {
-				return false;
-			}
-		};
 		
 		// Предзагрузка данных
 		const preloadData = async () => {
