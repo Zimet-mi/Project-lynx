@@ -1,4 +1,13 @@
-const LazyImage = (function() {
+// Упрощенный LazyImage без зависимостей
+window.LazyImage = (function() {
+    'use strict';
+    
+    // Проверяем, что React доступен
+    if (typeof React === 'undefined') {
+        console.error('React is not available');
+        return {};
+    }
+
     const { useState, useEffect, useRef } = React;
 
     function LazyImageComponent({ 
@@ -12,19 +21,21 @@ const LazyImage = (function() {
         const [currentSrc, setCurrentSrc] = useState('');
         const [isLoaded, setIsLoaded] = useState(false);
         const imgRef = useRef(null);
-        const observerRef = useRef(null);
 
         useEffect(() => {
-            if (!src) return;
+            if (!src || !window.imageLoader) {
+                setCurrentSrc(src || '../card/no-image.jpg');
+                setIsLoaded(true);
+                return;
+            }
 
-            // Если изображение уже загружено глобальным loader'ом
+            // Если изображение уже загружено
             if (window.imageLoader.loaded.has(src)) {
                 setCurrentSrc(src);
                 setIsLoaded(true);
                 return;
             }
 
-            // Иначе добавляем в очередь загрузки
             const onImageLoad = (loadedSrc) => {
                 if (loadedSrc === src) {
                     setCurrentSrc(src);
@@ -32,35 +43,39 @@ const LazyImage = (function() {
                 }
             };
 
+            // Добавляем в очередь загрузки
             window.imageLoader.addImages([src], priority, onImageLoad);
 
-            // Настройка Intersection Observer для critical приоритета
+            // Intersection Observer для видимых изображений
             if (priority === 'normal' && imgRef.current) {
-                observerRef.current = new IntersectionObserver((entries) => {
+                const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
                             window.imageLoader.addImages([src], 'critical', onImageLoad);
-                            observerRef.current.unobserve(entry.target);
+                            observer.unobserve(entry.target);
                         }
                     });
-                }, { rootMargin: '50px' });
+                }, { 
+                    rootMargin: '50px',
+                    threshold: 0.1 
+                });
 
-                observerRef.current.observe(imgRef.current);
+                observer.observe(imgRef.current);
+
+                return () => {
+                    observer.disconnect();
+                };
             }
-
-            return () => {
-                if (observerRef.current) {
-                    observerRef.current.disconnect();
-                }
-            };
         }, [src, priority]);
 
         const handleError = (e) => {
-            if (onError) {
-                onError(e);
-            } else {
-                e.target.src = '../card/no-image.jpg';
-            }
+            const target = e.target;
+            if (target.src.includes('no-image.jpg')) return;
+            
+            target.src = '../card/no-image.jpg';
+            target.onerror = null;
+            
+            if (onError) onError(e);
         };
 
         return React.createElement('img', {
@@ -71,7 +86,7 @@ const LazyImage = (function() {
             onClick: onClick,
             onError: handleError,
             style: {
-                opacity: isLoaded ? 1 : 0,
+                opacity: isLoaded ? 1 : 0.7,
                 transition: 'opacity 0.3s ease-in-out'
             }
         });
@@ -81,5 +96,3 @@ const LazyImage = (function() {
         LazyImage: LazyImageComponent
     };
 })();
-
-window.LazyImage = LazyImage;

@@ -1,7 +1,7 @@
 /* Стили для LazyImage библиотеки - без плейсхолдера */
 
 .lazy-loading {
-    opacity: 0;
+    opacity: 0.7;
     transform: scale(0.98);
 }
 

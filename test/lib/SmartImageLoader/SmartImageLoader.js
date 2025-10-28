@@ -5,10 +5,11 @@ class SmartImageLoader {
         this.loaded = new Set();
         this.maxConcurrent = this.getOptimalConcurrency();
         this.isIdle = false;
-        this.callbacks = new Map(); // Колбэки для уведомления компонентов
+        this.callbacks = new Map();
     }
 
     getOptimalConcurrency() {
+        // Для слабых устройств - меньше одновременных загрузок
         const isWeakDevice = 
             (navigator.hardwareConcurrency || 4) <= 2 ||
             (navigator.deviceMemory || 4) <= 2;
@@ -16,12 +17,20 @@ class SmartImageLoader {
         return isWeakDevice ? 2 : 4;
     }
 
-    // Добавить изображения с приоритетом
     addImages(urls, priority = 'normal', onLoadCallback = null) {
         urls.forEach(url => {
-            if (this.loaded.has(url) || this.queue.some(item => item.url === url)) {
-                // Если уже загружено или в очереди, сразу вызываем колбэк
+            if (this.loaded.has(url)) {
                 if (onLoadCallback) onLoadCallback(url);
+                return;
+            }
+
+            if (this.queue.some(item => item.url === url)) {
+                // Уже в очереди - обновляем приоритет если нужно
+                const existing = this.queue.find(item => item.url === url);
+                if (this.getPriorityValue(priority) > existing.priority) {
+                    existing.priority = this.getPriorityValue(priority);
+                    this.queue.sort((a, b) => b.priority - a.priority);
+                }
                 return;
             }
             
@@ -42,65 +51,57 @@ class SmartImageLoader {
 
     getPriorityValue(priority) {
         const priorities = {
-            'critical': 100,  // Видимые в viewport
-            'high': 75,       // Текущая секция
-            'normal': 50,     // Следующие секции
-            'low': 25         // Всё остальное
+            'critical': 100,
+            'high': 75,
+            'normal': 50,
+            'low': 25
         };
         return priorities[priority] || 50;
     }
 
-    async processQueue() {
+    processQueue() {
         while (this.inProgress.size < this.maxConcurrent && this.queue.length > 0) {
             const task = this.queue.shift();
             this.loadImage(task.url);
         }
         
-        // Проверяем idle состояние
         if (this.queue.length === 0 && this.inProgress.size === 0) {
             this.isIdle = true;
         }
     }
 
-    async loadImage(url) {
+    loadImage(url) {
         if (this.inProgress.has(url)) return;
         
         this.inProgress.add(url);
         
-        try {
-            await this.fetchImage(url);
+        const img = new Image();
+        img.onload = () => {
             this.loaded.add(url);
-            
-            // Вызываем колбэк если есть
             const callback = this.callbacks.get(url);
             if (callback) {
                 callback(url);
                 this.callbacks.delete(url);
             }
-        } catch (error) {
-            console.warn(`Failed to load image: ${url}`);
-        } finally {
             this.inProgress.delete(url);
             this.processQueue();
-        }
+        };
+        
+        img.onerror = () => {
+            console.warn(`Failed to load image: ${url}`);
+            this.inProgress.delete(url);
+            this.processQueue();
+        };
+        
+        img.src = url;
     }
 
-    fetchImage(url) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(url);
-            img.onerror = () => reject(url);
-            img.src = url;
-        });
-    }
-
-    // Для фоновой загрузки
-    startBackgroundLoading(allRemainingUrls) {
+    startBackgroundLoading(urls) {
         if (this.isIdle) {
-            this.addImages(allRemainingUrls, 'low');
+            this.addImages(urls, 'low');
         }
     }
 }
 
-// Глобальный инстанс
+// Создаем глобальный инстанс
 window.imageLoader = new SmartImageLoader();
