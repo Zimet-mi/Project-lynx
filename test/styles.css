@@ -949,16 +949,6 @@ img {
     .tableHead {
         font-size: 16px;
     }
-	
-	.image-modal-content {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
-    
-    .image-modal-img {
-        max-width: 95vw;
-        max-height: 95vh;
-    }
     
     .image-modal-close {
         top: -45px;
@@ -1180,10 +1170,9 @@ img {
 }
 
 .image-modal.show {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.3s ease;
 }
 
 .image-modal-content {

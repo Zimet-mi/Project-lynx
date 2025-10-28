@@ -757,7 +757,7 @@ const ParticipantsPage = ({ section = 'One', debounce  }) => {
 // Компонент страницы всех участников с редактированием оценок
 const AllParticipantsPage = ({ debounce }) => {
     const [allParticipants, setAllParticipants] = useState([]);
-    const [loading, setLoading] = useState(false); // Изменено на false, т.к. данные уже предзагружены
+    const [loading, setLoading] = useState(false);
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -833,6 +833,10 @@ const AllParticipantsPage = ({ debounce }) => {
     };
 
     const handleParticipantClick = (participant) => {
+        if (!participant) {
+            console.error('Participant is undefined in handleParticipantClick');
+            return;
+        }
         setSelectedParticipant(participant);
         // Загружаем текущие значения оценок из данных участника
         setEditingScores(participant.scores);
@@ -840,9 +844,13 @@ const AllParticipantsPage = ({ debounce }) => {
         setIsModalOpen(true);
     };
 
-    // ... остальные обработчики без изменений
+    // Исправленный обработчик клика по изображению
     const handleImageClick = (participant, e) => {
         if (e) e.stopPropagation();
+        if (!participant) {
+            console.error('Participant is undefined in handleImageClick');
+            return;
+        }
         setSelectedImageParticipant(participant);
         setIsImageModalOpen(true);
         telegramApi.hapticFeedback('impact', 'soft');
@@ -967,6 +975,7 @@ const AllParticipantsPage = ({ debounce }) => {
     // Группируем участников по листу
     const groupedParticipants = {};
     allParticipants.forEach(p => {
+        if (!p) return; // Защита от undefined
         if (!groupedParticipants[p.sheet]) groupedParticipants[p.sheet] = [];
         groupedParticipants[p.sheet].push(p);
     });
@@ -988,8 +997,10 @@ const AllParticipantsPage = ({ debounce }) => {
                         const group = groupedParticipants[sheet] || [];
                         const dayLabel = `День ${sheetIdx + 1}`;
                         
-                        return group.map(participant => 
-                            React.createElement('tr', {
+                        return group.map(participant => {
+                            if (!participant) return null; // Защита от undefined
+                            
+                            return React.createElement('tr', {
                                 key: `${participant.sheet}-${participant.row}`,
                                 className: 'participant-row',
                                 onClick: () => handleParticipantClick(participant),
@@ -997,10 +1008,10 @@ const AllParticipantsPage = ({ debounce }) => {
                             },
                                 React.createElement('td', null,
                                     React.createElement(LazyImage, {
-										src: `../card/${participant.img}`,
-										alt: participant.name,
-										className: 'participant-thumbnail',
-										onError: handleImageError,
+                                        src: `../card/${participant.img}`,
+                                        alt: participant.name,
+                                        className: 'participant-preview-img-small',
+                                        onError: handleImageError,
                                         onClick: (e) => handleImageClick(participant, e)
                                     })
                                 ),
@@ -1008,75 +1019,75 @@ const AllParticipantsPage = ({ debounce }) => {
                                 React.createElement('td', null, participant.id || ''),
                                 React.createElement('td', null, dayLabel),
                                 React.createElement('td', { 
-									className: 'participant-total-score'
-								}, 
-									(() => {
-										// Вычисляем сумму оценок
-										const scores = participant.scores;
-										const sum = [scores.C, scores.D, scores.E, scores.F]
-											.reduce((total, score) => total + (parseInt(score) || 0), 0);
-										return sum > 0 ? sum : '-';
-									})()
-								)
-                            )
-                        );
+                                    className: 'participant-total-score'
+                                }, 
+                                    (() => {
+                                        // Вычисляем сумму оценок
+                                        const scores = participant.scores;
+                                        const sum = [scores.C, scores.D, scores.E, scores.F]
+                                            .reduce((total, score) => total + (parseInt(score) || 0), 0);
+                                        return sum > 0 ? sum : '-';
+                                    })()
+                                )
+                            );
+                        });
                     })
                 )
             )
         ),
         
-        // Модальное окно редактирования участника - УПРОЩЕННАЯ ВЕРСИЯ БЕЗ КНОПКИ
-		isModalOpen && selectedParticipant && React.createElement('div', {
-			className: 'participant-modal show',
-			onClick: handleModalClose
-		},
-			React.createElement('div', {
-				className: 'participant-modal-content',
-				onClick: (e) => e.stopPropagation(),
-				style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
-			},
-				React.createElement('span', {
-					className: 'participant-modal-close',
-					onClick: handleModalClose,
-					title: 'Закрыть (Esc)'
-				}, '×'),
-				
-				// Заголовок с информацией об участнике
-				React.createElement('div', { className: 'participant-modal-header' },
-					React.createElement(LazyImage, {
-						src: `../card/${participant.img}`,
-						alt: participant.name,
-						className: 'participant-thumbnail',
-						onError: handleImageError,
-						onClick: () => {
-							setSelectedImageParticipant(selectedParticipant);
-							setIsImageModalOpen(true);
-						},
-						style: { cursor: 'pointer' }
-					}),
-					React.createElement('div', null,
-						React.createElement('div', { className: 'participant-modal-name' }, selectedParticipant.name),
-						React.createElement('div', { className: 'participant-modal-id' }, `Номер: ${selectedParticipant.id}`),
-						React.createElement('div', { className: 'participant-modal-sheet' }, `День: ${selectedParticipant.sheet}`)
-					)
-				),
+        // Модальное окно редактирования участника
+        isModalOpen && selectedParticipant && React.createElement('div', {
+            className: 'participant-modal show',
+            onClick: handleModalClose
+        },
+            React.createElement('div', {
+                className: 'participant-modal-content',
+                onClick: (e) => e.stopPropagation(),
+                style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }
+            },
+                React.createElement('span', {
+                    className: 'participant-modal-close',
+                    onClick: handleModalClose,
+                    title: 'Закрыть (Esc)'
+                }, '×'),
+                
+                // Заголовок с информацией об участнике
+                React.createElement('div', { className: 'participant-modal-header' },
+                    React.createElement(LazyImage, {
+                        src: `../card/${selectedParticipant.img}`,
+                        alt: selectedParticipant.name,
+                        className: 'participant-modal-img',
+                        onError: handleImageError,
+                        onClick: () => {
+                            setSelectedImageParticipant(selectedParticipant);
+                            setIsImageModalOpen(true);
+                        },
+                        style: { cursor: 'pointer' }
+                    }),
+                    React.createElement('div', null,
+                        React.createElement('div', { className: 'participant-modal-name' }, selectedParticipant.name),
+                        React.createElement('div', { className: 'participant-modal-id' }, `Номер: ${selectedParticipant.id}`),
+                        React.createElement('div', { className: 'participant-modal-sheet' }, `День: ${selectedParticipant.sheet}`)
+                    )
+                ),
 
-				// Форма редактирования оценок
-				React.createElement('div', { className: 'participant-modal-marks' },
-					React.createElement('h3', { style: { margin: '0 0 20px 0', color: '#333' } }, 'Редактирование оценок'),
-					
-					React.createElement(EvaluationFields, {
-						scores: editingScores,
-						checkboxes: editingCheckboxes,
-						onScoreChange: handleScoreChange,
-						onCheckboxChange: handleCheckboxChange,
-						onCommentChange: handleCommentChange,
-						participantId: selectedParticipant.id,
-						compact: true
-					})
-				)
-			)
-		),
+                // Форма редактирования оценок
+                React.createElement('div', { className: 'participant-modal-marks' },
+                    React.createElement('h3', { style: { margin: '0 0 20px 0', color: '#333' } }, 'Редактирование оценок'),
+                    
+                    React.createElement(EvaluationFields, {
+                        scores: editingScores,
+                        checkboxes: editingCheckboxes,
+                        onScoreChange: handleScoreChange,
+                        onCheckboxChange: handleCheckboxChange,
+                        onCommentChange: handleCommentChange,
+                        participantId: selectedParticipant.id,
+                        compact: true
+                    })
+                )
+            )
+        ),
 
         // Модальное окно для увеличенного изображения
         isImageModalOpen && selectedImageParticipant && React.createElement('div', {
@@ -1093,12 +1104,11 @@ const AllParticipantsPage = ({ debounce }) => {
                     title: 'Закрыть (Esc)'
                 }, '×'),
                 React.createElement(LazyImage, {
-					src: `../card/${participant.img}`,
-					alt: participant.name,
-					className: 'participant-thumbnail',
-					onError: handleImageError,
-					onClick: handleImageClick
-				})
+                    src: `../card/${selectedImageParticipant.img}`,
+                    alt: selectedImageParticipant.name,
+                    className: 'image-modal-img',
+                    onError: handleImageError
+                })
             )
         )
     );
