@@ -1,5 +1,9 @@
 // Основное React приложение
 
+// Импортируем компоненты из библиотеки LazyImage
+const { LazyImage, withImagePreload, LazyImageProvider } = window.LazyImage;
+const OptimizedLazyImage = withImagePreload(LazyImage);
+
 const saveImmediately = async (value, column, row, sheetName) => {
     try {
         // Используем ленивое сохранение вместо прямого вызова API
@@ -12,8 +16,8 @@ const saveImmediately = async (value, column, row, sheetName) => {
 };
 
 const handleImageError = (e) => {
-    e.target.src = '../card/no-image.jpg';
-    e.target.onerror = null; // предотвращаем бесконечный цикл
+    // Теперь ошибки обрабатываются внутри LazyImage, но оставляем как fallback
+    console.warn('Ошибка загрузки изображения:', e.target.src);
 };
 
 const { useState, useEffect, useCallback, useRef } = React;
@@ -70,41 +74,6 @@ const useDebounce = () => {
     }, []);
 
     return { debounce, flush, cancelAll, cancel };
-};
-
-// Компонент LazyImage для отложенной загрузки изображений
-const LazyImage = ({ src, alt, className, onClick, onError }) => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [imageSrc, setImageSrc] = useState('../card/no-image.jpg'); // Плейсхолдер по умолчанию
-    const [hasError, setHasError] = useState(false);
-
-    useEffect(() => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-            setImageSrc(src);
-            setIsLoaded(true);
-        };
-        img.onerror = () => {
-            setHasError(true);
-            setIsLoaded(true);
-            if (onError) {
-                onError({ target: img });
-            }
-        };
-    }, [src, onError]);
-
-    return React.createElement('img', {
-        src: hasError ? '../card/no-image.jpg' : imageSrc,
-        alt: alt,
-        className: `${className} ${isLoaded ? 'loaded' : 'loading'}`,
-        onClick: onClick,
-        onError: hasError ? null : onError, // Предотвращаем бесконечный цикл ошибок
-        style: { 
-            opacity: isLoaded ? 1 : 0.7,
-            transition: 'opacity 0.3s ease-in-out'
-        }
-    });
 };
 
 // Компонент загрузки
@@ -590,13 +559,15 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
             className: 'participant-header',
             onClick: handleToggle
         },
+            // ЗАМЕНА: Используем новую библиотеку LazyImage
             React.createElement(LazyImage, {
-				src: `../card/${participant.img}`,
-				alt: participant.name,
-				className: 'participant-thumbnail',
-				onError: handleImageError,
-				onClick: handleImageClick
-			}),
+                src: `../card/${participant.img}`,
+                alt: participant.name,
+                className: 'participant-thumbnail',
+                onError: handleImageError,
+                onClick: handleImageClick,
+                fallback: '../card/no-image.jpg'
+            }),
             React.createElement('div', { className: 'participant-info' },
                 React.createElement('div', { className: 'participant-name' }, participant.name),
                 React.createElement('div', { className: 'participant-id' }, `Номер: ${participant.id}`)
@@ -607,7 +578,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
                 participant,
                 onScoreChange,
                 onCommentChange,
-				debounce: debounce
+                debounce: debounce
             })
         ),
         
@@ -625,13 +596,14 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-				React.createElement(LazyImage, {
-					src: `../card/${participant.img}`,
-					alt: participant.name,
-					className: 'participant-thumbnail',
-					onError: handleImageError,
-					onClick: handleImageClick
-				})
+                // ЗАМЕНА: Используем OptimizedLazyImage для модальных окон (предзагрузка)
+                React.createElement(OptimizedLazyImage, {
+                    src: `../card/${participant.img}`,
+                    alt: participant.name,
+                    className: 'image-modal-img',
+                    onError: handleImageError,
+                    preloadPriority: 'high' // Важные изображения загружаем сразу
+                })
             )
         )
     );
@@ -645,7 +617,7 @@ const AccordionSection = ({
     onCommentChange,
     isActive,
     onToggle,
-	debounce
+    debounce
 }) => {
     return React.createElement('div', { className: 'accordion-section' },
         React.createElement('button', {
@@ -660,7 +632,7 @@ const AccordionSection = ({
                         participant,
                         onScoreChange,
                         onCommentChange,
-						debounce: debounce
+                        debounce: debounce
                     })
                 ) :
                 React.createElement('div', { className: 'no-participants' },
@@ -671,9 +643,9 @@ const AccordionSection = ({
 };
 
 // Компонент страницы участников
-const ParticipantsPage = ({ section = 'One', debounce  }) => {
+const ParticipantsPage = ({ section = 'One', debounce }) => { // ← debounce ПЕРЕДАН как prop
     const [participants, setParticipants] = useState([]);
-    const [loading, setLoading] = useState(false); // Изменено на false
+    const observerRef = useRef(null);
 
     useEffect(() => {
         loadParticipants();
@@ -681,7 +653,6 @@ const ParticipantsPage = ({ section = 'One', debounce  }) => {
 
     const loadParticipants = () => {
         try {
-            // Используем только предзагруженные данные
             const data = googleSheetsApi.getCachedData(
                 SHEET_CONFIG.mainSheet,
                 RangeHelper.getParticipantsRange()
@@ -697,20 +668,15 @@ const ParticipantsPage = ({ section = 'One', debounce  }) => {
                         row: index + 2
                     }));
                 setParticipants(extractedParticipants);
-            } else {
-                setParticipants([]);
+
+                // НЕМЕДЛЕННАЯ загрузка текущей секции с высоким приоритетом
+                const urls = extractedParticipants.map(p => `../card/${p.img}`);
+                window.imageLoader.addImages(urls, 'high');
             }
         } catch (err) {
             console.warn('Ошибка загрузки участников из кеша:', err);
             setParticipants([]);
         }
-    };
-
-    const filterParticipantsByRange = (participants, range) => {
-        return participants.filter(participant => {
-            const rowId = participant.row;
-            return rowId >= range[0] && rowId <= range[1];
-        });
     };
 
     const handleScoreChange = (participantId, field, value) => {
@@ -744,7 +710,7 @@ const ParticipantsPage = ({ section = 'One', debounce  }) => {
                         participant,
                         onScoreChange: handleScoreChange,
                         onCommentChange: handleCommentChange,
-                        debounce: debounce
+                        debounce: debounce // ← ПЕРЕДАЁМ debounce вниз
                     })
                 ) :
                 React.createElement('div', { className: 'no-participants' },
@@ -772,12 +738,12 @@ const AllParticipantsPage = ({ debounce }) => {
         comment: ''
     });
     const [editingCheckboxes, setEditingCheckboxes] = useState({});
-	
-	// Проверяем, что debounce функция передана
+    
+    // Проверяем, что debounce функция передана
     if (!debounce) {
         console.warn('⚠️ AllParticipantsPage: debounce функция не передана, используется прямое сохранение');
     }
-	
+    
     useEffect(() => {
         loadAllParticipants();
     }, []);
@@ -871,7 +837,7 @@ const AllParticipantsPage = ({ debounce }) => {
         e.stopPropagation();
     };
 
-	// Обработчики для формы редактирования с debounce
+    // Обработчики для формы редактирования с debounce
     const handleScoreChange = (column, value) => {
         if (!selectedParticipant) return;
         
@@ -1007,6 +973,7 @@ const AllParticipantsPage = ({ debounce }) => {
                                 style: { cursor: 'pointer' }
                             },
                                 React.createElement('td', null,
+                                    // ЗАМЕНА: Используем LazyImage для превью
                                     React.createElement(LazyImage, {
                                         src: `../card/${participant.img}`,
                                         alt: participant.name,
@@ -1054,7 +1021,8 @@ const AllParticipantsPage = ({ debounce }) => {
                 
                 // Заголовок с информацией об участнике
                 React.createElement('div', { className: 'participant-modal-header' },
-                    React.createElement(LazyImage, {
+                    // ЗАМЕНА: Используем OptimizedLazyImage для модальных окон
+                    React.createElement(OptimizedLazyImage, {
                         src: `../card/${selectedParticipant.img}`,
                         alt: selectedParticipant.name,
                         className: 'participant-modal-img',
@@ -1063,6 +1031,7 @@ const AllParticipantsPage = ({ debounce }) => {
                             setSelectedImageParticipant(selectedParticipant);
                             setIsImageModalOpen(true);
                         },
+                        preloadPriority: 'high', // Важное изображение - загружаем сразу
                         style: { cursor: 'pointer' }
                     }),
                     React.createElement('div', null,
@@ -1103,11 +1072,13 @@ const AllParticipantsPage = ({ debounce }) => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement(LazyImage, {
+                // ЗАМЕНА: Используем OptimizedLazyImage для модальных окон
+                React.createElement(OptimizedLazyImage, {
                     src: `../card/${selectedImageParticipant.img}`,
                     alt: selectedImageParticipant.name,
                     className: 'image-modal-img',
-                    onError: handleImageError
+                    onError: handleImageError,
+                    preloadPriority: 'high' // Важное изображение - загружаем сразу
                 })
             )
         )
@@ -1127,16 +1098,16 @@ const ScheduleTable = () => {
     }, []);
 
     const loadSchedule = async () => {
-		try {
-			setLoading(true);
-			const scheduleData = await googleSheetsApi.fetchSchedule();
-			setData(scheduleData);
-		} catch (err) {
-			console.warn('Ошибка загрузки расписания:', err);
-		} finally {
-			setLoading(false);
-		}
-	};
+        try {
+            setLoading(true);
+            const scheduleData = await googleSheetsApi.fetchSchedule();
+            setData(scheduleData);
+        } catch (err) {
+            console.warn('Ошибка загрузки расписания:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
@@ -1215,7 +1186,6 @@ const ScheduleTable = () => {
                                         onClick: () => handleImageClick(cell),
                                         style: {
                                             cursor: 'pointer'
-                                            // Убраны цвет и подчёркивание
                                         }
                                     }, cell)
                                 );
@@ -1241,13 +1211,14 @@ const ScheduleTable = () => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement(LazyImage, {
-					src: `../card/${participant.img}`,
-					alt: participant.name,
-					className: 'participant-thumbnail',
-					onError: handleImageError,
-					onClick: handleImageClick
-				})
+                // ЗАМЕНА: Используем OptimizedLazyImage для расписания
+                React.createElement(OptimizedLazyImage, {
+                    src: `../card/${selectedImage}.jpg`,
+                    alt: `Участник ${selectedImage}`,
+                    className: 'image-modal-img',
+                    onError: handleImageError,
+                    preloadPriority: 'high'
+                })
             )
         )
     );
@@ -1274,26 +1245,26 @@ const ResultsAccordion = () => {
     }, []);
 
     const loadResultsData = async () => {
-		try {
-			setLoading(true);
+        try {
+            setLoading(true);
 
-			const dataParts = await Promise.all(
-				RESULT_RANGES.map(range => 
-					googleSheetsApi.fetchDataWithCache(SHEET_CONFIG.resultSheet, range, 420000)
-						.catch(err => {
-							console.warn(`Ошибка при загрузке данных для диапазона ${range}:`, err);
-							return null;
-						})
-				)
-			);
+            const dataParts = await Promise.all(
+                RESULT_RANGES.map(range => 
+                    googleSheetsApi.fetchDataWithCache(SHEET_CONFIG.resultSheet, range, 420000)
+                        .catch(err => {
+                            console.warn(`Ошибка при загрузке данных для диапазона ${range}:`, err);
+                            return null;
+                        })
+                )
+            );
 
-			setResultsData(dataParts);
-		} catch (error) {
-			console.warn('Ошибка при загрузке данных результатов:', error);
-		} finally {
-			setLoading(false);
-		}
-	};
+            setResultsData(dataParts);
+        } catch (error) {
+            console.warn('Ошибка при загрузке данных результатов:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleImageClick = (imageId) => {
         setSelectedImage(imageId);
@@ -1319,7 +1290,6 @@ const ResultsAccordion = () => {
                     onClick: () => handleImageClick(cellContent),
                     style: {
                         cursor: 'pointer'
-                        // Убраны цвет и подчёркивание
                     }
                 }, cellContent)
             );
@@ -1408,13 +1378,14 @@ const ResultsAccordion = () => {
                     onClick: handleImageModalClose,
                     title: 'Закрыть (Esc)'
                 }, '×'),
-                React.createElement(LazyImage, {
-					src: `../card/${participant.img}`,
-					alt: participant.name,
-					className: 'participant-thumbnail',
-					onError: handleImageError,
-					onClick: handleImageClick
-				})
+                // ЗАМЕНА: Используем OptimizedLazyImage для результатов
+                React.createElement(OptimizedLazyImage, {
+                    src: `../card/${selectedImage}.jpg`,
+                    alt: `Участник ${selectedImage}`,
+                    className: 'image-modal-img',
+                    onError: handleImageError,
+                    preloadPriority: 'high'
+                })
             )
         )
     );
@@ -1432,15 +1403,15 @@ const App = () => {
     const [activeTab, setActiveTab] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [preloadComplete, setPreloadComplete] = useState(false);
-    const [telegramReady, setTelegramReady] = useState(false);
-	
-	// Глобальный экземпляр useDebounce для всего приложения
-	const globalDebounce = useDebounce();
-	
-	// Защита при закрытии страницы
+    const [telegramReady, setTelegramReady] = useState(false); // ← ВОССТАНОВЛЕНО
+    const [allImages, setAllImages] = useState(new Set());
+    
+    // Глобальный экземпляр useDebounce
+    const globalDebounce = useDebounce();
+
+    // Защита при закрытии страницы (оставляем как было)
     useEffect(() => {
         const handleBeforeUnload = (e) => {
-            // Проверяем, есть ли неотправленные данные в LazySaveManager
             if (lazySaveManager.hasPendingSaves()) {
                 e.preventDefault();
                 e.returnValue = 'У вас есть несохраненные изменения. Вы уверены, что хотите уйти?';
@@ -1449,17 +1420,13 @@ const App = () => {
         };
 
         const handleVisibilityChange = () => {
-            // При скрытии страницы принудительно сохраняем все ожидающие изменения
             if (document.hidden) {
                 console.log('📱 Страница скрыта, принудительно сохраняем данные...');
                 lazySaveManager.flushQueue();
             }
         };
 
-        // Обработчик когда пользователь пытается закрыть/перезагрузить страницу
         window.addEventListener('beforeunload', handleBeforeUnload);
-        
-        // Обработчик когда пользователь переключается на другую вкладку/приложение
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
@@ -1468,7 +1435,7 @@ const App = () => {
         };
     }, []);
 
-    // Инициализация Telegram
+    // Инициализация Telegram (оставляем как было)
     useEffect(() => {
         const initTelegram = () => {
             if (telegramApi.init()) {
@@ -1497,105 +1464,117 @@ const App = () => {
         }
     }, []);
 
-    // Предзагрузка данных
-	useEffect(() => {
-		const checkCachedData = () => {
-			try {
-				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-					const range = RangeHelper.getSheetRange(sheet);
-					if (range) {
-						const cacheKey = `data_${sheet}_${range}`;
-						const cachedData = localStorage.getItem(cacheKey);
-						if (cachedData) {
-							return true;
-						}
-					}
-				}
-				return false;
-			} catch (error) {
-				return false;
-			}
-		};
-		
-		// Предзагрузка критических изображений
-		const preloadCriticalImages = async () => {
-			const criticalImages = [
-				'../card/no-image.jpg'
-			];
-			
-			// Добавляем первые 5 изображений из каждой секции если данные уже загружены
-			try {
-				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-					const range = RangeHelper.getSheetRange(sheet);
-					if (range) {
-						const cachedData = googleSheetsApi.getCachedData(sheet, range);
-						if (cachedData && cachedData.values) {
-							const firstParticipants = cachedData.values.slice(1, 6) // первые 5 участников
-								.filter(row => row && row[0])
-								.map(row => `../card/${row[0]}.jpg`);
-							
-							criticalImages.push(...firstParticipants);
-						}
-					}
-				}
-			} catch (error) {
-				console.warn('Ошибка при определении критических изображений:', error);
-			}
-			
-			console.log('🖼️ Предзагрузка критических изображений:', criticalImages);
-			
-			return Promise.all(
-				criticalImages.map(src => {
-					return new Promise((resolve) => {
-						const img = new Image();
-						img.src = src;
-						img.onload = resolve;
-						img.onerror = resolve; // Не блокируем загрузку при ошибках
-					});
-				})
-			);
-		};
-		
-		// Предзагрузка данных
-		const preloadData = async () => {
-			try {
-				setIsLoading(true);
-				
-				// Проверяем, что googleSheetsApi доступен
-				if (typeof googleSheetsApi === 'undefined' || !googleSheetsApi.preloadAllData) {
-					console.error('googleSheetsApi не определен или не имеет метода preloadAllData');
-					// Проверяем наличие кешированных данных
-					const hasCachedData = checkCachedData();
-					if (hasCachedData) {
-						console.log('🔄 Использую кешированные данные (API недоступен)');
-						setPreloadComplete(true);
-						return;
-					} else {
-						throw new Error('API не инициализирован');
-					}
-				}
-				
-				await googleSheetsApi.preloadAllData();
-				setPreloadComplete(true);
-			} catch (error) {
-				console.error('Ошибка предзагрузки данных:', error);
-				// Проверяем наличие кешированных данных
-				const hasCachedData = checkCachedData();
-				if (hasCachedData) {
-					console.log('🔄 Использую кешированные данные после ошибки');
-					setPreloadComplete(true);
-				} else {
-					telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
-				}
-			} finally {
-				setIsLoading(false);
-			}
-		};
+    // Предзагрузка данных (обновляем с учетом imageLoader)
+    useEffect(() => {
+        const checkCachedData = () => {
+            try {
+                for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+                    const range = RangeHelper.getSheetRange(sheet);
+                    if (range) {
+                        const cacheKey = `data_${sheet}_${range}`;
+                        const cachedData = localStorage.getItem(cacheKey);
+                        if (cachedData) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            } catch (error) {
+                return false;
+            }
+        };
+        
+        // Собираем все URLs изображений для фоновой загрузки
+        const getAllImagesUrls = () => {
+            const urls = new Set();
+            try {
+                for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+                    const range = RangeHelper.getSheetRange(sheet);
+                    if (!range) continue;
+                    
+                    const cachedData = googleSheetsApi.getCachedData(sheet, range);
+                    if (cachedData && cachedData.values) {
+                        cachedData.values.slice(1).forEach(row => {
+                            if (row && row[0]) {
+                                urls.add(`../card/${row[0]}.jpg`);
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.warn('Ошибка сбора URLs изображений:', error);
+            }
+            return urls;
+        };
 
-		if (telegramReady) {
-			preloadData();
-		}
-	}, [telegramReady]);
+        // Предзагрузка данных
+        const preloadData = async () => {
+            try {
+                setIsLoading(true);
+                
+                if (typeof googleSheetsApi === 'undefined' || !googleSheetsApi.preloadAllData) {
+                    console.error('googleSheetsApi не определен');
+                    const hasCachedData = checkCachedData();
+                    if (hasCachedData) {
+                        console.log('🔄 Использую кешированные данные');
+                        setPreloadComplete(true);
+                        
+                        // Инициализируем imageLoader с собранными URLs
+                        const allUrls = getAllImagesUrls();
+                        setAllImages(allUrls);
+                        return;
+                    } else {
+                        throw new Error('API не инициализирован');
+                    }
+                }
+                
+                await googleSheetsApi.preloadAllData();
+                
+                // После загрузки данных, собираем все URLs изображений
+                const allUrls = getAllImagesUrls();
+                setAllImages(allUrls);
+                
+                setPreloadComplete(true);
+            } catch (error) {
+                console.error('Ошибка предзагрузки данных:', error);
+                const hasCachedData = checkCachedData();
+                if (hasCachedData) {
+                    console.log('🔄 Использую кешированные данные после ошибки');
+                    setPreloadComplete(true);
+                    
+                    const allUrls = getAllImagesUrls();
+                    setAllImages(allUrls);
+                } else {
+                    telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (telegramReady) {
+            preloadData();
+        }
+    }, [telegramReady]);
+
+    // Фоновая загрузка изображений
+    useEffect(() => {
+        const backgroundInterval = setInterval(() => {
+            if (!allImages.size) return;
+            
+            const remainingUrls = Array.from(allImages).filter(url => 
+                !window.imageLoader.loaded.has(url) && 
+                !window.imageLoader.inProgress.has(url)
+            );
+            
+            if (remainingUrls.length > 0 && window.imageLoader.isIdle) {
+                console.log('🔄 Фоновая загрузка изображений:', remainingUrls.length);
+                window.imageLoader.startBackgroundLoading(remainingUrls.slice(0, 10)); // По 10 за раз
+            }
+        }, 5000);
+
+        return () => clearInterval(backgroundInterval);
+    }, [allImages]);
 
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
@@ -1612,45 +1591,45 @@ const App = () => {
     };
 
     const renderContent = () => {
-		if (isLoading || !preloadComplete) {
-			return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
-		}
+        if (isLoading || !preloadComplete) {
+            return React.createElement(LoadingIndicator, { message: 'Загрузка данных...' });
+        }
 
-		if (!activeTab) {
-			return React.createElement('div', { 
-				className: 'no-data',
-				style: { 
-					padding: '100px 20px', 
-					textAlign: 'center', 
-					color: '#6c757d' 
-				} 
-			}, 'Выберите раздел для начала работы');
-		}
-		
-		switch (activeTab) {
-			case 'One':
-			case 'Two':
-			case 'Three':
-				return React.createElement(ParticipantsPage, { 
-					section: activeTab, 
-					key: activeTab,
-					debounce: globalDebounce.debounce 
-				});
-			case 'all':
-				return React.createElement(AllParticipantsPage, {
-					debounce: globalDebounce.debounce
-				});
-			case 'table':
-				return React.createElement(SchedulePage);
-			case 'red':
-				return React.createElement(ResultsPage);
-			default:
-				return React.createElement(ParticipantsPage, { 
-					section: 'One',
-					debounce: globalDebounce.debounce 
-				});
-		}
-	};
+        if (!activeTab) {
+            return React.createElement('div', { 
+                className: 'no-data',
+                style: { 
+                    padding: '100px 20px', 
+                    textAlign: 'center', 
+                    color: '#6c757d' 
+                } 
+            }, 'Выберите раздел для начала работы');
+        }
+        
+        switch (activeTab) {
+            case 'One':
+            case 'Two':
+            case 'Three':
+                return React.createElement(ParticipantsPage, { 
+                    section: activeTab, 
+                    key: activeTab,
+                    debounce: globalDebounce.debounce 
+                });
+            case 'all':
+                return React.createElement(AllParticipantsPage, {
+                    debounce: globalDebounce.debounce
+                });
+            case 'table':
+                return React.createElement(SchedulePage);
+            case 'red':
+                return React.createElement(ResultsPage);
+            default:
+                return React.createElement(ParticipantsPage, { 
+                    section: 'One',
+                    debounce: globalDebounce.debounce 
+                });
+        }
+    };
 
     return React.createElement('div', { className: 'main' },
         React.createElement(Header, {

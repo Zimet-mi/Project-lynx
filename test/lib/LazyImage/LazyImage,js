@@ -1,0 +1,85 @@
+const LazyImage = (function() {
+    const { useState, useEffect, useRef } = React;
+
+    function LazyImageComponent({ 
+        src, 
+        alt, 
+        className = '', 
+        onClick, 
+        onError,
+        priority = 'normal'
+    }) {
+        const [currentSrc, setCurrentSrc] = useState('');
+        const [isLoaded, setIsLoaded] = useState(false);
+        const imgRef = useRef(null);
+        const observerRef = useRef(null);
+
+        useEffect(() => {
+            if (!src) return;
+
+            // Если изображение уже загружено глобальным loader'ом
+            if (window.imageLoader.loaded.has(src)) {
+                setCurrentSrc(src);
+                setIsLoaded(true);
+                return;
+            }
+
+            // Иначе добавляем в очередь загрузки
+            const onImageLoad = (loadedSrc) => {
+                if (loadedSrc === src) {
+                    setCurrentSrc(src);
+                    setIsLoaded(true);
+                }
+            };
+
+            window.imageLoader.addImages([src], priority, onImageLoad);
+
+            // Настройка Intersection Observer для critical приоритета
+            if (priority === 'normal' && imgRef.current) {
+                observerRef.current = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            window.imageLoader.addImages([src], 'critical', onImageLoad);
+                            observerRef.current.unobserve(entry.target);
+                        }
+                    });
+                }, { rootMargin: '50px' });
+
+                observerRef.current.observe(imgRef.current);
+            }
+
+            return () => {
+                if (observerRef.current) {
+                    observerRef.current.disconnect();
+                }
+            };
+        }, [src, priority]);
+
+        const handleError = (e) => {
+            if (onError) {
+                onError(e);
+            } else {
+                e.target.src = '../card/no-image.jpg';
+            }
+        };
+
+        return React.createElement('img', {
+            ref: imgRef,
+            src: currentSrc || '../card/no-image.jpg',
+            alt: alt,
+            className: `${className} ${isLoaded ? 'loaded' : 'loading'}`,
+            onClick: onClick,
+            onError: handleError,
+            style: {
+                opacity: isLoaded ? 1 : 0,
+                transition: 'opacity 0.3s ease-in-out'
+            }
+        });
+    }
+
+    return {
+        LazyImage: LazyImageComponent
+    };
+})();
+
+window.LazyImage = LazyImage;
