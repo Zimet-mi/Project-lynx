@@ -1455,23 +1455,51 @@ const App = () => {
 				setIsLoading(true);
 				
 				// Проверяем, что googleSheetsApi доступен
-				if (typeof googleSheetsApi === 'undefined') {
-					console.error('googleSheetsApi не определен');
-					throw new Error('API не инициализирован');
+				if (typeof googleSheetsApi === 'undefined' || !googleSheetsApi.preloadAllData) {
+					console.error('googleSheetsApi не определен или не имеет метода preloadAllData');
+					// Проверяем наличие кешированных данных
+					const hasCachedData = checkCachedData();
+					if (hasCachedData) {
+						console.log('🔄 Использую кешированные данные (API недоступен)');
+						setPreloadComplete(true);
+						return;
+					} else {
+						throw new Error('API не инициализирован');
+					}
 				}
 				
 				await googleSheetsApi.preloadAllData();
 				setPreloadComplete(true);
 			} catch (error) {
 				console.error('Ошибка предзагрузки данных:', error);
-				// Используем showAlert вместо showPopup для совместимости
-				if (telegramApi && telegramApi.showAlert) {
-					telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+				// Проверяем наличие кешированных данных
+				const hasCachedData = checkCachedData();
+				if (hasCachedData) {
+					console.log('🔄 Использую кешированные данные после ошибки');
+					setPreloadComplete(true);
 				} else {
-					alert('Ошибка загрузки данных. Проверьте подключение к интернету.');
+					telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
 				}
 			} finally {
 				setIsLoading(false);
+			}
+		};
+		
+		const checkCachedData = () => {
+			try {
+				for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
+					const range = RangeHelper.getSheetRange(sheet);
+					if (range) {
+						const cacheKey = `data_${sheet}_${range}`;
+						const cachedData = localStorage.getItem(cacheKey);
+						if (cachedData) {
+							return true;
+						}
+					}
+				}
+				return false;
+			} catch (error) {
+				return false;
 			}
 		};
 

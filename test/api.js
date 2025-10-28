@@ -21,6 +21,22 @@ class GoogleSheetsApi {
 		this.timeout = 30000;
     }
 
+	async fetchWithRetry(url, maxRetries = 3, baseDelay = 1000) {
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				const response = await axios.get(url, { 
+					timeout: this.timeout 
+				});
+				return response;
+			} catch (error) {
+				if (attempt === maxRetries) throw error;
+				
+				console.warn(`Попытка ${attempt} не удалась, повтор через ${baseDelay * attempt}ms`);
+				await new Promise(resolve => setTimeout(resolve, baseDelay * attempt));
+			}
+		}
+	}
+
     // Метод для получения данных из кеша
     getCachedData(sheetName, range) {
         const cacheKey = `data_${sheetName}_${range}`;
@@ -53,7 +69,9 @@ class GoogleSheetsApi {
         }
 
         try {
-            const response = await axios.get(GOOGLE_SCRIPT_URLS.getSheetId);
+            const response = await axios.get(GOOGLE_SCRIPT_URLS.getSheetId, {
+            timeout: this.timeout
+			});
             this.sheetIdCache = response.data;
             
             try {
@@ -71,22 +89,14 @@ class GoogleSheetsApi {
 
     // Загрузка данных из Google Sheets с кешированием
     async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
-        try {
-            const sheetId = await this.getSheetId();
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${API_KEY}`;
-            
-            console.log('Запрашиваю из сети:', url);
-            const response = await axios.get(url, { 
-                timeout: this.timeout 
-            });
-        if (!navigator.onLine) {
+         if (!navigator.onLine) {
             const cachedData = this.getCachedData(sheetName, range);
             if (cachedData) {
                 console.log('📴 Офлайн режим: использую кешированные данные');
                 return cachedData;
             }
         }
-        
+		       
         const cacheKey = `data_${sheetName}_${range}`;
         const timeKey = `time_${sheetName}_${range}`;
         console.group(`[GoogleSheetsApi] ${sheetName}!${range}`);
@@ -148,7 +158,9 @@ class GoogleSheetsApi {
                 sheet: sheetName
             });
 
-            const response = await axios.get(`${GOOGLE_SCRIPT_URLS.saveData}?${params.toString()}`);
+            const response = await axios.get(`${GOOGLE_SCRIPT_URLS.saveData}?${params.toString()}`, {
+				timeout: this.timeout
+			});
             
             if (response.status === 200) {
                 console.log(`Данные сохранены: ${sheetName} ${column}${row} = ${value}`);
@@ -182,8 +194,10 @@ class GoogleSheetsApi {
         }
 
         try {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${TIMETABLE_ID}/values/${TIMETABLE_RANGE}?key=${API_KEY}`;
-            const response = await axios.get(url);
+			const url = `https://sheets.googleapis.com/v4/spreadsheets/${TIMETABLE_ID}/values/${TIMETABLE_RANGE}?key=${API_KEY}`;
+			const response = await axios.get(url, {
+				timeout: this.timeout  // ← ДОБАВИТЬ ЭТУ СТРОЧКУ
+			});
             
             const data = response.data;
             
@@ -224,22 +238,6 @@ class GoogleSheetsApi {
         
         await Promise.all(promises);
         console.log('Предзагрузка данных завершена');
-    }
-}
-
-async fetchWithRetry(url, maxRetries = 3, baseDelay = 1000) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const response = await axios.get(url, { 
-                timeout: this.timeout 
-            });
-            return response;
-        } catch (error) {
-            if (attempt === maxRetries) throw error;
-            
-            console.warn(`Попытка ${attempt} не удалась, повтор через ${baseDelay * attempt}ms`);
-            await new Promise(resolve => setTimeout(resolve, baseDelay * attempt));
-        }
     }
 }
 
