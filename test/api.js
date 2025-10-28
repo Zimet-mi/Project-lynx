@@ -18,6 +18,7 @@ if (typeof CACHE_CONFIG === 'undefined') {
 class GoogleSheetsApi {
     constructor() {
         this.sheetIdCache = null;
+		this.timeout = 30000;
     }
 
     // Метод для получения данных из кеша
@@ -70,7 +71,14 @@ class GoogleSheetsApi {
 
     // Загрузка данных из Google Sheets с кешированием
     async fetchDataWithCache(sheetName, range, cacheExpiry = CACHE_CONFIG.generalExpiry) {
-        
+        try {
+            const sheetId = await this.getSheetId();
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${API_KEY}`;
+            
+            console.log('Запрашиваю из сети:', url);
+            const response = await axios.get(url, { 
+                timeout: this.timeout 
+            });
         if (!navigator.onLine) {
             const cachedData = this.getCachedData(sheetName, range);
             if (cachedData) {
@@ -120,6 +128,11 @@ class GoogleSheetsApi {
             return data;
         } catch (error) {
             console.error('Ошибка загрузки данных:', error);
+			const cachedData = this.getCachedData(sheetName, range);
+            if (cachedData) {
+                console.log('⏰ Таймаут, использую кешированные данные');
+                return cachedData;
+            }
             console.groupEnd();
             throw error;
         }
@@ -211,6 +224,22 @@ class GoogleSheetsApi {
         
         await Promise.all(promises);
         console.log('Предзагрузка данных завершена');
+    }
+}
+
+async fetchWithRetry(url, maxRetries = 3, baseDelay = 1000) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await axios.get(url, { 
+                timeout: this.timeout 
+            });
+            return response;
+        } catch (error) {
+            if (attempt === maxRetries) throw error;
+            
+            console.warn(`Попытка ${attempt} не удалась, повтор через ${baseDelay * attempt}ms`);
+            await new Promise(resolve => setTimeout(resolve, baseDelay * attempt));
+        }
     }
 }
 
