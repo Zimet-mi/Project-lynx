@@ -596,7 +596,7 @@ const ParticipantCard = ({ participant, onScoreChange, onCommentChange, debounce
 				className: 'participant-thumbnail',
 				onError: handleImageError,
 				onClick: handleImageClick
-			})
+			}),
             React.createElement('div', { className: 'participant-info' },
                 React.createElement('div', { className: 'participant-name' }, participant.name),
                 React.createElement('div', { className: 'participant-id' }, `Номер: ${participant.id}`)
