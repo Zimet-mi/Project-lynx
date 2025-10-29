@@ -24,7 +24,7 @@ window.LazyImage = (function() {
 
         useEffect(() => {
             if (!src || !window.imageLoader) {
-                setCurrentSrc(src || '../card/no-image.jpg');
+                setCurrentSrc(src || '../card/no-image.png');
                 setIsLoaded(true);
                 return;
             }
@@ -70,9 +70,9 @@ window.LazyImage = (function() {
 
         const handleError = (e) => {
             const target = e.target;
-            if (target.src.includes('no-image.jpg')) return;
+            if (target.src.includes('no-image.png')) return;
             
-            target.src = '../card/no-image.jpg';
+            target.src = '../card/no-image.png';
             target.onerror = null;
             
             if (onError) onError(e);
@@ -80,7 +80,7 @@ window.LazyImage = (function() {
 
         return React.createElement('img', {
             ref: imgRef,
-            src: currentSrc || '../card/no-image.jpg',
+            src: currentSrc || '../card/no-image.png',
             alt: alt,
             className: `${className} ${isLoaded ? 'loaded' : 'loading'}`,
             onClick: onClick,

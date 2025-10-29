@@ -29,7 +29,7 @@
 
         return React.createElement('div', { className: 'participant-card' },
             React.createElement('div', { className: 'participant-header', onClick: handleToggle },
-                React.createElement(LazyImage, { src: `../card/${participant.img}`, alt: participant.name, className: 'participant-thumbnail', onError: handleImageError, onClick: handleImageClick, fallback: '../card/no-image.jpg' }),
+                React.createElement(LazyImage, { src: `../card/${participant.img}`, alt: participant.name, className: 'participant-thumbnail', onError: handleImageError, onClick: handleImageClick, fallback: '../card/no-image.png' }),
                 React.createElement('div', { className: 'participant-info' },
                     React.createElement('div', { className: 'participant-name' }, participant.name),
                     React.createElement('div', { className: 'participant-id' }, `Номер: ${participant.id}`)

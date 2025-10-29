@@ -11,7 +11,7 @@
 
     const { useState, useEffect, useRef } = React;
 
-    function BaseLazyImage({ src, alt, className = '', onClick, onError, priority = 'normal', fallback = '../card/no-image.jpg', preloadPriority }) {
+    function BaseLazyImage({ src, alt, className = '', onClick, onError, priority = 'normal', fallback = '../card/no-image.png', preloadPriority }) {
         const [currentSrc, setCurrentSrc] = useState('');
         const [isLoaded, setIsLoaded] = useState(false);
         const imgRef = useRef(null);
@@ -20,10 +20,10 @@
         // Список кандидатов для заглушки на случай разных относительных путей на GitHub Pages
         const fallbackCandidates = [
             fallback,
-            'card/no-image.jpg',
-            './card/no-image.jpg',
-            '../card/no-image.jpg',
-            'no-image.jpg'
+            'card/no-image.png',
+            './card/no-image.png',
+            '../card/no-image.png',
+            'no-image.png'
         ].filter((v, i, a) => typeof v === 'string' && v && a.indexOf(v) === i);
 
         const effectivePriority = preloadPriority || priority || 'normal';
