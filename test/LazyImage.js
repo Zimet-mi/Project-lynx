@@ -15,12 +15,22 @@
         const [currentSrc, setCurrentSrc] = useState('');
         const [isLoaded, setIsLoaded] = useState(false);
         const imgRef = useRef(null);
+        const triedFallbacksRef = useRef(new Set());
+
+        // Список кандидатов для заглушки на случай разных относительных путей на GitHub Pages
+        const fallbackCandidates = [
+            fallback,
+            'card/no-image.jpg',
+            './card/no-image.jpg',
+            '../card/no-image.jpg',
+            'no-image.jpg'
+        ].filter((v, i, a) => typeof v === 'string' && v && a.indexOf(v) === i);
 
         const effectivePriority = preloadPriority || priority || 'normal';
 
         useEffect(() => {
             if (!src || !window.imageLoader) {
-                setCurrentSrc(src || fallback);
+                setCurrentSrc(src || fallbackCandidates[0]);
                 setIsLoaded(true);
                 return;
             }
@@ -57,15 +67,22 @@
 
         const handleError = (e) => {
             const target = e.target;
-            if (target.src.includes('no-image.jpg')) return;
-            target.src = fallback;
+            const current = target.getAttribute('src') || '';
+            // Если текущий src уже один из пробованных заглушек — ищем следующую
+            triedFallbacksRef.current.add(current);
+            const next = fallbackCandidates.find(u => !triedFallbacksRef.current.has(u));
+            if (next) {
+                target.src = next;
+                return;
+            }
+            // Больше вариантов нет — прекращаем попытки
             target.onerror = null;
             if (onError) onError(e);
         };
 
         return React.createElement('img', {
             ref: imgRef,
-            src: currentSrc || fallback,
+            src: currentSrc || fallbackCandidates[0],
             alt: alt,
             className: `${className} ${isLoaded ? 'loaded' : 'loading'}`,
             onClick: onClick,
