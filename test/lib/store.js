@@ -98,14 +98,16 @@
     async function initFromCache() {
         try {
             const participants = [];
-            for (const { sheet } of (window.ALL_PARTICIPANTS_SHEETS || [])) {
+            const sheetsList = (typeof ALL_PARTICIPANTS_SHEETS !== 'undefined') ? ALL_PARTICIPANTS_SHEETS : [];
+            for (const { sheet } of sheetsList) {
                 const range = RangeHelper.getSheetRange(sheet);
                 if (!range) continue;
                 let data = googleSheetsApi.getCachedData(sheet, range);
                 if (!data) {
                     try {
                         // Попробуем получить из сети и одновременно прогреть кеш
-                        data = await googleSheetsApi.fetchDataWithCache(sheet, range, (window.CACHE_CONFIG?.generalExpiry) || 420000);
+                        const expiry = (typeof CACHE_CONFIG !== 'undefined' && CACHE_CONFIG && CACHE_CONFIG.generalExpiry) ? CACHE_CONFIG.generalExpiry : 420000;
+                        data = await googleSheetsApi.fetchDataWithCache(sheet, range, expiry);
                     } catch (e) {
                         console.warn('[AppStore] fetch fallback failed for', sheet, range, e);
                     }
