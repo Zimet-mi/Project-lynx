@@ -41,6 +41,13 @@ const App = () => {
         };
     }, []);
 
+    // Быстрая инициализация стора из кеша, чтобы секции не были пустыми до предзагрузки
+    useEffect(() => {
+        if (window.AppStore && AppStore.initFromCache) {
+            AppStore.initFromCache();
+        }
+    }, []);
+
     // Инициализация Telegram (оставляем как было)
     useEffect(() => {
         const initTelegram = () => {
