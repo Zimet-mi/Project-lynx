@@ -53,6 +53,7 @@
         useEffect(() => {
             function updateFromStore() {
                 const list = (window.AppStore && AppStore.getParticipantsForSection) ? AppStore.getParticipantsForSection(section) : [];
+                console.log('[ParticipantsPage] section', section, 'count', list.length);
                 setParticipants(list);
                 if (list && list.length) {
                     const urls = list.map(p => `../card/${p.img}`);

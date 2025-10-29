@@ -104,12 +104,14 @@
                 const cached = googleSheetsApi.getCachedData(sheet, range);
                 if (cached && cached.values) {
                     const rows = cached.values.slice(1);
+                    console.log('[AppStore] initFromCache:', sheet, 'rows:', rows.length);
                     rows.forEach((row, idx) => {
                         const p = mapRowToParticipant(row, idx, sheet);
                         if (p) participants.push(p);
                     });
                 }
             }
+            console.log('[AppStore] total participants:', participants.length);
             replaceAllParticipants(participants);
             notifyReady();
         } catch (e) {
