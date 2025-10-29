@@ -1,8 +1,2 @@
-@import url('../styles.css');
-
-/* Standalone override: remove external bg image path that points to parent */
-body, html {
-    background: var(--color-bg);
-}
-
+@import url('../new/styles.css');
 
