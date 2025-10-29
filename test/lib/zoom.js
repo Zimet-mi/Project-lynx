@@ -8,7 +8,15 @@
     function getState(el) {
         let s = stateMap.get(el);
         if (!s) {
-            s = { scale: 1, x: 0, y: 0, startX: 0, startY: 0, isPanning: false, lastTap: 0 };
+            s = { 
+                scale: 1, x: 0, y: 0,
+                startX: 0, startY: 0, isPanning: false,
+                lastTap: 0,
+                // pinch state
+                isPinching: false, pinchStartDist: 0, pinchStartScale: 1,
+                pinchCenterX: 0, pinchCenterY: 0,
+                rafId: 0
+            };
             stateMap.set(el, s);
         }
         return s;
@@ -59,6 +67,16 @@
         s.scale = nextScale;
         limitPan(el);
         applyTransform(el);
+    }
+
+    function touchesInfo(touches) {
+        const [t1, t2] = [touches[0], touches[1]];
+        const dx = t2.clientX - t1.clientX;
+        const dy = t2.clientY - t1.clientY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const cx = (t1.clientX + t2.clientX)/2;
+        const cy = (t1.clientY + t2.clientY)/2;
+        return { dist, cx, cy };
     }
 
     function onWheel(e) {
@@ -117,16 +135,65 @@
         const el = e.target.closest('.image-modal-img');
         if (!el) return;
         const s = getState(el);
-        const now = Date.now();
-        if (now - s.lastTap < 300) {
-            // double-tap
-            const touch = e.touches[0];
-            if (s.scale === 1) {
-                zoomAt(el, 2, touch.clientX, touch.clientY);
-            } else { s.scale = 1; s.x = 0; s.y = 0; applyTransform(el); }
-            s.lastTap = 0;
-        } else {
-            s.lastTap = now;
+        if (e.touches && e.touches.length === 2) {
+            // start pinch
+            const { dist, cx, cy } = touchesInfo(e.touches);
+            s.isPinching = true;
+            s.pinchStartDist = dist || 1;
+            s.pinchStartScale = s.scale;
+            s.pinchCenterX = cx;
+            s.pinchCenterY = cy;
+            // захват для плавного pan при pinch
+            e.preventDefault();
+        } else if (e.touches && e.touches.length === 1) {
+            // double-tap detection
+            const now = Date.now();
+            if (now - s.lastTap < 300) {
+                const touch = e.touches[0];
+                if (s.scale === 1) {
+                    zoomAt(el, 2, touch.clientX, touch.clientY);
+                } else { s.scale = 1; s.x = 0; s.y = 0; applyTransform(el); }
+                s.lastTap = 0;
+            } else {
+                s.lastTap = now;
+            }
+        }
+    }
+
+    function onTouchMove(e) {
+        const el = e.target.closest('.image-modal-img');
+        if (!el) return;
+        const s = getState(el);
+        if (s.isPinching && e.touches && e.touches.length === 2) {
+            // pinch zoom
+            const { dist, cx, cy } = touchesInfo(e.touches);
+            const factor = dist / (s.pinchStartDist || 1);
+            const prevScale = s.scale;
+            const nextScale = clamp(s.pinchStartScale * factor, 1, 4);
+            if (nextScale !== prevScale) {
+                // корректируем x/y чтобы центр оставался под пальцами
+                const rect = el.getBoundingClientRect();
+                const offsetX = (cx - rect.left - s.x) / prevScale;
+                const offsetY = (cy - rect.top - s.y) / prevScale;
+                s.x -= offsetX * (nextScale - prevScale);
+                s.y -= offsetY * (nextScale - prevScale);
+                s.scale = nextScale;
+                limitPan(el);
+            }
+            // requestAnimationFrame для плавности
+            if (!s.rafId) {
+                s.rafId = requestAnimationFrame(() => { s.rafId = 0; applyTransform(el); });
+            }
+            e.preventDefault();
+        }
+    }
+
+    function onTouchEnd(e) {
+        const el = e.target.closest('.image-modal-img');
+        if (!el) return;
+        const s = getState(el);
+        if (e.touches.length < 2) {
+            s.isPinching = false;
         }
     }
 
@@ -136,7 +203,9 @@
     document.addEventListener('pointermove', onPointerMove);
     document.addEventListener('pointerup', onPointerUp);
     document.addEventListener('dblclick', onDblClick);
-    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchstart', onTouchStart, { passive: false });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
 
     // Инициализируем transform для уже вставленных изображений модалки (если есть)
     function initExisting() {
