@@ -8,6 +8,7 @@ class LazySaveManager {
         this.processingInterval = LAZY_SAVE_CONFIG.processingInterval; // Интервал проверки очереди (мс)
         this.dataMaxAge = LAZY_SAVE_CONFIG.dataMaxAge; // Время жизни данных в localStorage
         this.lastProcessTime = 0; // Время последней обработки
+        this.maxConcurrentSends = 5; // Одновременных отправок
         
         // Запускаем периодическую обработку очереди
         this.startQueueProcessor();
@@ -107,49 +108,45 @@ class LazySaveManager {
 
     // Обработка очереди отправки на сервер
     async processQueue() {
-		if (this.isProcessing || this.queue.size === 0) {
-			return;
-		}
+        if (this.isProcessing || this.queue.size === 0) {
+            return;
+        }
 
-		this.isProcessing = true;
-		console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
+        this.isProcessing = true;
+        console.log(`🔄 Начинаю обработку очереди (${this.queue.size} элементов)`);
 
-		try {
-			// Обрабатываем очередь ПОСЛЕДОВАТЕЛЬНО, а не параллельно
-			const keys = Array.from(this.queue.keys());
-			
-			for (const key of keys) {
-				const data = this.queue.get(key);
-				if (!data) continue;
-
-				try {
-					await this.sendToServer(data, key);
-					
-					// Проверяем, что данные не были обновлены во время отправки
-					const currentData = this.queue.get(key);
-					if (currentData && currentData.timestamp === data.timestamp) {
-						// Только если timestamp совпадает - удаляем из очереди
-						this.removeFromQueue(key);
-						console.log(`✅ Успешно отправлено: ${key}`);
-					} else {
-						console.log(`🔄 Данные были обновлены во время отправки: ${key}`);
-						// Не удаляем - новые данные будут обработаны в следующем цикле
-					}
-				} catch (error) {
-					console.warn(`❌ Ошибка отправки ${key}:`, error);
-					// При ошибке прерываем обработку для этого ключа, но продолжаем для остальных
-					continue;
-				}
-			}
-		} catch (error) {
-			console.error('❌ Критическая ошибка обработки очереди:', error);
-		} finally {
-			this.isProcessing = false;
-			this.lastProcessTime = Date.now();
-			
-			console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
-		}
-	}
+        try {
+            const keys = Array.from(this.queue.keys());
+            let cursor = 0;
+            while (cursor < keys.length) {
+                const batchKeys = keys.slice(cursor, cursor + this.maxConcurrentSends);
+                const sends = batchKeys.map(async (key) => {
+                    const data = this.queue.get(key);
+                    if (!data) return;
+                    try {
+                        await this.sendToServer(data, key);
+                        const currentData = this.queue.get(key);
+                        if (currentData && currentData.timestamp === data.timestamp) {
+                            this.removeFromQueue(key);
+                            console.log(`✅ Успешно отправлено: ${key}`);
+                        } else {
+                            console.log(`🔄 Обновлено во время отправки: ${key}`);
+                        }
+                    } catch (error) {
+                        console.warn(`❌ Ошибка отправки ${key}:`, error);
+                    }
+                });
+                await Promise.all(sends);
+                cursor += this.maxConcurrentSends;
+            }
+        } catch (error) {
+            console.error('❌ Критическая ошибка обработки очереди:', error);
+        } finally {
+            this.isProcessing = false;
+            this.lastProcessTime = Date.now();
+            console.log(`📊 Обработка завершена. В очереди осталось: ${this.queue.size} элементов`);
+        }
+    }
 
     // Отправка данных на сервер
     async sendToServer(data, key) {
@@ -202,7 +199,9 @@ class LazySaveManager {
     setupOnlineHandler() {
         window.addEventListener('online', () => {
             console.log('🌐 Соединение восстановлено, запускаю обработку очереди');
-            this.processQueue();
+            // При восстановлении сети — запускаем ускоренную отправку
+            this.maxConcurrentSends = 8;
+            this.processQueue().finally(() => { this.maxConcurrentSends = 5; });
         });
 
         // Также проверяем при фокусе окна
