@@ -97,6 +97,50 @@
         const [editingCheckboxes, setEditingCheckboxes] = useState({});
 
         useEffect(() => { loadAllParticipants(); }, []);
+
+        // Подписка на локальные изменения ячеек: обновляем таблицу "Все участники" без перезагрузки
+        useEffect(() => {
+            if (!window.AppEvents) return;
+            const unsubscribe = AppEvents.on('cellChanged', ({ sheet, row, column, value }) => {
+                setAllParticipants(prev => {
+                    if (!prev || prev.length === 0) return prev;
+                    let changed = false;
+                    const next = prev.map(p => {
+                        if (p.sheet === sheet && p.dataRow === row) {
+                            const updated = { ...p, scores: { ...p.scores } };
+                            if (column === 'C' || column === 'D' || column === 'E' || column === 'F') {
+                                updated.scores[column] = value || '';
+                                changed = true;
+                                return updated;
+                            }
+                            if (column === 'G') {
+                                updated.scores.comment = value || '';
+                                changed = true;
+                                return updated;
+                            }
+                            // Колонки спецпризов: I..N
+                            const colCode = column && column.charCodeAt && column.charCodeAt(0);
+                            if (colCode && colCode >= 'I'.charCodeAt(0) && colCode <= 'N'.charCodeAt(0)) {
+                                // Пересоберём чекбоксы на основе value
+                                const activePrizes = getActiveSpecialPrizes();
+                                const checkboxes = { ...p.checkboxes };
+                                activePrizes.forEach((prize, idx) => {
+                                    if (prize.column === column) {
+                                        checkboxes[idx] = !!(value && value.toString().trim() !== '');
+                                    }
+                                });
+                                updated.checkboxes = checkboxes;
+                                changed = true;
+                                return updated;
+                            }
+                        }
+                        return p;
+                    });
+                    return changed ? next : prev;
+                });
+            });
+            return () => { if (unsubscribe) unsubscribe(); };
+        }, []);
         const loadAllParticipants = () => {
             let allParticipantsData = [];
             try {
@@ -133,12 +177,22 @@
             telegramApi.hapticFeedback('selection');
             if (debounce) {
                 debounce(`modal_score_${selectedParticipant.id}_${column}`, async (val, col) => { await saveImmediately(val, col, selectedParticipant.dataRow, selectedParticipant.sheet); }, 500, value, column);
-            } else { saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet); }
+                if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column, value });
+            } else { 
+                saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column, value });
+            }
         };
         const handleCommentChange = (value) => {
             if (!selectedParticipant) return;
             setEditingScores(prev => ({ ...prev, comment: value }));
-            if (debounce) { debounce(`modal_comment_${selectedParticipant.id}`, async (val) => { await saveImmediately(val, 'G', selectedParticipant.dataRow, selectedParticipant.sheet); }, 1000, value); } else { saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet); }
+            if (debounce) { 
+                debounce(`modal_comment_${selectedParticipant.id}`, async (val) => { await saveImmediately(val, 'G', selectedParticipant.dataRow, selectedParticipant.sheet); }, 1000, value);
+                if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: 'G', value });
+            } else { 
+                saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+                if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: 'G', value });
+            }
         };
         const handleCheckboxChange = (index, checked) => {
             if (!selectedParticipant) return;
@@ -147,8 +201,14 @@
             const prize = activePrizes[index];
             if (prize) {
                 const value = checked ? prize.value : '';
-                if (debounce) { debounce(`modal_checkbox_${selectedParticipant.id}_${index}`, async (val) => { await saveImmediately(val, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet); }, 300, value); }
-                else { saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet); }
+                if (debounce) { 
+                    debounce(`modal_checkbox_${selectedParticipant.id}_${index}`, async (val) => { await saveImmediately(val, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet); }, 300, value); 
+                    if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: prize.column, value });
+                }
+                else { 
+                    saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                    if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: prize.column, value });
+                }
             }
         };
 
