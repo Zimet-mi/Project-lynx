@@ -59,7 +59,13 @@
             isImageModalOpen && selectedImage && React.createElement('div', { className: 'image-modal show', onClick: handleImageModalClose },
                 React.createElement('div', { className: 'image-modal-content', onClick: handleImageModalContentClick },
                     React.createElement('span', { className: 'image-modal-close', onClick: handleImageModalClose, title: 'Закрыть (Esc)' }, '×'),
-                    React.createElement(OptimizedLazyImage, { src: `../card/${selectedImage}.jpg`, alt: `Участник ${selectedImage}`, className: 'image-modal-img', onError: handleImageError, preloadPriority: 'high', onClick: (e) => { e.stopPropagation(); if (window.telegramApi && telegramApi.isMobile && telegramApi.isMobile()) { telegramApi.openLink(`../card/${selectedImage}.jpg`); } } })
+                    React.createElement((window.AppMedia && AppMedia.ZoomableImage) || 'div', {
+                        src: `../card/${selectedImage}.jpg`,
+                        alt: `Участник ${selectedImage}`,
+                        className: 'image-modal-img',
+                        preloadPriority: 'high',
+                        stopPropagation: true
+                    })
                 )
             )
         );

@@ -41,7 +41,13 @@
             isImageModalOpen && React.createElement('div', { className: 'image-modal show', onClick: handleImageModalClose },
                 React.createElement('div', { className: 'image-modal-content', onClick: handleImageModalContentClick },
                     React.createElement('span', { className: 'image-modal-close', onClick: handleImageModalClose, title: 'Закрыть (Esc)' }, '×'),
-                    React.createElement(OptimizedLazyImage, { src: `../card/${participant.img}`, alt: participant.name, className: 'image-modal-img', onError: handleImageError, preloadPriority: 'high', onClick: (e) => { e.stopPropagation(); if (window.telegramApi && telegramApi.isMobile && telegramApi.isMobile()) { telegramApi.openLink(`../card/${participant.img}`); } } })
+                    React.createElement((window.AppMedia && AppMedia.ZoomableImage) || 'div', {
+                        src: `../card/${participant.img}`,
+                        alt: participant.name,
+                        className: 'image-modal-img',
+                        preloadPriority: 'high',
+                        stopPropagation: true
+                    })
                 )
             )
         );
@@ -284,7 +290,14 @@
                 React.createElement('div', { className: 'participant-modal-content', onClick: (e) => e.stopPropagation(), style: { maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' } },
                     React.createElement('span', { className: 'participant-modal-close', onClick: handleModalClose, title: 'Закрыть (Esc)' }, '×'),
                     React.createElement('div', { className: 'participant-modal-header' },
-                        React.createElement(OptimizedLazyImage, { src: `../card/${selectedParticipant.img}`, alt: selectedParticipant.name, className: 'participant-modal-img', onError: handleImageError, onClick: () => { if (window.telegramApi && telegramApi.isMobile && telegramApi.isMobile()) { telegramApi.openLink(`../card/${selectedParticipant.img}`); } else { setSelectedImageParticipant(selectedParticipant); setIsImageModalOpen(true); } }, preloadPriority: 'high', style: { cursor: 'pointer' } }),
+                    React.createElement((window.AppMedia && AppMedia.ZoomableImage) || 'div', {
+                        src: `../card/${selectedParticipant.img}`,
+                        alt: selectedParticipant.name,
+                        className: 'participant-modal-img',
+                        preloadPriority: 'high',
+                        stopPropagation: false,
+                        onClick: () => { setSelectedImageParticipant(selectedParticipant); setIsImageModalOpen(true); }
+                    }),
                         React.createElement('div', null,
                             React.createElement('div', { className: 'participant-modal-name' }, selectedParticipant.name),
                             React.createElement('div', { className: 'participant-modal-id' }, `Номер: ${selectedParticipant.id}`),
@@ -300,7 +313,13 @@
             isImageModalOpen && selectedImageParticipant && React.createElement('div', { className: 'image-modal show', onClick: handleImageModalClose },
                 React.createElement('div', { className: 'image-modal-content', onClick: handleImageModalContentClick },
                     React.createElement('span', { className: 'image-modal-close', onClick: handleImageModalClose, title: 'Закрыть (Esc)' }, '×'),
-                    React.createElement(OptimizedLazyImage, { src: `../card/${selectedImageParticipant.img}`, alt: selectedImageParticipant.name, className: 'image-modal-img', onError: handleImageError, preloadPriority: 'high', onClick: (e) => { e.stopPropagation(); if (window.telegramApi && telegramApi.isMobile && telegramApi.isMobile()) { telegramApi.openLink(`../card/${selectedImageParticipant.img}`); } } })
+                    React.createElement((window.AppMedia && AppMedia.ZoomableImage) || 'div', {
+                        src: `../card/${selectedImageParticipant.img}`,
+                        alt: selectedImageParticipant.name,
+                        className: 'image-modal-img',
+                        preloadPriority: 'high',
+                        stopPropagation: true
+                    })
                 )
             )
         );
