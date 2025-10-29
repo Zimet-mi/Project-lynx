@@ -67,7 +67,8 @@
     }
 
     function mapRowToParticipant(row, idx, sheet) {
-        if (!row || !row[1]) return null;
+        // Пропускаем пустые строки: нужен и номер (A), и имя (B)
+        if (!row || !row[0] || !row[1]) return null;
         const id = row[0];
         const name = row[1];
         const dataRow = idx + 2;
