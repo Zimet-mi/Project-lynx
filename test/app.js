@@ -141,6 +141,10 @@ const App = () => {
                 setAllImages(allUrls);
                 
                 setPreloadComplete(true);
+                // Инициализируем глобальный стор из кеша
+                if (window.AppStore && AppStore.initFromCache) {
+                    AppStore.initFromCache();
+                }
             } catch (error) {
                 console.error('Ошибка предзагрузки данных:', error);
                 const hasCachedData = checkCachedData();
@@ -150,6 +154,9 @@ const App = () => {
                     
                     const allUrls = getAllImagesUrls();
                     setAllImages(allUrls);
+                    if (window.AppStore && AppStore.initFromCache) {
+                        AppStore.initFromCache();
+                    }
                 } else {
                     telegramApi.showAlert('Ошибка загрузки данных. Проверьте подключение к интернету.');
                 }

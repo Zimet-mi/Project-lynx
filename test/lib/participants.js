@@ -50,20 +50,22 @@
     const ParticipantsPage = ({ section = 'One', debounce }) => {
         const [participants, setParticipants] = useState([]);
 
-        useEffect(() => { loadParticipants(); }, [section]);
-        const loadParticipants = () => {
-            try {
-                const data = googleSheetsApi.getCachedData(SHEET_CONFIG.mainSheet, RangeHelper.getParticipantsRange());
-                if (data && data.values) {
-                    const extractedParticipants = data.values.slice(1)
-                        .filter(row => row && row[1] && row[1].toString().trim() !== '')
-                        .map((row, index) => ({ id: row[0], name: row[1], img: `${row[0]}.jpg`, row: index + 2 }));
-                    setParticipants(extractedParticipants);
-                    const urls = extractedParticipants.map(p => `../card/${p.img}`);
-                    window.imageLoader.addImages(urls, 'high');
+        useEffect(() => {
+            function updateFromStore() {
+                const list = (window.AppStore && AppStore.getParticipantsForSection) ? AppStore.getParticipantsForSection(section) : [];
+                setParticipants(list);
+                if (list && list.length) {
+                    const urls = list.map(p => `../card/${p.img}`);
+                    if (window.imageLoader) window.imageLoader.addImages(urls, 'high');
                 }
-            } catch (err) { console.warn('Ошибка загрузки участников из кеша:', err); setParticipants([]); }
-        };
+            }
+            updateFromStore();
+            let unsubscribe = null;
+            if (window.AppStore && AppStore.subscribe) {
+                unsubscribe = AppStore.subscribe(updateFromStore);
+            }
+            return () => { if (unsubscribe) unsubscribe(); };
+        }, [section]);
 
         const getRangeForSection = (section) => {
             switch (section) {
@@ -74,7 +76,7 @@
             }
         };
 
-        const filterParticipantsByRange = (list, [start, end]) => list.filter((_, idx) => (idx + 2) >= start && (idx + 2) <= end);
+        const filterParticipantsByRange = (list, [start, end]) => list.filter(p => p.dataRow >= start && p.dataRow <= end);
         const range = getRangeForSection(section);
         const sectionParticipants = filterParticipantsByRange(participants, range);
 
@@ -96,7 +98,18 @@
         const [editingScores, setEditingScores] = useState({ C: '', D: '', E: '', F: '', comment: '' });
         const [editingCheckboxes, setEditingCheckboxes] = useState({});
 
-        useEffect(() => { loadAllParticipants(); }, []);
+        useEffect(() => {
+            function updateFromStore() {
+                const list = (window.AppStore && AppStore.getAllParticipants) ? AppStore.getAllParticipants() : [];
+                setAllParticipants(list);
+            }
+            updateFromStore();
+            let unsubscribe = null;
+            if (window.AppStore && AppStore.subscribe) {
+                unsubscribe = AppStore.subscribe(updateFromStore);
+            }
+            return () => { if (unsubscribe) unsubscribe(); };
+        }, []);
 
         // Подписка на локальные изменения ячеек: обновляем таблицу "Все участники" без перезагрузки
         useEffect(() => {
@@ -141,28 +154,7 @@
             });
             return () => { if (unsubscribe) unsubscribe(); };
         }, []);
-        const loadAllParticipants = () => {
-            let allParticipantsData = [];
-            try {
-                for (const { sheet } of ALL_PARTICIPANTS_SHEETS) {
-                    const range = RangeHelper.getSheetRange(sheet);
-                    if (!range) continue;
-                    const cachedData = googleSheetsApi.getCachedData(sheet, range);
-                    if (cachedData && cachedData.values) {
-                        const participants = cachedData.values.slice(1)
-                            .filter(row => row && row[1] && row[1].toString().trim() !== '')
-                            .map((row, idx) => ({
-                                id: row[0], name: row[1], img: `${row[0]}.jpg`, row: idx + 2,
-                                sheet, dataRow: idx + 2, raw: row,
-                                scores: { C: row[2] || '', D: row[3] || '', E: row[4] || '', F: row[5] || '', comment: row[6] || '' },
-                                checkboxes: getActiveSpecialPrizes().reduce((acc, prize, index) => { const colIndex = prize.column.charCodeAt(0) - 'A'.charCodeAt(0); acc[index] = row[colIndex] ? row[colIndex].toString().trim() !== '' : false; return acc; }, {})
-                            }));
-                        allParticipantsData = allParticipantsData.concat(participants);
-                    }
-                }
-                setAllParticipants(allParticipantsData);
-            } catch (error) { console.error('Ошибка загрузки участников из кеша:', error); }
-        };
+        // loadAllParticipants больше не нужен: используем AppStore
 
         const saveImmediately = async (value, column, row, sheetName) => { try { await lazySaveManager.saveData(value, column, row, sheetName); } catch (e) { telegramApi.showAlert('Ошибка сохранения данных'); } };
         const handleParticipantClick = (participant) => { if (!participant) return; setSelectedParticipant(participant); setEditingScores(participant.scores); setEditingCheckboxes(participant.checkboxes); setIsModalOpen(true); };
@@ -176,10 +168,18 @@
             setEditingScores(prev => ({ ...prev, [column]: value }));
             telegramApi.hapticFeedback('selection');
             if (debounce) {
-                debounce(`modal_score_${selectedParticipant.id}_${column}`, async (val, col) => { await saveImmediately(val, col, selectedParticipant.dataRow, selectedParticipant.sheet); }, 500, value, column);
+                debounce(`modal_score_${selectedParticipant.id}_${column}`, async (val, col) => { 
+                    await saveImmediately(val, col, selectedParticipant.dataRow, selectedParticipant.sheet);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, col, val);
+                    }
+                }, 500, value, column);
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column, value });
             } else { 
                 saveImmediately(value, column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                    googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, column, value);
+                }
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column, value });
             }
         };
@@ -187,10 +187,18 @@
             if (!selectedParticipant) return;
             setEditingScores(prev => ({ ...prev, comment: value }));
             if (debounce) { 
-                debounce(`modal_comment_${selectedParticipant.id}`, async (val) => { await saveImmediately(val, 'G', selectedParticipant.dataRow, selectedParticipant.sheet); }, 1000, value);
+                debounce(`modal_comment_${selectedParticipant.id}`, async (val) => { 
+                    await saveImmediately(val, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, 'G', val);
+                    }
+                }, 1000, value);
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: 'G', value });
             } else { 
                 saveImmediately(value, 'G', selectedParticipant.dataRow, selectedParticipant.sheet);
+                if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                    googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, 'G', value);
+                }
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: 'G', value });
             }
         };
@@ -202,11 +210,19 @@
             if (prize) {
                 const value = checked ? prize.value : '';
                 if (debounce) { 
-                    debounce(`modal_checkbox_${selectedParticipant.id}_${index}`, async (val) => { await saveImmediately(val, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet); }, 300, value); 
+                    debounce(`modal_checkbox_${selectedParticipant.id}_${index}`, async (val) => { 
+                        await saveImmediately(val, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                        if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                            googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, prize.column, val);
+                        }
+                    }, 300, value); 
                     if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: prize.column, value });
                 }
                 else { 
                     saveImmediately(value, prize.column, selectedParticipant.dataRow, selectedParticipant.sheet);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(selectedParticipant.sheet, selectedParticipant.dataRow, prize.column, value);
+                    }
                     if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: selectedParticipant.sheet, row: selectedParticipant.dataRow, column: prize.column, value });
                 }
             }

@@ -17,6 +17,43 @@ class GoogleSheetsApi {
 		this.timeout = 30000;
     }
 
+    // Преобразование буквы колонки в индекс (0-based)
+    static columnLetterToIndex(column) {
+        if (!column || typeof column !== 'string') return 0;
+        const c = column.trim().toUpperCase();
+        // Поддержка A..Z (достаточно для текущих листов)
+        return c.charCodeAt(0) - 'A'.charCodeAt(0);
+    }
+
+    // Локально обновить кеш (localStorage) для конкретной ячейки
+    updateCachedCell(sheetName, rowNumber, columnLetter, value) {
+        try {
+            const range = RangeHelper.getSheetRange(sheetName);
+            if (!range) return false;
+            const cacheKey = `data_${sheetName}_${range}`;
+            const timeKey = `time_${sheetName}_${range}`;
+            const raw = localStorage.getItem(cacheKey);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (!data || !Array.isArray(data.values)) return false;
+            const rowIdx = rowNumber - 1;
+            if (rowIdx < 0) return false;
+            const colIdx = GoogleSheetsApi.columnLetterToIndex(columnLetter);
+            // Убедимся, что массив строк достаточной длины
+            while (data.values.length <= rowIdx) data.values.push([]);
+            const rowArr = Array.isArray(data.values[rowIdx]) ? data.values[rowIdx] : [];
+            while (rowArr.length <= colIdx) rowArr.push('');
+            rowArr[colIdx] = value == null ? '' : value;
+            data.values[rowIdx] = rowArr;
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(timeKey, Date.now().toString());
+            return true;
+        } catch (e) {
+            console.warn('updateCachedCell error:', e);
+            return false;
+        }
+    }
+
 	async fetchWithRetry(url, maxRetries = 3, baseDelay = 1000) {
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {

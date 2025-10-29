@@ -94,11 +94,17 @@
             if (debounce) {
                 debounce(`score_${participant.id}_${column}`, async (val, col) => {
                     await saveImmediately(val, col, participant.row, SHEET_CONFIG.mainSheet);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, col, val);
+                    }
                     if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column: col, value: val, participantId: participant.id });
                     onScoreChange?.(participant.id, col, val);
                 }, 500, value, column);
             } else {
                 saveImmediately(value, column, participant.row, SHEET_CONFIG.mainSheet);
+                if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                    googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, column, value);
+                }
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column, value, participantId: participant.id });
                 onScoreChange?.(participant.id, column, value);
             }
@@ -109,11 +115,17 @@
             if (debounce) {
                 debounce(`comment_${participant.id}`, async (val) => {
                     await saveImmediately(val, 'G', participant.row, SHEET_CONFIG.mainSheet);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, 'G', val);
+                    }
                     if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column: 'G', value: val, participantId: participant.id });
                     onCommentChange?.(participant.id, val);
                 }, 1000, value);
             } else {
                 saveImmediately(value, 'G', participant.row, SHEET_CONFIG.mainSheet);
+                if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                    googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, 'G', value);
+                }
                 if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column: 'G', value, participantId: participant.id });
                 onCommentChange?.(participant.id, value);
             }
@@ -129,10 +141,16 @@
                 if (debounce) {
                     debounce(`checkbox_${participant.id}_${index}`, async (val) => {
                         await saveImmediately(val, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+                        if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                            googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, prize.column, val);
+                        }
                         if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column: prize.column, value: val, participantId: participant.id });
                     }, 300, value);
                 } else {
                     saveImmediately(value, prize.column, participant.row, SHEET_CONFIG.mainSheet);
+                if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                    googleSheetsApi.updateCachedCell(SHEET_CONFIG.mainSheet, participant.row, prize.column, value);
+                }
                     if (window.AppEvents) AppEvents.emit('cellChanged', { sheet: SHEET_CONFIG.mainSheet, row: participant.row, column: prize.column, value, participantId: participant.id });
                 }
             }
