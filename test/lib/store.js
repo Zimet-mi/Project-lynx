@@ -101,14 +101,24 @@
             for (const { sheet } of (window.ALL_PARTICIPANTS_SHEETS || [])) {
                 const range = RangeHelper.getSheetRange(sheet);
                 if (!range) continue;
-                const cached = googleSheetsApi.getCachedData(sheet, range);
-                if (cached && cached.values) {
-                    const rows = cached.values.slice(1);
-                    console.log('[AppStore] initFromCache:', sheet, 'rows:', rows.length);
+                let data = googleSheetsApi.getCachedData(sheet, range);
+                if (!data) {
+                    try {
+                        // Попробуем получить из сети и одновременно прогреть кеш
+                        data = await googleSheetsApi.fetchDataWithCache(sheet, range, (window.CACHE_CONFIG?.generalExpiry) || 420000);
+                    } catch (e) {
+                        console.warn('[AppStore] fetch fallback failed for', sheet, range, e);
+                    }
+                }
+                if (data && data.values) {
+                    const rows = data.values.slice(1);
+                    console.log('[AppStore] init:', sheet, 'rows:', rows.length);
                     rows.forEach((row, idx) => {
                         const p = mapRowToParticipant(row, idx, sheet);
                         if (p) participants.push(p);
                     });
+                } else {
+                    console.log('[AppStore] no data for', sheet, range);
                 }
             }
             console.log('[AppStore] total participants:', participants.length);
