@@ -5,6 +5,7 @@ class SmartImageLoader {
         this.loaded = new Set();
         this.maxConcurrent = this.getOptimalConcurrency();
         this.isIdle = false;
+        // callbacks: url -> Set of callbacks
         this.callbacks = new Map();
     }
 
@@ -35,7 +36,9 @@ class SmartImageLoader {
             }
             
             if (onLoadCallback) {
-                this.callbacks.set(url, onLoadCallback);
+                const set = this.callbacks.get(url) || new Set();
+                set.add(onLoadCallback);
+                this.callbacks.set(url, set);
             }
             
             this.queue.push({
@@ -78,9 +81,9 @@ class SmartImageLoader {
         const img = new Image();
         img.onload = () => {
             this.loaded.add(url);
-            const callback = this.callbacks.get(url);
-            if (callback) {
-                callback(url);
+            const set = this.callbacks.get(url);
+            if (set && set.size) {
+                set.forEach(cb => { try { cb(url); } catch (e) { console.error(e); } });
                 this.callbacks.delete(url);
             }
             this.inProgress.delete(url);
