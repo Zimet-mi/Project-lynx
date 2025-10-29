@@ -113,9 +113,6 @@
                     ),
                     React.createElement('button', { className: `dropdown-item tablinks ${activeTab === 'red' ? 'active' : ''}`, onClick: () => handleTabClick('red') },
                         React.createElement('span', { className: 'nav-icon' }, '📊'), React.createElement('span', { className: 'nav-label' }, 'Итог')
-                    ),
-                    React.createElement('button', { className: 'dropdown-item send-btn', onClick: onSendCache, id: 'sendCacheButton' },
-                        React.createElement('span', { className: 'nav-icon' }, '📤'), React.createElement('span', { className: 'nav-label' }, 'Отправить')
                     )
                 )
             )

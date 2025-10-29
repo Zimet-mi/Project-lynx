@@ -201,14 +201,7 @@ const App = () => {
         telegramApi.hapticFeedback('selection');
     };
 
-    const handleSendCache = async () => {
-        try {
-            telegramApi.showAlert('Данные отправлены!');
-        } catch (error) {
-            console.error('Ошибка отправки данных:', error);
-            telegramApi.showAlert('Ошибка отправки данных');
-        }
-    };
+    // send cache functionality removed (auto-send enabled)
 
     const renderContent = () => {
         if (isLoading || !preloadComplete) {
@@ -254,8 +247,7 @@ const App = () => {
     return React.createElement('div', { className: 'main' },
         React.createElement(Header, {
             activeTab,
-            onTabChange: handleTabChange,
-            onSendCache: handleSendCache
+            onTabChange: handleTabChange
         }),
         React.createElement('div', { className: 'content' },
             React.createElement('div', { className: `tabcontent ${activeTab === activeTab ? 'active' : ''}` },
