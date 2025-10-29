@@ -5,11 +5,11 @@ const CACHE_EXPIRY = 420000; // 7 минут в миллисекундах
 
 //Первый день
 const TABLE_RANGE = 'Day1!A1:B205'; // Диапазон для таблицы
-const ACCORDION_RANGE = 'accordionDay1!A1:B160'; // Диапазон для аккордеона
+const ACCORDION_RANGE = 'accordionDay1!A1:B115'; // Диапазон для аккордеона
 const SECTION_RANGES = {
-	section1: [1, 24],
-    section2: [25, 41],
-    section3: [42, 74]
+	section1: [1, 32],
+    section2: [33, 71],
+    section3: [72, 113]
 //	section4: [118, 156]
 };
 
