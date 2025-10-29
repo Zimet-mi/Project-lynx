@@ -1,7 +1,7 @@
 // Основное React приложение (сборка из библиотек)
 const { useState, useEffect } = React;
 const { useDebounce } = window.AppHooks || {};
-const { Header } = window.AppUI || {};
+const { Header, LoadingIndicator } = window.AppUI || {};
 const { ParticipantsPage, AllParticipantsPage } = window.AppParticipants || {};
 const { SchedulePage } = window.AppSchedule || {};
 const { ResultsPage } = window.AppResults || {};
