@@ -31,6 +31,11 @@
             // Ранний прогрев стора из кеша и после — из сети
             if (window.AppStore && AppStore.initFromCache) AppStore.initFromCache();
             preload();
+            // Периодическое обновление каждые 10 секунд
+            const interval = setInterval(() => {
+                if (window.AppStore && AppStore.refreshFromNetwork) AppStore.refreshFromNetwork();
+            }, 10000);
+            return () => clearInterval(interval);
         }, []);
 
         const renderTab = () => {
