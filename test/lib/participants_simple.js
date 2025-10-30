@@ -8,7 +8,13 @@
     function Card({ participant }) {
         const [isImageModalOpen, setIsImageModalOpen] = useState(false);
         const [comment, setComment] = useState(participant.comment || '');
-        useEffect(() => { setComment(participant.comment || ''); }, [participant.comment]);
+        const [userEditing, setUserEditing] = useState(false);
+        useEffect(() => {
+            // Если пользователь сейчас не редактирует (нет фокуса), или пришло новое внешнее значение, обновить поле
+            if (!userEditing && comment !== (participant.comment || '')) {
+                setComment(participant.comment || '');
+            }
+        }, [participant.comment]);
         useEffect(() => {
             const handler = (e) => { if (e.key === 'Escape') setIsImageModalOpen(false); };
             if (isImageModalOpen) document.addEventListener('keydown', handler);
@@ -22,6 +28,8 @@
                 if (ok) {
                     if (googleSheetsApi.updateCachedCell) googleSheetsApi.updateCachedCell(participant.sheet, participant.dataRow, 'C', value);
                     if (window.AppStore && AppStore.updateParticipantComment) AppStore.updateParticipantComment(participant.sheet, participant.dataRow, value);
+                } else {
+                    alert('Ошибка сохранения комментария!');
                 }
             }, 500);
         }
@@ -47,6 +55,8 @@
                         className: 'input-field comment-textarea',
                         placeholder: 'Комментарий (сохраняется в колонку C)...',
                         value: comment,
+                        onFocus: () => setUserEditing(true),
+                        onBlur: () => { setUserEditing(false); setComment(participant.comment || ''); },
                         onChange: (e) => { const v = e.target.value; setComment(v); saveCommentDebounced(v); }
                     })
                 )

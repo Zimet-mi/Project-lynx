@@ -15,7 +15,7 @@ const SHEET_CONFIG = {
 const SECTION_RANGES = {
     section1: [2, 32],
     section2: [33, 71],
-    section3: [72, 13]
+    section3: [72, 113]
 };
 
 const ALL_PARTICIPANTS_SHEETS = [
