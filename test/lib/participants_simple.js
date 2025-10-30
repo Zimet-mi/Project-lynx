@@ -56,7 +56,7 @@
         const handleClose = () => setIsImageModalOpen(false);
         const stop = (e) => e.stopPropagation();
         return React.createElement('div', { className: 'participant-card' },
-            React.createElement('div', { className: 'participant-header', onClick: () => {} },
+            React.createElement('div', { className: 'participant-header' },
                 React.createElement(ZoomableImage, {
                     src: `../card/${participant.img}`,
                     alt: participant.name,
@@ -68,35 +68,32 @@
                 React.createElement('div', { className: 'participant-info' },
                     React.createElement('div', { className: 'participant-name' }, participant.name),
                     React.createElement('div', { className: 'participant-id' }, `Номер: ${participant.id}`)
-                ),
-                React.createElement('div', { className: 'participant-info' },
-                    React.createElement('textarea', {
-                        className: 'input-field comment-textarea',
-                        placeholder: 'Комментарий',
-                        value: comment,
-                        onChange: (e) => {
-                            const val = e.target.value;
-                            setComment(val);
-                            setEdited(true);
-                        },
-                        onBlur: async () => {
-                            if (edited && comment !== (participant.comment || '')) {
-                                const ok = await saveImmediately(comment, participant.row);
-                                console.log('[vol] onBlur: save', ok, 'edited:', edited);
-                                if (ok) {
-                                    // оставляем comment как есть, логируем
-                                    setEdited(false);
-                                    console.log('[vol] onBlur: saved and leaving comment as is!');
-                                }
-                                // если нет, просто остаёмся в том же состоянии (на самом деле можно ещё показать ошибку)
-                            } else {
-                                console.log('[vol] onBlur: not changed or not edited, skip save. edited:', edited);
-                                setEdited(false);
-                                // больше НЕ сбрасываем comment! только edited.
-                            }
-                        },
-                    })
                 )
+            ),
+            React.createElement('div', { className: 'comment-block' },
+                React.createElement('textarea', {
+                    className: 'input-field comment-textarea',
+                    placeholder: 'Комментарий',
+                    value: comment,
+                    onChange: (e) => {
+                        const val = e.target.value;
+                        setComment(val);
+                        setEdited(true);
+                    },
+                    onBlur: async () => {
+                        if (edited && comment !== (participant.comment || '')) {
+                            const ok = await saveImmediately(comment, participant.row);
+                            console.log('[vol] onBlur: save', ok, 'edited:', edited);
+                            if (ok) {
+                                setEdited(false);
+                                console.log('[vol] onBlur: saved and leaving comment as is!');
+                            }
+                        } else {
+                            console.log('[vol] onBlur: not changed or not edited, skip save. edited:', edited);
+                            setEdited(false);
+                        }
+                    }
+                })
             ),
             isImageModalOpen && React.createElement('div', { className: 'image-modal show', onClick: handleClose },
                 React.createElement('div', { className: 'image-modal-content', onClick: stop },
