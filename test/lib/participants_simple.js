@@ -52,7 +52,13 @@
                 }
             }, 700, value);
         }
-        const handleThumbClick = (e) => { e.stopPropagation(); setIsImageModalOpen(true); };
+        const handleThumbClick = (e) => {
+            e.stopPropagation();
+            if (window.telegramApi && telegramApi.hapticFeedback) {
+                telegramApi.hapticFeedback('impact', 'soft');
+            }
+            setIsImageModalOpen(true);
+        };
         const handleClose = () => setIsImageModalOpen(false);
         const stop = (e) => e.stopPropagation();
         return React.createElement('div', { className: 'participant-card' },
