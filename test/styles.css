@@ -84,9 +84,11 @@ textarea.comment-textarea:focus, .participant-info textarea:focus {
 
 html, body {
     height: 100%;
-    min-height: 100dvh;
+    width: 100%;
     background: var(--color-bg) url(../icons/city.jpg) no-repeat center center fixed;
     background-size: cover;
+    margin: 0;
+    padding: 0;
 }
 
 .main, .participants-page {
@@ -97,11 +99,11 @@ html, body {
 }
 
 @media (max-width: 700px) {
-    html, body {
+    /* html, body {
         min-height: 100dvh;
         height: 100dvh;
         overflow: hidden;
-    }
+    } */
     .main, .participants-page {
         min-height: 100dvh;
         height: 100dvh;
