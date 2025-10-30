@@ -7,7 +7,7 @@
     const { ParticipantsSimple, AllParticipantsSimple } = (window.SimpleParticipants || {});
 
     function App() {
-        const [activeTab, setActiveTab] = useState('One');
+        const [activeTab, setActiveTab] = useState(null); // было 'One'
         const [isLoading, setIsLoading] = useState(true);
         const [ready, setReady] = useState(false);
 

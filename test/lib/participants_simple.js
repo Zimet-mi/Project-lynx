@@ -72,7 +72,7 @@
                 React.createElement('div', { className: 'participant-info' },
                     React.createElement('textarea', {
                         className: 'input-field comment-textarea',
-                        placeholder: 'Комментарий (сохраняется в колонку C)...',
+                        placeholder: 'Комментарий',
                         value: comment,
                         onChange: (e) => {
                             const val = e.target.value;
@@ -83,11 +83,16 @@
                             if (edited && comment !== (participant.comment || '')) {
                                 const ok = await saveImmediately(comment, participant.row);
                                 console.log('[vol] onBlur: save', ok, 'edited:', edited);
-                                // setEdited внутри saveImmediately
-                                setComment(participant.comment || '');
+                                if (ok) {
+                                    // оставляем comment как есть, логируем
+                                    setEdited(false);
+                                    console.log('[vol] onBlur: saved and leaving comment as is!');
+                                }
+                                // если нет, просто остаёмся в том же состоянии (на самом деле можно ещё показать ошибку)
                             } else {
                                 console.log('[vol] onBlur: not changed or not edited, skip save. edited:', edited);
-                                setComment(participant.comment || '');
+                                setEdited(false);
+                                // больше НЕ сбрасываем comment! только edited.
                             }
                         },
                     })
