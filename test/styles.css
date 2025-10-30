@@ -82,37 +82,6 @@ textarea.comment-textarea:focus, .participant-info textarea:focus {
     overflow-x: auto !important;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-    margin: 0;
-    padding: 0;
-    background: var(--color-bg) url(../icons/city.jpg) no-repeat center center fixed;
-    background-size: cover;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.main, .participants-page {
-    min-height: 100dvh;
-    height: 100dvh;
-    box-sizing: border-box;
-    overflow-y: auto;
-}
-
-@media (max-width: 700px) {
-    /* html, body {
-        min-height: 100dvh;
-        height: 100dvh;
-        overflow: hidden;
-    } */
-    .main, .participants-page {
-        min-height: 100dvh;
-        height: 100dvh;
-        box-sizing: border-box;
-    }
-}
-
 .nav-tab-number {
     display: inline-block;
     width: 22px;
