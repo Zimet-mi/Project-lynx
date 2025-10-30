@@ -40,6 +40,7 @@
 
         const renderTab = () => {
             if (!ready || isLoading) return React.createElement(Loading, { message: 'Загрузка данных...' });
+            if (!activeTab) return React.createElement('div', { className: 'no-data' }, 'Выберите секцию для просмотра');
             switch (activeTab) {
                 case 'One':
                 case 'Two':
@@ -48,7 +49,7 @@
                 case 'all':
                     return React.createElement(AllParticipantsSimple);
                 default:
-                    return React.createElement(ParticipantsSimple, { section: 'One' });
+                    return null;
             }
         };
 

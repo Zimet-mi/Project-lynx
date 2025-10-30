@@ -109,7 +109,10 @@
                         alt: participant.name,
                         className: 'image-modal-img',
                         preloadPriority: 'high',
-                        stopPropagation: true
+                        stopPropagation: true,
+                        onClick: () => {
+                            if (window.telegramApi && telegramApi.hapticFeedback) telegramApi.hapticFeedback('impact', 'soft');
+                        }
                     })
                 )
             )
