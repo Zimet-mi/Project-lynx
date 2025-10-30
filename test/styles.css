@@ -98,6 +98,19 @@ textarea.comment-textarea:focus, .participant-info textarea:focus {
     box-shadow: 0 2px 7px #ede6ca7a;
 }
 
+html, body {
+    background: none !important;
+}
+body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    background: var(--color-bg, #191828) url(../icons/city.jpg) no-repeat center center;
+    background-size: cover;
+    pointer-events: none;
+}
+
 @media (max-width: 700px) {
     .participant-card {
         max-width: 100vw;
