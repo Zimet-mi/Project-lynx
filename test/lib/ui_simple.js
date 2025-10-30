@@ -16,7 +16,7 @@
             { id: 'One', label: 'Первый', number: '1' },
             { id: 'Two', label: 'Второй', number: '2' },
             { id: 'Three', label: 'Третий', number: '3' },
-            { id: 'all', label: 'Участники' }
+            { id: 'all', label: 'Участники', number: '👥' } // добавили иконку для "все участники"
         ];
         return React.createElement('nav', { className: 'top-nav' },
             ...tabs.map(tab => React.createElement('button', {

@@ -83,12 +83,14 @@ textarea.comment-textarea:focus, .participant-info textarea:focus {
 }
 
 html, body {
-    height: 100%;
     width: 100%;
-    background: var(--color-bg) url(../icons/city.jpg) no-repeat center center fixed;
-    background-size: cover;
+    height: 100%;
+    overflow-x: hidden;
     margin: 0;
     padding: 0;
+    background: var(--color-bg) url(../icons/city.jpg) no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .main, .participants-page {
