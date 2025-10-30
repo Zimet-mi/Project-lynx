@@ -6,33 +6,31 @@
     const { ZoomableImage } = (window.AppMedia || {});
 
     function Card({ participant }) {
+        const mainSheet = SHEET_CONFIG.mainSheet;
         const [isImageModalOpen, setIsImageModalOpen] = useState(false);
         const [comment, setComment] = useState(participant.comment || '');
-        const [userEditing, setUserEditing] = useState(false);
         useEffect(() => {
-            // Только если не редактируем вручную
-            if (!userEditing && comment !== (participant.comment || '')) {
-                setComment(participant.comment || '');
-            }
-        }, [participant.comment, participant.row, participant.id]);
-        useEffect(() => {
-            const handler = (e) => { if (e.key === 'Escape') setIsImageModalOpen(false); };
-            if (isImageModalOpen) document.addEventListener('keydown', handler);
-            return () => document.removeEventListener('keydown', handler);
-        }, [isImageModalOpen]);
+            // Подгружать всегда снаружи ТОЛЬКО при смене row
+            setComment(participant.comment || '');
+        }, [participant.row, participant.comment]);
 
-        // Дебаунс для сохранения
-        function debouncedSave(value) {
+        function saveImmediately(value, row) {
+            return googleSheetsApi.saveData(value, 'C', row, mainSheet)
+        }
+
+        function handleSaveDebounced(value) {
             const debounce = (window.debounce)
-              ? window.debounce
-              : function fakeDebounce(key, fn, delay, ...args) { return setTimeout(() => fn(...args), delay || 1000); };
+                ? window.debounce
+                : function fakeDebounce(key, fn, delay, ...args) { return setTimeout(() => fn(...args), delay || 700); };
             debounce(`vol_comment_${participant.id}_${participant.row}`, async (val) => {
-                // сохраняем только в mainSheet, колонка C
-                const mainSheet = SHEET_CONFIG.mainSheet;
-                const ok = await googleSheetsApi.saveData(val, 'C', participant.row, mainSheet);
+                const ok = await saveImmediately(val, participant.row);
                 if (ok) {
-                    if (googleSheetsApi.updateCachedCell) googleSheetsApi.updateCachedCell(mainSheet, participant.row, 'C', val);
-                    if (window.AppStore && AppStore.updateParticipantComment) AppStore.updateParticipantComment(mainSheet, participant.row, val);
+                    if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
+                        googleSheetsApi.updateCachedCell(mainSheet, participant.row, 'C', val);
+                    }
+                    if (window.AppEvents && typeof AppEvents.emit === 'function') {
+                        window.AppEvents.emit('cellChanged', { sheet: mainSheet, row: participant.row, column: 'C', value: val });
+                    }
                 } else {
                     alert('Ошибка сохранения комментария!');
                 }
@@ -60,17 +58,15 @@
                         className: 'input-field comment-textarea',
                         placeholder: 'Комментарий (сохраняется в колонку C)...',
                         value: comment,
-                        onFocus: () => setUserEditing(true),
+                        onChange: (e) => {
+                            const val = e.target.value;
+                            setComment(val);
+                            handleSaveDebounced(val);
+                        },
                         onBlur: () => {
-                            setUserEditing(false);
-                            // на blur — сбросим в поле последнее внешнее значение (аналог жюри)
+                            // Обновить значение из стора
                             setComment(participant.comment || '');
                         },
-                        onChange: (e) => {
-                            const v = e.target.value;
-                            setComment(v);
-                            debouncedSave(v);
-                        }
                     })
                 )
             ),
