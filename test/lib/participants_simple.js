@@ -9,8 +9,12 @@
         const mainSheet = SHEET_CONFIG.mainSheet;
         const [isImageModalOpen, setIsImageModalOpen] = useState(false);
         const [comment, setComment] = useState(participant.comment || '');
+        const [edited, setEdited] = useState(false);
         useEffect(() => {
-            setComment(participant.comment || '');
+            // ONLY подгружать с сервера когда нет редактирования
+            if (!edited) {
+                setComment(participant.comment || '');
+            }
         }, [participant.row, participant.comment]);
 
         async function saveImmediately(value, row) {
@@ -18,9 +22,10 @@
             try {
                 const result = await googleSheetsApi.saveData(value, 'C', row, mainSheet);
                 console.log('[vol] saveData result:', result);
+                if (result) setEdited(false);
                 return result;
             } catch (e) {
-                console.error('[vol] saveData ERROR:', e);
+                console.warn('[vol] saveData ERROR:', e);
                 return false;
             }
         }
@@ -72,16 +77,16 @@
                         onChange: (e) => {
                             const val = e.target.value;
                             setComment(val);
-                            handleSaveDebounced(val);
+                            setEdited(true);
                         },
-                        onBlur: () => {
-                            if (comment !== (participant.comment || '')) {
-                                saveImmediately(comment, participant.row).then(() => {
-                                    console.log('[vol] textarea onBlur, FORCE SAVE (changed!):', comment);
-                                    setComment(participant.comment || '');
-                                });
+                        onBlur: async () => {
+                            if (edited && comment !== (participant.comment || '')) {
+                                const ok = await saveImmediately(comment, participant.row);
+                                console.log('[vol] onBlur: save', ok, 'edited:', edited);
+                                // setEdited внутри saveImmediately
+                                setComment(participant.comment || '');
                             } else {
-                                console.log('[vol] textarea onBlur, not changed - skip save');
+                                console.log('[vol] onBlur: not changed or not edited, skip save. edited:', edited);
                                 setComment(participant.comment || '');
                             }
                         },
