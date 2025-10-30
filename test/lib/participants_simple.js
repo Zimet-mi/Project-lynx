@@ -10,12 +10,19 @@
         const [isImageModalOpen, setIsImageModalOpen] = useState(false);
         const [comment, setComment] = useState(participant.comment || '');
         useEffect(() => {
-            // Подгружать всегда снаружи ТОЛЬКО при смене row
             setComment(participant.comment || '');
         }, [participant.row, participant.comment]);
 
-        function saveImmediately(value, row) {
-            return googleSheetsApi.saveData(value, 'C', row, mainSheet)
+        async function saveImmediately(value, row) {
+            console.log('[vol] saveData: sheet=', mainSheet, 'row=', row, 'col=C', 'value=', value);
+            try {
+                const result = await googleSheetsApi.saveData(value, 'C', row, mainSheet);
+                console.log('[vol] saveData result:', result);
+                return result;
+            } catch (e) {
+                console.error('[vol] saveData ERROR:', e);
+                return false;
+            }
         }
 
         function handleSaveDebounced(value) {
@@ -23,15 +30,19 @@
                 ? window.debounce
                 : function fakeDebounce(key, fn, delay, ...args) { return setTimeout(() => fn(...args), delay || 700); };
             debounce(`vol_comment_${participant.id}_${participant.row}`, async (val) => {
+                console.log('[vol] DEBOUNCE go', val);
                 const ok = await saveImmediately(val, participant.row);
                 if (ok) {
                     if (window.googleSheetsApi && googleSheetsApi.updateCachedCell) {
-                        googleSheetsApi.updateCachedCell(mainSheet, participant.row, 'C', val);
+                        const up = googleSheetsApi.updateCachedCell(mainSheet, participant.row, 'C', val);
+                        console.log('[vol] updateCachedCell =', up);
                     }
                     if (window.AppEvents && typeof AppEvents.emit === 'function') {
+                        console.log('[vol] EMIT cellChanged', mainSheet, participant.row);
                         window.AppEvents.emit('cellChanged', { sheet: mainSheet, row: participant.row, column: 'C', value: val });
                     }
                 } else {
+                    console.warn('[vol] Could not save, alert!');
                     alert('Ошибка сохранения комментария!');
                 }
             }, 700, value);
@@ -64,8 +75,8 @@
                             handleSaveDebounced(val);
                         },
                         onBlur: () => {
-                            // Обновить значение из стора
                             setComment(participant.comment || '');
+                            console.log('[vol] textarea onBlur, reset to', participant.comment);
                         },
                     })
                 )
