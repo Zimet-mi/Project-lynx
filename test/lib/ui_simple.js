@@ -13,9 +13,9 @@
 
     function Navigation({ activeTab, onTabChange }) {
         const tabs = [
-            { id: 'One', label: 'Первый' },
-            { id: 'Two', label: 'Второй' },
-            { id: 'Three', label: 'Третий' },
+            { id: 'One', label: 'Первый', number: '1' },
+            { id: 'Two', label: 'Второй', number: '2' },
+            { id: 'Three', label: 'Третий', number: '3' },
             { id: 'all', label: 'Участники' }
         ];
         return React.createElement('nav', { className: 'top-nav' },
@@ -23,7 +23,10 @@
                 key: tab.id,
                 className: `tablinks ${activeTab === tab.id ? 'active' : ''}`,
                 onClick: () => onTabChange(tab.id)
-            }, tab.label))
+            },
+                (tab.number ? React.createElement('span', { className: 'nav-tab-number' }, tab.number) : null),
+                tab.label
+            ))
         );
     }
 
