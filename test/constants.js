@@ -26,8 +26,8 @@ const ALL_PARTICIPANTS_SHEETS = [
 const CACHE_CONFIG = { generalExpiry: 420000, participantsExpiry: 120000 };
 
 const GOOGLE_SCRIPT_URLS = {
-    getSheetId: 'https://script.google.com/macros/s/AKfycbxemxyuf8cFQCnr1joWtAzRqhIyfeTCU2OU19RrWac57c0HuANTdNRb7i21iVEr9yNQ/exec',
-    saveData: 'https://script.google.com/macros/s/AKfycbxQ3MrknFLRGXb6J7YJcNEVe5IShT-AITtvSvZHHSwK1OPvs-4ikzDXeSWQ60czU5z1/exec'
+    getSheetId: 'https://script.google.com/macros/s/AKfycbyJybPhXtndgtRfWrTzVRft9hTY83Jj42KQOPOnebPUPqQrGZd6J09YtD7Vf8-SKGs/exec',
+    saveData: 'https://script.google.com/macros/s/AKfycbyJybPhXtndgtRfWrTzVRft9hTY83Jj42KQOPOnebPUPqQrGZd6J09YtD7Vf8-SKGs/exec'
 };
 
 const RangeHelper = {
