@@ -15,6 +15,7 @@ class GoogleSheetsApi {
     }
     async getSheetId() {
         if (this.sheetIdCache) return this.sheetIdCache;
+        if (window.VOLUNTEER_SHEET_ID) { this.sheetIdCache = window.VOLUNTEER_SHEET_ID; return this.sheetIdCache; }
         const fromSession = sessionStorage.getItem('SHEET_ID');
         if (fromSession) { this.sheetIdCache = fromSession; return this.sheetIdCache; }
         const res = await axios.get(GOOGLE_SCRIPT_URLS.getSheetId, { timeout: this.timeout });
