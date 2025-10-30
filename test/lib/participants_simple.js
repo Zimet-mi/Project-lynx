@@ -75,8 +75,15 @@
                             handleSaveDebounced(val);
                         },
                         onBlur: () => {
-                            setComment(participant.comment || '');
-                            console.log('[vol] textarea onBlur, reset to', participant.comment);
+                            if (comment !== (participant.comment || '')) {
+                                saveImmediately(comment, participant.row).then(() => {
+                                    console.log('[vol] textarea onBlur, FORCE SAVE (changed!):', comment);
+                                    setComment(participant.comment || '');
+                                });
+                            } else {
+                                console.log('[vol] textarea onBlur, not changed - skip save');
+                                setComment(participant.comment || '');
+                            }
                         },
                     })
                 )
