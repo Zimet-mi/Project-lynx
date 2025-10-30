@@ -55,9 +55,31 @@ textarea.comment-textarea, .participant-info textarea {
     border: 1px solid #ccc;
     resize: vertical;
 }
+textarea.comment-textarea:focus, .participant-info textarea:focus {
+    padding: 10px 16px;
+    border: 1px solid #888;
+    background: #fff;
+    box-sizing: border-box;
+    outline: 2px solid var(--color-accent, #df3036);
+}
 .participant-thumbnail.loading, .participant-thumbnail.fallback {
     background: #ddd url('../card/no-image.png') center center no-repeat;
     background-size: 42px 42px;
+}
+
+.participant-preview-img-small {
+    width: 48px;
+    min-width: 38px;
+    max-width: 48px;
+    height: 48px;
+    object-fit: cover;
+    background: #eee;
+    display: block;
+}
+
+.all-participants-page, .all-participants-table {
+    max-width: 100vw;
+    overflow-x: auto !important;
 }
 
 @media (max-width: 700px) {
