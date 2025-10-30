@@ -10,28 +10,33 @@
         const [comment, setComment] = useState(participant.comment || '');
         const [userEditing, setUserEditing] = useState(false);
         useEffect(() => {
-            // Если пользователь сейчас не редактирует (нет фокуса), или пришло новое внешнее значение, обновить поле
+            // Только если не редактируем вручную
             if (!userEditing && comment !== (participant.comment || '')) {
                 setComment(participant.comment || '');
             }
-        }, [participant.comment]);
+        }, [participant.comment, participant.row, participant.id]);
         useEffect(() => {
             const handler = (e) => { if (e.key === 'Escape') setIsImageModalOpen(false); };
             if (isImageModalOpen) document.addEventListener('keydown', handler);
             return () => document.removeEventListener('keydown', handler);
         }, [isImageModalOpen]);
-        function saveCommentDebounced(value){
-            if (!window.googleSheetsApi) return;
-            if (saveCommentDebounced._t) clearTimeout(saveCommentDebounced._t);
-            saveCommentDebounced._t = setTimeout(async () => {
-                const ok = await googleSheetsApi.saveData(value, 'C', participant.dataRow, participant.sheet);
+
+        // Дебаунс для сохранения
+        function debouncedSave(value) {
+            const debounce = (window.debounce)
+              ? window.debounce
+              : function fakeDebounce(key, fn, delay, ...args) { return setTimeout(() => fn(...args), delay || 1000); };
+            debounce(`vol_comment_${participant.id}_${participant.row}`, async (val) => {
+                // сохраняем только в mainSheet, колонка C
+                const mainSheet = SHEET_CONFIG.mainSheet;
+                const ok = await googleSheetsApi.saveData(val, 'C', participant.row, mainSheet);
                 if (ok) {
-                    if (googleSheetsApi.updateCachedCell) googleSheetsApi.updateCachedCell(participant.sheet, participant.dataRow, 'C', value);
-                    if (window.AppStore && AppStore.updateParticipantComment) AppStore.updateParticipantComment(participant.sheet, participant.dataRow, value);
+                    if (googleSheetsApi.updateCachedCell) googleSheetsApi.updateCachedCell(mainSheet, participant.row, 'C', val);
+                    if (window.AppStore && AppStore.updateParticipantComment) AppStore.updateParticipantComment(mainSheet, participant.row, val);
                 } else {
                     alert('Ошибка сохранения комментария!');
                 }
-            }, 500);
+            }, 700, value);
         }
         const handleThumbClick = (e) => { e.stopPropagation(); setIsImageModalOpen(true); };
         const handleClose = () => setIsImageModalOpen(false);
@@ -56,8 +61,16 @@
                         placeholder: 'Комментарий (сохраняется в колонку C)...',
                         value: comment,
                         onFocus: () => setUserEditing(true),
-                        onBlur: () => { setUserEditing(false); setComment(participant.comment || ''); },
-                        onChange: (e) => { const v = e.target.value; setComment(v); saveCommentDebounced(v); }
+                        onBlur: () => {
+                            setUserEditing(false);
+                            // на blur — сбросим в поле последнее внешнее значение (аналог жюри)
+                            setComment(participant.comment || '');
+                        },
+                        onChange: (e) => {
+                            const v = e.target.value;
+                            setComment(v);
+                            debouncedSave(v);
+                        }
                     })
                 )
             ),
