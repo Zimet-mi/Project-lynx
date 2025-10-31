@@ -6,19 +6,19 @@ const API_KEY = 'AIzaSyBj2W1tUafEz-lBa8CIwiILl28XlmAhyFM';
 // Настройки листов
 const SHEET_CONFIG = {
     // Основная страница с выставлением оценок жюри
-    mainSheet: 'valerieDay2', // Можно переключать на 'valerieDay1'
+    mainSheet: 'valerieDay1', // Можно переключать на 'valerieDay1'
     resultSheet: 'valerieRes', // Страница с итогами конкретного жюри
-    timetableSheet: 'Day2' // Лист расписания
+    timetableSheet: 'Day1' // Лист расписания
 };
 
 // Диапазоны для секций с участниками
 const SECTION_RANGES = {
-    // Второй день
-    section1: [2, 38],
-    section2: [39, 72],
-    section3: [73, 90],
+    // Первый день
+    section1: [2, 32],
+    section2: [33, 71],
+    section3: [72, 113],
     
-    // Первый день (закомментировано)
+    // Второй день
     // section1: [2, 47],
     // section2: [48, 84],
     // section3: [85, 116],
@@ -26,10 +26,10 @@ const SECTION_RANGES = {
 
 // Диапазоны для таблицы с результатами
 const RESULT_RANGES = [
-    'A1:H136',   // Диапазон для первой части
-    'A137:H210', // Диапазон для второй части
-    'A211:H235', // Диапазон для третьей части
-    'A236:H700'  // Диапазон для четвертой части
+    'A1:H2',   // Диапазон для первой части
+    'A3:H4', // Диапазон для второй части
+    'A5:H6', // Диапазон для третьей части
+    'A7:H8'  // Диапазон для четвертой части
 ];
 
 // Массив для всех листов/дней с участниками
@@ -39,11 +39,11 @@ const ALL_PARTICIPANTS_SHEETS = [
         range: 'A1:N120',
         day: 'День 1'
     },
-    { 
-        sheet: 'valerieDay2', 
-        range: 'A1:N90',
-        day: 'День 2' 
-    },
+//    { 
+//        sheet: 'valerieDay2', 
+//        range: 'A1:N90',
+//        day: 'День 2' 
+//    },
 ];
 
 // Настройки кеширования
@@ -97,7 +97,7 @@ const SPECIAL_PRIZES = [
     { label: 'Крафт',             column: 'J', active: true, value: 'Номинант' },
     { label: 'Дефиле',            column: 'K', active: true, value: 'Номинант' },
     { label: 'Парик',             column: 'L', active: true, value: 'Номинант' },
-    { label: 'Русский источник',  column: 'M', active: true, value: 'Номинант' },
+//    { label: 'Русский источник',  column: 'M', active: true, value: 'Номинант' },
     { label: 'Гран-при',          column: 'N', active: true, value: 'Номинант' }
     // Для добавления нового спецприза:
     // { label: 'Новый спецприз', column: 'O', active: true, value: 'Номинант' }
